@@ -463,7 +463,7 @@ import { loadConfig } from '../config.js'
 import { StubProvider } from '../model/stub.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
 import { createSession } from '../repos/sessions.js'
-import { listMessages } from '../repos/messages.js'
+import { createMessage, listMessages } from '../repos/messages.js'
 import { AgentBridge, AGENT_USER_ID } from './bridge.js'
 import type { Message } from '@ta/contracts'
 
@@ -517,7 +517,17 @@ describe('agent bridge', () => {
 
   it('triggers on @Ta-Fullstack and posts an agent reply', async () => {
     const { bridge, provider } = makeBridge('收到，我来实现报销系统。')
-    const result = await bridge.handle(userMessage('@Ta-Fullstack 帮我做报销系统'))
+    const userMsg = userMessage('@Ta-Fullstack 帮我做报销系统')
+    // 用户消息先落库（真实流程中由路由写入），bridge 只负责 agent 回复
+    await createMessage(pool, {
+      sessionId: userMsg.sessionId,
+      senderId: userMsg.senderId,
+      senderKind: 'human',
+      contentType: 'text',
+      content: userMsg.content,
+      clientMsgId: userMsg.clientMsgId,
+    })
+    const result = await bridge.handle(userMsg)
     expect(result.triggered).toBe(true)
     expect(result.reply?.senderId).toBe(AGENT_USER_ID)
     expect(result.reply?.senderKind).toBe('agent')
@@ -528,6 +538,8 @@ describe('agent bridge', () => {
     expect(emitted).toHaveLength(1)
     const messages = await listMessages(pool, sessionId, 0, 10)
     expect(messages).toHaveLength(2) // 用户消息 + agent 回复
+    expect(messages[1]!.senderKind).toBe('agent')
+    expect(messages[1]!.seq).toBe(2)
   })
 
   it('skips non-mention messages', async () => {
