@@ -8,18 +8,17 @@
 
 **Tech Stack:** Node 24 + Fastify 5 + `pg`（node-postgres 8，自带 TS 类型）+ PostgreSQL 16（docker）+ 自定义 SQL 迁移 runner（tsx 执行）+ vitest 集成测试（真实 PG）。
 
-**前置条件：** 本地 PostgreSQL 16（决策记录：本机 Docker/colima 首次可用性不稳，开发/测试用 Homebrew 本地 PG；`deploy/docker-compose.yml` 保留为部署路径，D4 不变）。
+**前置条件：** 本地 PostgreSQL 16。本机 colima（macOS 虚拟化）已运行，Docker daemon 可用：`docker compose -f deploy/docker-compose.yml up -d` 拉起开发库。若 Docker 不可用，备选 Homebrew 本地 PG（连接串相同：`postgres://ta:ta@localhost:5432/ta_dev`）。
 
-### 本地 PG 初始化（一次性，Homebrew）
+### 本地 PG 初始化（一次性）
 
 ```bash
-brew install postgresql@16
-brew services start postgresql@16          # 常驻服务
-# 创建开发角色与库（brew PG 超级用户为当前 macOS 用户）
-/opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE ROLE ta WITH LOGIN PASSWORD 'ta'"
-/opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE DATABASE ta_dev OWNER ta"
+docker compose -f deploy/docker-compose.yml up -d   # postgres:16-alpine，自动建 ta/ta_dev
+# 备选（Docker 不可用时）：brew install postgresql@16 && brew services start postgresql@16
+#   /opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE ROLE ta WITH LOGIN PASSWORD 'ta'"
+#   /opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE DATABASE ta_dev OWNER ta"
 # 验证
-/opt/homebrew/opt/postgresql@16/bin/psql -h localhost -U ta -d ta_dev -c 'SELECT 1'
+docker exec ta-db pg_isready -U ta -d ta_dev
 ```
 
 ---
@@ -230,19 +229,19 @@ function pathToFileURL(p: string): URL {
 
 dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；scripts 增 `"migrate": "tsx scripts/migrate.ts"`。
 
-- [ ] **Step 7: 初始化本地 PG 并验证迁移**
+- [ ] **Step 7: 启动 PG 并验证迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
-# 前置：brew PG 已装且 ta/ta_dev 已创建（见「本地 PG 初始化」）
+docker compose -f deploy/docker-compose.yml up -d
+sleep 3
+docker compose -f deploy/docker-compose.yml ps   # db 应 healthy
 pnpm install
 pnpm --filter @ta/gateway migrate
-/opt/homebrew/opt/postgresql@16/bin/psql -h localhost -U ta -d ta_dev -c '\dt'
+docker exec ta-db psql -U ta -d ta_dev -c '\dt'
 ```
 
 Expected: 迁移输出 `migrations applied: 001_init.sql`；`\dt` 显示 sessions / session_members / messages / schema_migrations 四张表。
-
-> 注：`deploy/docker-compose.yml` 仍创建（部署路径，D4）；开发/测试用本地 PG，连接串 `postgres://ta:ta@localhost:5432/ta_dev` 两者一致。
 
 - [ ] **Step 8: 提交**
 
