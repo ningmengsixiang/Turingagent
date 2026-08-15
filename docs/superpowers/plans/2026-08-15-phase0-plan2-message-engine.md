@@ -909,7 +909,7 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
 
 ```ts
 import type { FastifyInstance } from 'fastify'
-import { isMessageContentType } from '@ta/contracts'
+import { isMessageContentType, type Message } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
 import { createMessage, listMessages } from '../repos/messages.js'
@@ -923,7 +923,7 @@ export function registerMessageRoutes(
   app: FastifyInstance,
   config: Config,
   pool: pg.Pool,
-  onMessageCreated: (message: unknown) => void,
+  onMessageCreated: (message: Message) => void,
 ): void {
   const auth = requireAuth(config)
 
