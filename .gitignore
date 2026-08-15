@@ -5,3 +5,4 @@ dsh/
 .gstack/
 __pycache__/
 *.pyc
+ta-workspace/
