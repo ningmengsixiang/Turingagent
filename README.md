@@ -15,6 +15,32 @@ pnpm test           # 全仓测试
 pnpm dev:gateway    # 启动网关开发服务器（默认 :3001）
 ```
 
+### 本地依赖（PG）
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d   # 启动 PostgreSQL 16（ta_dev 库，自动建 ta 角色）
+pnpm --filter @ta/gateway migrate                    # 应用迁移（幂等）
+```
+
+> 网关集成测试需要本地 PG 运行（`postgres://ta:ta@localhost:5432/ta_dev`）；未启动会 fail fast。
+
+### 消息引擎冒烟
+
+```bash
+# 登录 → 建会话 → 发消息 → 拉消息 → 标记已读
+TOKEN=$(curl -s -X POST localhost:3001/api/v1/auth/login -H 'content-type: application/json' \
+  -d '{"username":"alice"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')
+
+curl -s -X POST localhost:3001/api/v1/sessions -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"kind":"project","title":"报销系统","memberIds":["u-bob"]}'
+
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"clientMsgId":"m1","contentType":"text","content":"你好"}'
+
+curl -s "localhost:3001/api/v1/sessions/<sessionId>/messages?after_seq=0" -H "authorization: Bearer $TOKEN"
+```
+
 ### 网关冒烟
 
 ```bash
