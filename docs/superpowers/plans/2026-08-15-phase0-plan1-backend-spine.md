@@ -312,7 +312,7 @@ git commit -m "feat(contracts): 核心类型与消息内容类型守卫"
   "type": "module",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/index.ts",
     "start": "node lib/index.js",
     "test": "vitest run",
@@ -334,6 +334,8 @@ git commit -m "feat(contracts): 核心类型与消息内容类型守卫"
 }
 ```
 
+> **仓库约定（T2 质量审查确立）**：每个包 build 用 `tsconfig.build.json`（排除 `src/**/*.test.ts`，测试不进 lib 产物），配 `vitest.config.ts`（`include: ['src/**/*.test.ts']`）防止 vitest 双拾取构建产物；`typecheck` 仍用主 tsconfig 覆盖测试文件的类型检查。
+
 - [ ] **Step 2: 写 tsconfig.json**
 
 ```json
@@ -345,6 +347,27 @@ git commit -m "feat(contracts): 核心类型与消息内容类型守卫"
   },
   "include": ["src"]
 }
+```
+
+- [ ] **Step 2b: 写 tsconfig.build.json（仓库约定：排除测试）**
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts"]
+}
+```
+
+- [ ] **Step 2c: 写 vitest.config.ts（仓库约定：只拾取 src 测试）**
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    include: ['src/**/*.test.ts'],
+  },
+})
 ```
 
 - [ ] **Step 3: 写 src/config.ts**
@@ -758,3 +781,9 @@ Expected: 推送成功，`origin/main` 更新。
 - **占位符扫描**：无 TBD；Task 3 的 `ws.ts` 占位是**有意的执行顺序占位**，Task 4 完整替换，计划已注明。
 - **类型一致性**：`buildApp` 返回 `{app, config}` 在 Task 3/4 测试中一致；`signToken`/`verifyToken` 签名在 auth.ts/route/ws 中一致；`Config` 字段 `port/jwtSecret/jwtExpiresIn` 全程一致。
 - **环境事实**：Node 24 / pnpm 11 / Docker 28 已确认；Go 未安装（D5 已改判 Node/TS）。
+
+## 决策记录（T2 质量审查后）
+
+1. **pnpm allowBuilds**：根 `pnpm-workspace.yaml` 写 `allowBuilds: { esbuild: true }`（pnpm 11 语法，实测有效；pnpm 10 的 `onlyBuiltDependencies` 在 11 已被改名，勿用）——否则全新克隆 `pnpm install --frozen-lockfile` 直接失败（esbuild postinstall 被拒）。
+2. **测试排除约定（全仓）**：每包 `tsconfig.build.json`（extends 主配置 + `exclude: ["src/**/*.test.ts"]`）供 build 使用；`vitest.config.ts` 限定 `include: ['src/**/*.test.ts']`；`typecheck` 用主 tsconfig 保留测试文件的类型检查。contracts 为范例，gateway 照抄（Task 3 Step 2b/2c）。
+3. **契约完备度（延后项，Plan 2 落地）**：WS 事件联合（message.new/updated、approval.created/decided 等）、错误码枚举、API DTO 与分页（after_seq）、结构化卡片负载（content 按 contentType 联合）——在 Plan 2（消息引擎 + WS 推送）消费契约前补齐，本计划只做低价高价值项：`MessageContentType` 增 System/Image/Voice、`Message` 增 `clientMsgId`/`updatedAt`/`ref`、`Approval` 增 `sessionId`、提取 `ActorKind`。
