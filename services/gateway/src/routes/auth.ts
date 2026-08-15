@@ -2,18 +2,23 @@ import type { FastifyInstance } from 'fastify'
 import { signToken } from '../auth.js'
 import type { Config } from '../config.js'
 
-interface LoginBody {
-  username?: string
-}
+const usernameSchema = {
+  type: 'object',
+  required: ['username'],
+  properties: {
+    username: { type: 'string', minLength: 1, maxLength: 64, pattern: '^[\\w.-]+$' },
+  },
+  additionalProperties: false,
+} as const
 
 export function registerAuth(app: FastifyInstance, config: Config): void {
-  app.post<{ Body: LoginBody }>('/api/v1/auth/login', async (request, reply) => {
-    const username = request.body?.username?.trim()
-    if (!username) {
-      return reply.code(400).send({ error: 'username is required' })
-    }
-    const user = { id: `u-${username}`, name: username }
-    const token = await signToken(user, config)
-    return { token, user }
-  })
+  app.post<{ Body: { username: string } }>(
+    '/api/v1/auth/login',
+    { schema: { body: usernameSchema } },
+    async (request, reply) => {
+      const user = { id: `u-${request.body.username}`, name: request.body.username }
+      const token = await signToken(user, config)
+      return { token, user }
+    },
+  )
 }

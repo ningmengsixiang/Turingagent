@@ -19,7 +19,7 @@ export async function signToken(user: JwtUser, config: Config): Promise<string> 
 export async function verifyToken(token: string, config: Config): Promise<JwtUser | null> {
   try {
     const secret = new TextEncoder().encode(config.jwtSecret)
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] })
     if (typeof payload.sub !== 'string' || typeof payload.name !== 'string') return null
     return { id: payload.sub, name: payload.name }
   } catch {

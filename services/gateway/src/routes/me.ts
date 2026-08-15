@@ -4,10 +4,9 @@ import type { Config } from '../config.js'
 
 export function registerMe(app: FastifyInstance, config: Config): void {
   app.get('/api/v1/me', async (request, reply) => {
-    const header = request.headers.authorization
-    const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined
-    if (!token) return reply.code(401).send({ error: 'missing bearer token' })
-    const user = await verifyToken(token, config)
+    const match = /^Bearer\s+(\S+)$/.exec(request.headers.authorization ?? '')
+    if (!match) return reply.code(401).send({ error: 'malformed authorization header' })
+    const user = await verifyToken(match[1]!, config)
     if (!user) return reply.code(401).send({ error: 'invalid token' })
     return { user }
   })

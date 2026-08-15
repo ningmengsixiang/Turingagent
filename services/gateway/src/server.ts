@@ -13,7 +13,7 @@ export interface BuiltApp {
 
 export async function buildApp(overrides?: Partial<Config>): Promise<BuiltApp> {
   const config = { ...loadConfig(), ...overrides }
-  const app = Fastify({ logger: false })
+  const app = Fastify({ logger: false, ajv: { customOptions: { coerceTypes: false } } })
   await app.register(websocket)
   registerHealth(app)
   registerAuth(app, config)
