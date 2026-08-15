@@ -8,7 +8,19 @@
 
 **Tech Stack:** Node 24 + Fastify 5 + `pg`（node-postgres 8，自带 TS 类型）+ PostgreSQL 16（docker）+ 自定义 SQL 迁移 runner（tsx 执行）+ vitest 集成测试（真实 PG）。
 
-**前置条件：** Docker 已装（28.3.2 确认）。本计划所有集成测试需要本地 PG 运行：`docker compose -f deploy/docker-compose.yml up -d`。
+**前置条件：** 本地 PostgreSQL 16（决策记录：本机 Docker/colima 首次可用性不稳，开发/测试用 Homebrew 本地 PG；`deploy/docker-compose.yml` 保留为部署路径，D4 不变）。
+
+### 本地 PG 初始化（一次性，Homebrew）
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16          # 常驻服务
+# 创建开发角色与库（brew PG 超级用户为当前 macOS 用户）
+/opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE ROLE ta WITH LOGIN PASSWORD 'ta'"
+/opt/homebrew/opt/postgresql@16/bin/psql -d postgres -c "CREATE DATABASE ta_dev OWNER ta"
+# 验证
+/opt/homebrew/opt/postgresql@16/bin/psql -h localhost -U ta -d ta_dev -c 'SELECT 1'
+```
 
 ---
 
@@ -218,19 +230,19 @@ function pathToFileURL(p: string): URL {
 
 dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；scripts 增 `"migrate": "tsx scripts/migrate.ts"`。
 
-- [ ] **Step 7: 启动 PG 并验证迁移**
+- [ ] **Step 7: 初始化本地 PG 并验证迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
-docker compose -f deploy/docker-compose.yml up -d
-sleep 3
-docker compose -f deploy/docker-compose.yml ps   # db 应 healthy
+# 前置：brew PG 已装且 ta/ta_dev 已创建（见「本地 PG 初始化」）
 pnpm install
 pnpm --filter @ta/gateway migrate
-docker exec ta-db psql -U ta -d ta_dev -c '\dt'
+/opt/homebrew/opt/postgresql@16/bin/psql -h localhost -U ta -d ta_dev -c '\dt'
 ```
 
 Expected: 迁移输出 `migrations applied: 001_init.sql`；`\dt` 显示 sessions / session_members / messages / schema_migrations 四张表。
+
+> 注：`deploy/docker-compose.yml` 仍创建（部署路径，D4）；开发/测试用本地 PG，连接串 `postgres://ta:ta@localhost:5432/ta_dev` 两者一致。
 
 - [ ] **Step 8: 提交**
 
@@ -1487,11 +1499,12 @@ git commit -m "feat(gateway): WS 实时推送（注册表 + message.new 广播 +
 ### 本地依赖（PG）
 
 ```bash
-docker compose -f deploy/docker-compose.yml up -d   # 启动 PostgreSQL 16（ta_dev 库）
+# 一次性：brew install postgresql@16 && brew services start postgresql@16
+# 一次性：创建角色与库（见计划 2 头部「本地 PG 初始化」）
 pnpm --filter @ta/gateway migrate                    # 应用迁移（幂等）
 ```
 
-> 网关集成测试需要本地 PG 运行；未启动会 fail fast。
+> 网关集成测试需要本地 PG 运行（`postgres://ta:ta@localhost:5432/ta_dev`）；未启动会 fail fast。部署路径可用 `docker compose -f deploy/docker-compose.yml up -d` 起同配置 PG。
 
 ### 消息引擎冒烟
 
