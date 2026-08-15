@@ -6,3 +6,8 @@ dsh/
 __pycache__/
 *.pyc
 ta-workspace/
+dist/
+coverage/
+.env
+*.log
+

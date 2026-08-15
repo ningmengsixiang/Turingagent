@@ -1,0 +1,11 @@
+{
+  "name": "turing-agent",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r build && pnpm -r test",
+    "dev:gateway": "pnpm --filter @ta/gateway dev"
+  }
+}
