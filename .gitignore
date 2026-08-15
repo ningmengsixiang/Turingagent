@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+deepseek-harness/
+dsh/
+.gstack/
+__pycache__/
+*.pyc
