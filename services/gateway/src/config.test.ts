@@ -22,6 +22,21 @@ describe('loadConfig', () => {
     expect(config.jwtSecret).toHaveLength(40)
   })
 
+  it('rejects missing or dev DATABASE_URL outside test/development', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(40) })).toThrow(/DATABASE_URL/)
+    expect(() =>
+      loadConfig({
+        NODE_ENV: 'production',
+        JWT_SECRET: 'x'.repeat(40),
+        DATABASE_URL: 'postgres://ta:ta@localhost:5432/ta_dev',
+      }),
+    ).toThrow(/DATABASE_URL/)
+  })
+
+  it('accepts dev DATABASE_URL in development', () => {
+    expect(loadConfig({ NODE_ENV: 'development' }).databaseUrl).toBe('postgres://ta:ta@localhost:5432/ta_dev')
+  })
+
   it('rejects invalid PORT', () => {
     expect(() => loadConfig({ NODE_ENV: 'development', PORT: 'abc' })).toThrow(/PORT/)
     expect(() => loadConfig({ NODE_ENV: 'development', PORT: '0' })).toThrow(/PORT/)

@@ -28,4 +28,4 @@ CREATE TABLE IF NOT EXISTS messages (
   UNIQUE (sender_id, client_msg_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_messages_session_seq ON messages (session_id, seq);
+CREATE INDEX IF NOT EXISTS idx_session_members_user ON session_members (user_id);

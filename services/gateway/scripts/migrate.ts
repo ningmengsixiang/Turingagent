@@ -4,35 +4,42 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 const MIGRATIONS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
+const MIGRATION_LOCK_KEY = 726827367
 
 export async function runMigrations(pool: pg.Pool): Promise<string[]> {
-  await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+  // 并发 runner 串行化：双进程同时迁移时败者不再因记账 23505 崩溃
+  await pool.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_KEY])
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
     name TEXT PRIMARY KEY,
     applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`)
-  const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort()
-  const applied = new Set(
-    (await pool.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name as string),
-  )
-  const ran: string[] = []
-  for (const file of files) {
-    if (applied.has(file)) continue
-    const sql = await readFile(path.join(MIGRATIONS_DIR, file), 'utf8')
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-      await client.query(sql)
-      await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file])
-      await client.query('COMMIT')
-      ran.push(file)
-    } catch (err) {
-      await client.query('ROLLBACK')
-      throw err
-    } finally {
-      client.release()
+    const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort()
+    const applied = new Set(
+      (await pool.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name as string),
+    )
+    const ran: string[] = []
+    for (const file of files) {
+      if (applied.has(file)) continue
+      const sql = await readFile(path.join(MIGRATIONS_DIR, file), 'utf8')
+      const client = await pool.connect()
+      try {
+        await client.query('BEGIN')
+        await client.query(sql)
+        await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file])
+        await client.query('COMMIT')
+        ran.push(file)
+      } catch (err) {
+        await client.query('ROLLBACK')
+        throw err
+      } finally {
+        client.release()
+      }
     }
+    return ran
+  } finally {
+    await pool.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_KEY])
   }
-  return ran
 }
 
 const isCli = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href
