@@ -6,6 +6,7 @@ describe('contracts', () => {
     expect(isMessageContentType('text')).toBe(true)
     expect(isMessageContentType(MessageContentType.ConfirmationCard)).toBe(true)
     expect(isMessageContentType(MessageContentType.TaskCard)).toBe(true)
+    expect(isMessageContentType(MessageContentType.System)).toBe(true)
   })
 
   it('rejects unknown values', () => {

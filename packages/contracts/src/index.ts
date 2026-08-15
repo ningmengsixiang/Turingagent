@@ -1,7 +1,13 @@
+/** 参与者类型：人类与智能体在系统中地位对等（PRD §1.3 混合团队） */
+export type ActorKind = 'human' | 'agent'
+
 /** 消息内容类型（契约唯一事实来源，TechDesign：packages/contracts 是协议唯一事实来源） */
 export const MessageContentType = {
   Text: 'text',
   File: 'file',
+  Image: 'image',
+  Voice: 'voice',
+  System: 'system',
   ConfirmationCard: 'confirmation_card',
   TaskCard: 'task_card',
 } as const
@@ -14,7 +20,7 @@ export interface User {
   id: string
   name: string
   avatar?: string
-  role: 'human' | 'agent'
+  role: ActorKind
   agentRole?: 'ta-pm' | 'ta-architect' | 'ta-fullstack' | 'ta-qa'
 }
 
@@ -27,13 +33,19 @@ export interface Session {
 
 export interface Message {
   id: string
+  /** 客户端生成的幂等键（TechDesign：POST 消息幂等 client_msg_id，离线重发去重） */
+  clientMsgId: string
   sessionId: string
   senderId: string
-  senderKind: 'human' | 'agent'
+  senderKind: ActorKind
   contentType: MessageContentType
+  /** 文本内容（卡片/文件类的展示文本）；结构化负载由 Plan 2 补齐 */
   content: string
+  /** 卡片等消息引用的业务对象（如审批） */
+  ref?: { kind: 'approval' | 'task'; id: string }
   seq: number
   createdAt: string
+  updatedAt?: string
 }
 
 export const ApprovalStatus = {
@@ -45,6 +57,7 @@ export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus
 
 export interface Approval {
   id: string
+  sessionId: string
   title: string
   status: ApprovalStatus
   approverId: string
@@ -66,7 +79,7 @@ export interface Task {
   sessionId: string
   title: string
   assigneeId: string
-  assigneeKind: 'human' | 'agent'
+  assigneeKind: ActorKind
   status: TaskStatus
   dueAt?: string
 }
