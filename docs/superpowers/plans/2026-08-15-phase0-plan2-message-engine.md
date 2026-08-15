@@ -227,7 +227,21 @@ function pathToFileURL(p: string): URL {
 
 - [ ] **Step 6: 修改 package.json（services/gateway）**
 
-dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；scripts 增 `"migrate": "tsx scripts/migrate.ts"`。
+dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；devDependencies 增 `"@types/pg": "^8.11.10"`（pg 不自带类型声明，TS7016 需要）；scripts 增 `"migrate": "tsx scripts/migrate.ts"`。
+
+- [ ] **Step 6b: 修正既有 config 测试（DATABASE_URL 新守卫影响）**
+
+`src/config.test.ts` 的「accepts strong secret outside test/development」用例必须显式传 `DATABASE_URL`（否则新的非 dev 环境 DATABASE_URL 守卫先抛错）：
+```ts
+  it('accepts strong secret outside test/development', () => {
+    const config = loadConfig({
+      NODE_ENV: 'production',
+      JWT_SECRET: 'x'.repeat(40),
+      DATABASE_URL: 'postgres://prod:prod@db:5432/ta_prod',
+    })
+    expect(config.jwtSecret).toHaveLength(40)
+  })
+```
 
 - [ ] **Step 7: 启动 PG 并验证迁移**
 
