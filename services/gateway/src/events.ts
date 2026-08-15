@@ -1,7 +1,8 @@
 import { EventEmitter } from 'node:events'
+import type { Message } from '@ta/contracts'
 
 export type AppEvents = {
-  'message.created': (message: unknown) => void
+  'message.created': (message: Message) => void
 }
 
 export interface AppEventBus {
