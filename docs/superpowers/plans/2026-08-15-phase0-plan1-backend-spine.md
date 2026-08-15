@@ -269,10 +269,20 @@ pnpm --filter @ta/contracts test
 
 Expected: build 产出 `packages/contracts/lib/index.js` + `.d.ts`；vitest 3 个用例全 PASS。
 
+- [ ] **Step 5b: lockfile 入库（质量审查硬性要求）**
+
+```bash
+cd /Users/wanzichanpinjingli/Desktop/TuringAgent
+git add pnpm-lock.yaml
+pnpm install --frozen-lockfile   # 一致性校验：应成功
+```
+
+Expected: `pnpm-lock.yaml` 已生成并加入暂存；`--frozen-lockfile` 无版本漂移报错。lockfile 与 contracts 一起在 Step 6 提交（把 `pnpm-lock.yaml` 加进 Step 6 的 `git add` 列表）。
+
 - [ ] **Step 6: 提交**
 
 ```bash
-git add packages/contracts
+git add packages/contracts pnpm-lock.yaml
 git commit -m "feat(contracts): 核心类型与消息内容类型守卫"
 ```
 
