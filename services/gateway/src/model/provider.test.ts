@@ -25,4 +25,15 @@ describe('model provider', () => {
     expect(stub.calls[0]!.userInput).toBe('帮我做报销系统')
     expect(result.promptTokens).toBeGreaterThan(0)
   })
+
+  it('prefers MODEL_API_KEY over DEEPSEEK_API_KEY', () => {
+    const config = loadConfig({ NODE_ENV: 'test', MODEL_API_KEY: 'sk-model', DEEPSEEK_API_KEY: 'sk-deepseek' })
+    expect(config.modelApiKey).toBe('sk-model')
+  })
+
+  it('rejects invalid AGENT_MAX_PROMPT_CHARS', () => {
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: 'abc' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: '0' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: '-5' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+  })
 })

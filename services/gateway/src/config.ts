@@ -32,6 +32,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`DATABASE_URL must be set in non-development environments (NODE_ENV=${envName})`)
   }
   const modelApiKey = env.MODEL_API_KEY ?? env.DEEPSEEK_API_KEY ?? ''
+  const agentMaxPromptChars = Number(env.AGENT_MAX_PROMPT_CHARS ?? 4000)
+  if (!Number.isInteger(agentMaxPromptChars) || agentMaxPromptChars < 1) {
+    throw new Error(`AGENT_MAX_PROMPT_CHARS must be a positive integer, got: ${env.AGENT_MAX_PROMPT_CHARS}`)
+  }
   return {
     port,
     jwtSecret,
@@ -41,6 +45,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     modelBaseUrl: env.MODEL_BASE_URL ?? 'https://api.deepseek.com',
     modelName: env.MODEL_NAME ?? 'deepseek-chat',
     agentEnabled: modelApiKey.length > 0,
-    agentMaxPromptChars: Number(env.AGENT_MAX_PROMPT_CHARS ?? 4000),
+    agentMaxPromptChars,
   }
 }

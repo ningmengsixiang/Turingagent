@@ -30,6 +30,7 @@ export class DeepSeekProvider implements ModelProvider {
         ],
         stream: false,
       }),
+      signal: AbortSignal.timeout(30_000), // 模型请求挂死防护（质量审查）
     })
     if (!response.ok) {
       const body = await response.text().catch(() => '')
