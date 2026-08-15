@@ -10,7 +10,7 @@
     "start": "node lib/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "migrate": "tsx scripts/migrate.ts"
+    "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^11.0.2",
