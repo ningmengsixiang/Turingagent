@@ -75,6 +75,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`DATABASE_URL must be set in non-development environments (NODE_ENV=${envName})`)
   }
   const modelApiKey = env.MODEL_API_KEY ?? env.DEEPSEEK_API_KEY ?? ''
+  const agentMaxPromptChars = Number(env.AGENT_MAX_PROMPT_CHARS ?? 4000)
+  if (!Number.isInteger(agentMaxPromptChars) || agentMaxPromptChars < 1) {
+    throw new Error(`AGENT_MAX_PROMPT_CHARS must be a positive integer, got: ${env.AGENT_MAX_PROMPT_CHARS}`)
+  }
   return {
     port,
     jwtSecret,
@@ -84,7 +88,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     modelBaseUrl: env.MODEL_BASE_URL ?? 'https://api.deepseek.com',
     modelName: env.MODEL_NAME ?? 'deepseek-chat',
     agentEnabled: modelApiKey.length > 0,
-    agentMaxPromptChars: Number(env.AGENT_MAX_PROMPT_CHARS ?? 4000),
+    agentMaxPromptChars,
   }
 }
 ```
@@ -151,6 +155,7 @@ export class DeepSeekProvider implements ModelProvider {
         ],
         stream: false,
       }),
+      signal: AbortSignal.timeout(30_000), // 模型请求挂死防护（质量审查）
     })
     if (!response.ok) {
       const body = await response.text().catch(() => '')
@@ -228,6 +233,70 @@ describe('model provider', () => {
     expect(stub.calls[0]!.systemPrompt).toBe('你是 Ta-Fullstack')
     expect(stub.calls[0]!.userInput).toBe('帮我做报销系统')
     expect(result.promptTokens).toBeGreaterThan(0)
+  })
+
+  it('prefers MODEL_API_KEY over DEEPSEEK_API_KEY', () => {
+    const config = loadConfig({ NODE_ENV: 'test', MODEL_API_KEY: 'sk-model', DEEPSEEK_API_KEY: 'sk-deepseek' })
+    expect(config.modelApiKey).toBe('sk-model')
+  })
+
+  it('rejects invalid AGENT_MAX_PROMPT_CHARS', () => {
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: 'abc' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: '0' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+    expect(() => loadConfig({ NODE_ENV: 'test', AGENT_MAX_PROMPT_CHARS: '-5' })).toThrow(/AGENT_MAX_PROMPT_CHARS/)
+  })
+})
+```
+
+- [ ] **Step 5b: 创建 src/model/deepseek.test.ts（fetch mock 错误路径）**
+
+```ts
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DeepSeekProvider } from './deepseek.js'
+
+describe('DeepSeekProvider', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const okJson = { choices: [{ message: { content: '你好' } }], usage: { prompt_tokens: 10, completion_tokens: 5 } }
+
+  it('completes and maps usage', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => okJson }))
+    const provider = new DeepSeekProvider({ apiKey: 'k', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' })
+    const result = await provider.complete('sys', 'usr')
+    expect(result.content).toBe('你好')
+    expect(result.promptTokens).toBe(10)
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.deepseek.com/chat/completions',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ authorization: 'Bearer k' }),
+      }),
+    )
+  })
+
+  it('throws on non-2xx with status', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429, text: async () => 'rate limited' }))
+    const provider = new DeepSeekProvider({ apiKey: 'k', baseUrl: 'https://api.deepseek.com', model: 'm' })
+    await expect(provider.complete('s', 'u')).rejects.toThrow(/429/)
+  })
+
+  it('throws when content is missing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [] }) }))
+    const provider = new DeepSeekProvider({ apiKey: 'k', baseUrl: 'https://api.deepseek.com', model: 'm' })
+    await expect(provider.complete('s', 'u')).rejects.toThrow(/no content/)
+  })
+
+  it('aborts after the timeout', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url, init: { signal?: AbortSignal }) => {
+      expect(init.signal).toBeDefined()
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+      })
+    }))
+    const provider = new DeepSeekProvider({ apiKey: 'k', baseUrl: 'https://api.deepseek.com', model: 'm' })
+    await expect(provider.complete('s', 'u')).rejects.toThrow(/aborted/)
   })
 })
 ```
