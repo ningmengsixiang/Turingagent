@@ -56,7 +56,7 @@ docker exec ta-db pg_isready -U ta -d ta_dev
 - Modify: `services/gateway/src/config.ts`
 - Create: `services/gateway/src/db.ts`
 - Create: `services/gateway/migrations/001_init.sql`
-- Create: `services/gateway/scripts/migrate.ts`
+- Create: `services/gateway/src/migrate.ts`（迁移 runner；位于 src/ 内以纳入 typecheck/build，T2 阻塞点修正）
 - Modify: `services/gateway/package.json`
 
 - [ ] **Step 1: 写 deploy/docker-compose.yml**
@@ -171,7 +171,9 @@ CREATE INDEX IF NOT EXISTS idx_session_members_user ON session_members (user_id)
 ```
 > 注：`(session_id, seq)` 的 UNIQUE 约束已自带索引，不再显式建 `idx_messages_session_seq`（冗余，质量审查结论）；`session_members.user_id` 单列索引服务 `listSessionsForUser` 反前缀查询（Important 修复）。001 若已在 dev 库应用，改动需对现库手工收敛（`CREATE INDEX IF NOT EXISTS idx_session_members_user ON session_members (user_id);`），001 本身为全新环境保持正确。
 
-- [ ] **Step 5: 写 scripts/migrate.ts**
+- [ ] **Step 5: 写 src/migrate.ts（迁移 runner，位于 src/ 内）**
+
+> **位置说明（T2 阻塞点修正）**：runner 在 `src/` 而非 `scripts/`——`repos/test-helpers.ts` 需 import `runMigrations`，放 `scripts/` 会触发 tsc TS6059（rootDir=src 越界）。放 `src/` 后同时纳入 typecheck/build；`lib/migrate.js` 的 `..` 仍指向 gateway 根，`migrations/` 运行时解析正确，生产可从构建产物跑迁移。migrate 脚本为 `tsx src/migrate.ts`。
 
 ```ts
 import { readdir, readFile } from 'node:fs/promises'
@@ -180,10 +182,11 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 const MIGRATIONS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
+const MIGRATION_LOCK_KEY = 726827367
 
 export async function runMigrations(pool: pg.Pool): Promise<string[]> {
-  // 并发 runner 串行化（质量审查：双进程同时迁移时败者 23505 崩溃）
-  await pool.query('SELECT pg_advisory_lock(726827367)')
+  // 并发 runner 串行化：双进程同时迁移时败者不再因记账 23505 崩溃
+  await pool.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_KEY])
   try {
     await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
     name TEXT PRIMARY KEY,
@@ -213,28 +216,26 @@ export async function runMigrations(pool: pg.Pool): Promise<string[]> {
     }
     return ran
   } finally {
-    await pool.query('SELECT pg_advisory_unlock(726827367)')
+    await pool.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_KEY])
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const isCli = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href
+
+if (isCli) {
   const url = process.env.DATABASE_URL ?? 'postgres://ta:ta@localhost:5432/ta_dev'
   const pool = new pg.Pool({ connectionString: url })
   const ran = await runMigrations(pool)
   console.log(ran.length === 0 ? 'migrations: up to date' : `migrations applied: ${ran.join(', ')}`)
   await pool.end()
 }
-
-function pathToFileURL(p: string): URL {
-  return new URL(`file://${p.startsWith('/') ? '' : '/'}${p}`)
-}
 ```
 
-> 注：入口判断用 `import.meta.url === pathToFileURL(process.argv[1]).href`——直接运行（`tsx scripts/migrate.ts`）时执行 CLI 逻辑；被测试 import 时只导出 `runMigrations`。若该判断在 tsx 下不可靠，可改为「始终只导出 runMigrations + 独立 `scripts/migrate-cli.ts` 入口」，以可行为准，但导出名 `runMigrations` 必须保留。
+> **迁移说明（从 scripts/ 迁移至 src/，T2 阻塞点）**：已提交的 `scripts/migrate.ts`（提交 0b3937a 参数化锁版）整体移动到 `src/migrate.ts`；`package.json` migrate 脚本改为 `tsx src/migrate.ts`；`repos/test-helpers.ts` 的导入改为 `../migrate.js`。删除旧的 `scripts/` 目录。
 
 - [ ] **Step 6: 修改 package.json（services/gateway）**
 
-dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；devDependencies 增 `"@types/pg": "^8.11.10"`（pg 不自带类型声明，TS7016 需要）；scripts 增 `"migrate": "tsx scripts/migrate.ts"`。
+dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；devDependencies 增 `"@types/pg": "^8.11.10"`（pg 不自带类型声明，TS7016 需要）；scripts 增 `"migrate": "tsx src/migrate.ts"`。
 
 - [ ] **Step 6b: 修正既有 config 测试（DATABASE_URL 新守卫影响）**
 
@@ -301,7 +302,7 @@ git commit -m "feat(gateway): DB 基建（PG compose/配置/迁移 runner）"
 
 ```ts
 import pg from 'pg'
-import { runMigrations } from '../../scripts/migrate.js'
+import { runMigrations } from '../migrate.js'
 
 export const TEST_DATABASE_URL = 'postgres://ta:ta@localhost:5432/ta_dev'
 
@@ -315,6 +316,8 @@ export async function truncateAll(pool: pg.Pool): Promise<void> {
   await pool.query('TRUNCATE messages, session_members, sessions RESTART IDENTITY CASCADE')
 }
 ```
+
+> **vitest 串行化（T2 阻塞点修正）**：`services/gateway/vitest.config.ts` 必须加 `fileParallelism: false`——多个集成测试文件共享 `ta_dev` 库，各自 `beforeEach` TRUNCATE 会互相清数据（并行竞态实测失败）。文件级串行后仓储/路由/WS 集成测试确定可过。
 
 - [ ] **Step 2: 写 repos/sessions.ts**
 
