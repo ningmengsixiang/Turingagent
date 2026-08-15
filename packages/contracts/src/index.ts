@@ -83,3 +83,10 @@ export interface Task {
   status: TaskStatus
   dueAt?: string
 }
+
+export interface WsMessageNew {
+  type: 'message.new'
+  message: Message
+}
+
+export type WsEvent = WsMessageNew
