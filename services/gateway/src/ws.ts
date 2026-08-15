@@ -5,10 +5,15 @@ import type { Config } from './config.js'
 
 const OPEN = 1
 
-export function registerWs(app: FastifyInstance, config: Config): void {
+export function registerWs(
+  app: FastifyInstance,
+  config: Config,
+  _pool: unknown,
+  _registry: unknown,
+  _events: unknown,
+): void {
   app.get('/ws', { websocket: true }, (socket: WebSocket, request) => {
     const token = (request.query as { token?: string }).token
-    // 消息监听必须在鉴权 await 之前挂载：窗口期到达的客户端消息不能丢（竞态修复）
     let authed = false
     socket.on('message', (raw) => {
       if (!authed || socket.readyState !== OPEN) return
