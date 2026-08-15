@@ -81,4 +81,14 @@ describe('session routes', () => {
     })
     expect(res.statusCode).toBe(403)
   })
+
+  it('returns 404 for a non-existent session', async () => {
+    const alice = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'GET',
+      url: '/api/v1/sessions/00000000-0000-0000-0000-000000000000',
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(res.statusCode).toBe(404)
+  })
 })

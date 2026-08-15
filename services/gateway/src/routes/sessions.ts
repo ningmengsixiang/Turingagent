@@ -43,6 +43,9 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
     const sessionId = (request.params as { id: string }).id
     const userId = request.user!.id
     if (!(await isMember(pool, sessionId, userId))) {
+      // 区分 404/403：isMember 对不存在会话恒 false（FK 保证无成员行），必须回查存在性
+      const exists = await getSessionById(pool, sessionId)
+      if (!exists) return reply.code(404).send({ error: 'session not found' })
       return reply.code(403).send({ error: 'not a member of this session' })
     }
     const session = await getSessionById(pool, sessionId)
