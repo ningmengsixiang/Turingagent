@@ -507,7 +507,9 @@ export async function createMessage(
   } catch (err) {
     await client.query('ROLLBACK')
     if (isUniqueViolation(err, 'messages_sender_id_client_msg_id_key')) {
-      const dup = await pool.query<MessageRow>(
+      // 必须在同一 client 上回查（Blocker 修复）：此时 client 已 ROLLBACK 空闲；
+      // 若用 pool.query 借新连接，并发重复发送 ≥ 池上限时会池自死锁
+      const dup = await client.query<MessageRow>(
         'SELECT * FROM messages WHERE sender_id = $1 AND client_msg_id = $2',
         [input.senderId, input.clientMsgId],
       )
@@ -736,6 +738,47 @@ describe('message repository', () => {
     expect(replay.created).toBe(false)
     expect(replay.message.sessionId).toBe(sessionId)
     expect(replay.message.content).toBe('A')
+  })
+
+  it('assigns unique seqs under concurrent sends (并发性质)', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        createMessage(pool, {
+          sessionId,
+          senderId: `u-w${i}`,
+          senderKind: 'human',
+          contentType: 'text',
+          content: `w${i}`,
+          clientMsgId: `w-${i}`,
+        }),
+      ),
+    )
+    const seqs = results.map((r) => r.message.seq).sort((a, b) => a - b)
+    expect(new Set(seqs).size).toBe(10)
+    expect(seqs[0]).toBe(1)
+    expect(seqs[9]).toBe(10)
+  })
+
+  it('dedupes concurrent sends with the same clientMsgId (并发幂等，可捕获池死锁)', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        createMessage(pool, {
+          sessionId,
+          senderId: 'u-alice',
+          senderKind: 'human',
+          contentType: 'text',
+          content: '同一条',
+          clientMsgId: 'same-1',
+        }),
+      ),
+    )
+    const created = results.filter((r) => r.created)
+    expect(created).toHaveLength(1)
+    const ids = new Set(results.map((r) => r.message.id))
+    expect(ids.size).toBe(1)
+    // 落库仅 1 行
+    const count = await pool.query('SELECT count(*)::int AS n FROM messages WHERE session_id = $1', [sessionId])
+    expect(count.rows[0]!.n).toBe(1)
   })
 })
 ```
