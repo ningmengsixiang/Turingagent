@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 — Turing Agent</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/global.css" />
+  <link rel="stylesheet" href="styles/login.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">Ta</span>
+        <h1>Turing Agent</h1>
+        <p class="tagline">你的软件开发工厂</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">企业邮箱</label>
+          <input id="loginEmail" type="email" placeholder="work@company.com" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginPass">密码</label>
+          <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-solid login-btn">登 录</button>
+      </form>
+
+      <button class="btn btn-outline demo-btn" id="demoBtn">快速体验（演示登录）</button>
+
+      <div class="login-links">
+        <button id="forgotLink">忘记密码？</button>
+        <span aria-hidden="true">|</span>
+        <button id="ssoLink">企业 SSO</button>
+      </div>
+
+      <p class="hint mono">演示环境 · 数据为内存合成，无真实请求</p>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turing Agent — 报销系统项目群</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/global.css" />
+  <link rel="stylesheet" href="styles/workspace.css" />
+  <link rel="stylesheet" href="styles/thread.css" />
+  <link rel="stylesheet" href="styles/panel.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ================= 顶部导航栏 ================= -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="logo" aria-hidden="true">Ta</span>
+        <span>Turing Agent</span>
+      </div>
+
+      <!-- 项目切换 -->
+      <div class="project-switcher" id="projectSwitcher" tabindex="0" role="button" aria-haspopup="listbox" aria-label="切换项目">
+        <span class="current" id="currentProject">报销系统</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        <div class="popover popover-left" id="projectMenu" hidden>
+          <div class="pop-head">项目</div>
+          <div id="projectMenuList"></div>
+          <div class="pop-divider"></div>
+          <button class="pop-item new" data-action="new-project">＋ 新建项目群 <kbd>Ctrl N</kbd></button>
+        </div>
+      </div>
+
+      <!-- 全局搜索 -->
+      <div class="topbar-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="globalSearch" placeholder="搜索群聊、成员、文档…" aria-label="全局搜索" />
+        <kbd>Ctrl F</kbd>
+      </div>
+
+      <!-- 右侧动作 -->
+      <div class="topbar-actions">
+        <button class="icon-btn panel-toggle" id="panelToggle" aria-label="开关上下文面板" title="上下文面板">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
+        </button>
+
+        <div style="position:relative">
+          <button class="icon-btn" id="todoBtn" aria-label="待办中心" aria-haspopup="true" title="待办中心">
+            <span class="badge todo-badge" id="todoCount" style="position:absolute;top:-2px;right:-2px;display:none">0</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+          </button>
+          <div class="popover" id="todoPanel" hidden></div>
+        </div>
+
+        <div style="position:relative">
+          <button class="icon-btn" id="notifBtn" aria-label="通知中心" aria-haspopup="true">
+            <span class="dot" id="notifDot"></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <div class="popover" id="notifPanel" hidden>
+            <div class="pop-head">通知 <button class="pop-action" id="markRead">全部已读</button></div>
+            <button class="notif-item" data-chat="reimburse" data-type="approval">
+              <span class="n-dot amber"></span>
+              <span class="n-body"><span class="n-title">「设计稿评审」等待你确认</span><span class="n-time mono">10:02 · 报销系统</span></span>
+            </button>
+            <button class="notif-item" data-chat="reimburse" data-type="agent">
+              <span class="n-dot ai"></span>
+              <span class="n-body"><span class="n-title">Ta-Fullstack 完成「用户认证模块」开发</span><span class="n-time mono">09:58 · 报销系统</span></span>
+            </button>
+            <button class="notif-item" data-chat="reimburse" data-type="task">
+              <span class="n-dot"></span>
+              <span class="n-body"><span class="n-title">小王 将「报销单导出」标记为进行中</span><span class="n-time mono">09:55 · 报销系统</span></span>
+            </button>
+            <button class="notif-item" data-chat="pmo" data-type="report">
+              <span class="n-dot ai"></span>
+              <span class="n-body"><span class="n-title">Ta-PMO 已生成项目日报</span><span class="n-time mono">09:00 · 私聊</span></span>
+            </button>
+          </div>
+        </div>
+
+        <button class="icon-btn" id="settingsBtn" aria-label="设置" title="设置">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>
+        </button>
+
+        <div style="position:relative">
+          <button class="topbar-me" id="meBtn" aria-label="个人菜单" aria-haspopup="true">
+            <span class="avatar avatar-1" id="meAvatar"><i class="presence" id="mePresence"></i>敏</span>
+            <span class="meta-me">
+              <span class="name">张敏</span>
+              <span class="title">财务部 · 需求方</span>
+            </span>
+          </button>
+          <div class="popover" id="meMenu" hidden>
+            <div class="me-info">
+              <span class="avatar avatar-1">敏</span>
+              <span class="meta"><span class="name">张敏</span><span class="role">财务部 · 需求方</span></span>
+            </div>
+            <div class="pop-head">在线状态</div>
+            <div class="presence-options">
+              <button class="presence-opt active" data-presence="on"><span class="p-dot"></span>在线</button>
+              <button class="presence-opt" data-presence="busy"><span class="p-dot busy"></span>忙碌</button>
+              <button class="presence-opt" data-presence="off"><span class="p-dot off"></span>离开</button>
+            </div>
+            <div class="pop-divider"></div>
+            <button class="pop-item" data-action="org">组织与治理（管理员）</button>
+            <button class="pop-item" data-action="logout">退出登录</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= 主体三栏 ================= -->
+    <div class="app-body" id="appBody">
+      <!-- 左侧边栏 -->
+      <nav class="sidebar" aria-label="主导航">
+        <div class="sidebar-tabs" role="tablist" aria-label="侧边栏视图">
+          <button class="sidebar-tab" role="tab" aria-selected="true" data-view="chats">消息</button>
+          <button class="sidebar-tab" role="tab" aria-selected="false" data-view="projects">项目</button>
+          <button class="sidebar-tab" role="tab" aria-selected="false" data-view="contacts">联系人</button>
+          <button class="sidebar-tab" role="tab" aria-selected="false" data-view="agents">智能体</button>
+        </div>
+        <div class="sidebar-list" id="sidebarList"></div>
+      </nav>
+
+      <!-- 中间消息流 -->
+      <main class="thread" aria-label="会话">
+        <header class="thread-header" id="threadHeader"></header>
+        <div class="thread-scroll" id="threadScroll"></div>
+        <div class="composer">
+          <!-- 表情选择器 -->
+          <div class="picker" id="emojiPicker" hidden>
+            <div class="p-head">表情</div>
+            <div class="emoji-grid" id="emojiGrid"></div>
+          </div>
+          <!-- @提及选择器 -->
+          <div class="picker" id="mentionPicker" hidden>
+            <div class="p-head">选择智能体或成员</div>
+            <div class="mention-list" id="mentionList"></div>
+          </div>
+          <div class="composer-box">
+            <button class="icon-btn" id="emojiBtn" aria-label="表情" title="表情">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+            </button>
+            <button class="icon-btn" id="fileBtn" aria-label="添加文件" title="添加文件">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input type="file" id="fileInput" hidden multiple />
+            <textarea id="composerInput" rows="1" placeholder="发消息给 报销系统项目群…（Ctrl+Enter 发送）" aria-label="消息输入框"></textarea>
+            <button class="icon-btn" id="micBtn" aria-label="语音输入" title="语音输入">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            </button>
+            <button class="btn-send" id="sendBtn" aria-label="发送">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            </button>
+          </div>
+          <div class="composer-toolbar">
+            <span class="hint">Enter 换行 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 发送 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd> @智能体</span>
+            <div class="composer-tools">
+              <span class="chip chip-ai" id="composerAgentChip">Ta-PM 在线</span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 右侧上下文面板 -->
+      <aside class="context-panel" aria-label="项目上下文">
+        <div class="panel-head">
+          <div class="proj">
+            <span class="icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+            </span>
+            报销系统 · 项目上下文
+          </div>
+        </div>
+        <div class="panel-tabs" role="tablist" aria-label="上下文面板视图">
+          <button class="panel-tab" role="tab" aria-selected="true" data-view="progress">进度</button>
+          <button class="panel-tab" role="tab" aria-selected="false" data-view="board">看板</button>
+          <button class="panel-tab" role="tab" aria-selected="false" data-view="memory">记忆</button>
+          <button class="panel-tab" role="tab" aria-selected="false" data-view="files">交付物</button>
+        </div>
+        <div class="panel-body">
+          <!-- 进度 -->
+          <div class="panel-view" data-view="progress">
+            <div class="overall">
+              <span class="pct" id="overallPct">62%</span>
+              <div class="desc">整体进度 · 当前阶段：开发中</div>
+              <div class="bar"><i style="width:62%" id="overallBar"></i></div>
+            </div>
+            <div class="milestone" data-id="clarify">
+              <div class="top"><span class="name">需求澄清</span><span class="due mono">08-11</span><span class="chip chip-green">已完成</span></div>
+              <div class="meta"><span class="mini-avatar agent">PM</span> Ta-PM</div>
+              <div class="bar bar-green"><i style="width:100%"></i></div>
+            </div>
+            <div class="milestone" data-id="design">
+              <div class="top"><span class="name">设计评审</span><span class="due mono">08-13</span><span class="chip chip-amber" id="designChip">待审批</span></div>
+              <div class="meta"><span class="mini-avatar agent">UX</span> Ta-UI/UX</div>
+              <div class="bar bar-amber" id="designBarWrap"><i style="width:90%" id="designBar"></i></div>
+            </div>
+            <div class="milestone">
+              <div class="top"><span class="name">用户认证模块</span><span class="due mono">08-15</span><span class="chip chip-ai">AI 开发中</span></div>
+              <div class="meta"><span class="mini-avatar agent">FS</span> Ta-Fullstack</div>
+              <div class="bar"><i style="width:80%"></i></div>
+            </div>
+            <div class="milestone">
+              <div class="top"><span class="name">报销单导出</span><span class="due mono">08-18</span><span class="chip chip-neutral">人类开发中</span></div>
+              <div class="meta"><span class="mini-avatar">王</span> 小王 · 研发部</div>
+              <div class="bar"><i style="width:20%"></i></div>
+            </div>
+            <div class="milestone">
+              <div class="top"><span class="name">测试验收</span><span class="due mono">08-22</span><span class="chip chip-neutral">未开始</span></div>
+              <div class="meta"><span class="mini-avatar agent">QA</span> Ta-QA</div>
+              <div class="bar"><i style="width:0%"></i></div>
+            </div>
+          </div>
+
+          <!-- 看板（迷你） -->
+          <div class="panel-view" data-view="board" hidden>
+            <div class="mini-board" id="miniBoard"></div>
+            <a class="board-link" href="board.html">打开完整任务看板 →</a>
+          </div>
+
+          <!-- 记忆 -->
+          <div class="panel-view" data-view="memory" hidden id="memoryView"></div>
+
+          <!-- 交付物 -->
+          <div class="panel-view" data-view="files" hidden id="filesView"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ================= 弹窗 ================= -->
+  <!-- 设置 -->
+  <div class="modal-overlay" id="settingsModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">设置</h2>
+      <div class="switch-row">
+        <div>
+          <div class="sw-label">审批提醒</div>
+          <div class="sw-sub">审批流待办到达时推送通知</div>
+        </div>
+        <button class="switch" role="switch" aria-checked="true" data-setting="approvalNotify" aria-label="审批提醒"></button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <div class="sw-label">智能体动态</div>
+          <div class="sw-sub">智能体开始/完成任务的实时动态</div>
+        </div>
+        <button class="switch" role="switch" aria-checked="true" data-setting="agentNotify" aria-label="智能体动态"></button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <div class="sw-label">日报推送</div>
+          <div class="sw-sub">Ta-PMO 每日 09:00 推送项目日报</div>
+        </div>
+        <button class="switch" role="switch" aria-checked="true" data-setting="reportNotify" aria-label="日报推送"></button>
+      </div>
+      <div class="field" style="margin-top:var(--s-4)">
+        <label for="notifyTime">日报推送时间</label>
+        <select id="notifyTime">
+          <option selected>09:00</option>
+          <option>10:00</option>
+          <option>18:00</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeSettings">关闭</button>
+        <button class="btn btn-danger" id="resetDemo">重置演示数据</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新建项目群 -->
+  <div class="modal-overlay" id="newProjectModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newProjectTitle">
+      <h2 id="newProjectTitle">新建项目群</h2>
+      <div class="field">
+        <label for="projectName">项目名称</label>
+        <input id="projectName" type="text" placeholder="例：员工考勤系统" />
+      </div>
+      <div class="field">
+        <label for="projectTeam">接入智能体团队</label>
+        <select id="projectTeam">
+          <option value="full" selected>全量团队（PM / UX / Architect / Fullstack / QA）</option>
+          <option value="lean">精简团队（PM / Fullstack）</option>
+          <option value="none">暂不接入</option>
+        </select>
+        <div class="help">创建后智能体将自动接入项目群，Ta-PM 会发起需求澄清。</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelProject">取消</button>
+        <button class="btn btn-solid" id="submitProject">创建项目群</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文档预览 -->
+  <div class="modal-overlay" id="docModal" hidden>
+    <div class="modal doc-preview" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+      <h2 id="docTitle"></h2>
+      <div class="doc-meta" id="docMeta"></div>
+      <div class="doc-body" id="docBody"></div>
+      <textarea class="doc-body" id="docEditArea" hidden rows="10" aria-label="编辑文档内容"></textarea>
+      <div class="modal-actions" id="docEditActions" hidden>
+        <button class="btn btn-ghost" id="cancelDocEdit">取消</button>
+        <button class="btn btn-solid" id="saveDocEdit">保存新版本</button>
+      </div>
+      <div class="doc-versions" id="docVersions"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeDoc">关闭</button>
+        <button class="btn btn-outline" id="editDoc">编辑</button>
+        <button class="btn btn-outline" id="downloadDoc">下载（演示）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast 容器 -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/data.js"></script>
+  <script src="scripts/approvals.js"></script>
+  <script src="scripts/cards.js"></script>
+  <script src="scripts/todo.js"></script>
+  <script src="scripts/workspace.js"></script>
+</body>
+</html>

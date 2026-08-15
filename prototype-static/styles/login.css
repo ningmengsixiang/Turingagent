@@ -1,0 +1,87 @@
+/* ============================================================
+   Turing Agent 原型 · 登录页（极简白，yanse.md §8.1）
+   白底居中卡片，黑色 Logo 与黑色登录按钮是唯一视觉焦点
+   ============================================================ */
+
+.login-page {
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: var(--bg-soft); /* 淡苹果灰舞台 */
+  padding: var(--s-4);
+}
+
+.login-card {
+  width: 360px;
+  max-width: 100%;
+  padding: var(--s-8) var(--s-8) var(--s-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--bg);
+  animation: pop-in var(--dur-normal) var(--ease-out);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-6);
+}
+.brand .logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent); /* 黑色方块 Logo */
+  color: var(--on-accent);
+  font-size: 20px;
+  font-weight: 700;
+}
+.brand h1 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.brand .tagline {
+  font-size: var(--text-md);
+  color: var(--ink-4);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 9px 14px;
+  margin-top: var(--s-2);
+}
+
+.demo-btn {
+  width: 100%;
+  margin-top: var(--s-3);
+}
+
+.login-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  font-size: var(--text-sm);
+}
+.login-links button {
+  color: var(--ink-4);
+  transition: color var(--dur-fast);
+}
+.login-links button:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.hint {
+  margin-top: var(--s-6);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}

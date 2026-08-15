@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turing Agent — 任务看板</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/global.css" />
+  <link rel="stylesheet" href="styles/board.css" />
+</head>
+<body>
+  <div class="board-page">
+    <!-- ================= 顶栏 ================= -->
+    <header class="board-topbar">
+      <a class="back-link" href="index.html">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        返回工作台
+      </a>
+      <div class="board-title">
+        <h1>任务看板</h1>
+        <div class="sub">报销系统 · 人类与智能体统一管理 · 2026-08-13</div>
+      </div>
+      <div class="board-actions">
+        <button class="btn btn-solid" id="newTaskBtn">＋ 新建任务</button>
+      </div>
+    </header>
+
+    <!-- ================= 主体 ================= -->
+    <div class="board-body">
+      <!-- 统计瓦片（JS 实时计算） -->
+      <div class="stats">
+        <div class="stat">
+          <div class="label">本周完结</div>
+          <div class="value" id="statDone">0</div>
+          <div class="delta" id="statDelta">▲ 0 较上周</div>
+        </div>
+        <div class="stat">
+          <div class="label">进行中</div>
+          <div class="value" id="statDoing">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">阻塞</div>
+          <div class="value" id="statBlocked" style="color:var(--danger)">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">待审批</div>
+          <div class="value" id="statApproval" style="color:var(--warning)">0</div>
+        </div>
+        <div class="stat highlight">
+          <div class="label">AI 产能占比（本周完结）</div>
+          <div class="value" id="statAiPct">0%</div>
+          <div class="bar"><i id="statAiBar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <!-- 筛选 -->
+      <div class="filter-row" role="group" aria-label="任务筛选">
+        <button class="filter-chip active" data-filter="all">全部</button>
+        <button class="filter-chip" data-filter="mine">我的</button>
+        <button class="filter-chip" data-filter="ai">AI 任务</button>
+        <button class="filter-chip" data-filter="approval">待审批</button>
+        <button class="filter-chip" data-filter="overdue">逾期</button>
+      </div>
+
+      <!-- 看板五列（JS 渲染卡片） -->
+      <div class="board" id="board">
+        <div class="board-col" data-col="todo">
+          <div class="col-head">待开始 <span class="n">0</span></div>
+          <div class="col-cards"></div>
+          <div class="empty-col">无匹配任务</div>
+        </div>
+        <div class="board-col" data-col="doing">
+          <div class="col-head">进行中 <span class="n">0</span></div>
+          <div class="col-cards"></div>
+          <div class="empty-col">无匹配任务</div>
+        </div>
+        <div class="board-col" data-col="blocked">
+          <div class="col-head">阻塞 <span class="n">0</span></div>
+          <div class="col-cards"></div>
+          <div class="empty-col">无匹配任务</div>
+        </div>
+        <div class="board-col" data-col="approval">
+          <div class="col-head">待审批 <span class="n">0</span></div>
+          <div class="col-cards"></div>
+          <div class="empty-col">无匹配任务</div>
+        </div>
+        <div class="board-col done-col" data-col="done">
+          <div class="col-head">已完成 <span class="n">0</span></div>
+          <div class="col-cards"></div>
+          <div class="empty-col">无匹配任务</div>
+        </div>
+      </div>
+
+      <!-- 图例 -->
+      <div class="legend">
+        <span><span class="shape"></span>人类任务</span>
+        <span><span class="shape ai"></span>智能体任务</span>
+        <span><span class="shape danger"></span>P0 / 阻塞 / 逾期</span>
+        <span class="mono" style="margin-left:auto">拖拽卡片可变更状态 · 点击卡片查看详情 · 审批与工作台实时同步</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 新建任务弹窗 ================= -->
+  <div class="modal-overlay" id="taskModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">新建任务</h2>
+      <div class="field">
+        <label for="taskTitle">任务名称</label>
+        <input id="taskTitle" type="text" placeholder="例：对接电子发票平台" />
+      </div>
+      <div class="field">
+        <label for="taskAssignee">执行者（人类或智能体）</label>
+        <select id="taskAssignee">
+          <option value="Ta-Fullstack（AI）">Ta-Fullstack（AI）</option>
+          <option value="Ta-Architect（AI）">Ta-Architect（AI）</option>
+          <option value="Ta-QA（AI）">Ta-QA（AI）</option>
+          <option value="Ta-UI/UX（AI）">Ta-UI/UX（AI）</option>
+          <option value="小王 · 研发">小王 · 研发</option>
+          <option value="张敏 · 财务">张敏 · 财务</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="taskPrio">优先级</label>
+        <select id="taskPrio">
+          <option>P0</option>
+          <option selected>P1</option>
+          <option>P2</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="taskDue">截止日期</label>
+        <input id="taskDue" type="date" value="2026-08-25" />
+        <div class="help">逾期任务在看板与统计中以危险色提示。</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelTask">取消</button>
+        <button class="btn btn-solid" id="submitTask">创建并分配</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 任务详情弹窗 ================= -->
+  <div class="modal-overlay" id="taskDetailModal" hidden>
+    <div class="modal task-detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="d-head">
+        <div>
+          <div class="d-title" id="detailTitle"></div>
+          <div class="d-id" id="detailId"></div>
+        </div>
+      </div>
+
+      <!-- 审批任务专用操作区 -->
+      <div class="detail-approve" id="detailApprove" hidden>
+        <button class="btn btn-sm btn-approve" id="detailApproveBtn">✓ 确认</button>
+        <button class="btn btn-sm btn-danger" id="detailRejectBtn">✕ 驳回</button>
+      </div>
+
+      <div class="field">
+        <label>移动状态</label>
+        <div class="status-grid" id="detailStatusGrid">
+          <button class="status-btn" data-status="todo">待开始</button>
+          <button class="status-btn" data-status="doing">进行中</button>
+          <button class="status-btn" data-status="blocked">阻塞</button>
+          <button class="status-btn" data-status="approval">待审批</button>
+          <button class="status-btn" data-status="done">已完成</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="detailAssignee">执行者</label>
+        <select id="detailAssignee">
+          <option value="Ta-Fullstack（AI）">Ta-Fullstack（AI）</option>
+          <option value="Ta-Architect（AI）">Ta-Architect（AI）</option>
+          <option value="Ta-QA（AI）">Ta-QA（AI）</option>
+          <option value="Ta-UI/UX（AI）">Ta-UI/UX（AI）</option>
+          <option value="小王 · 研发">小王 · 研发</option>
+          <option value="张敏 · 财务">张敏 · 财务</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="detailPrio">优先级</label>
+        <select id="detailPrio">
+          <option>P0</option>
+          <option>P1</option>
+          <option>P2</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="detailDue">截止日期</label>
+        <input id="detailDue" type="date" />
+      </div>
+      <div class="field" id="detailBlockedWrap" hidden>
+        <label for="detailBlocked">阻塞原因</label>
+        <input id="detailBlocked" type="text" placeholder="例：等待外部系统权限审批" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" id="deleteTask" style="margin-right:auto">删除任务</button>
+        <button class="btn btn-ghost" id="closeDetail">关闭</button>
+        <button class="btn btn-solid" id="saveDetail">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast 容器 -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/data.js"></script>
+  <script src="scripts/approvals.js"></script>
+  <script src="scripts/board.js"></script>
+</body>
+</html>

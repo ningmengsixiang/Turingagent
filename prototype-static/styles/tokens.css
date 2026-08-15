@@ -1,0 +1,114 @@
+/* ============================================================
+   Turing Agent 原型 · 设计令牌
+   设计体系：Apple（open-design / DESIGN.md）
+   - 中性三基色：绝对黑 #000000 · 淡苹果灰 #f5f5f7 · 纯白 #ffffff
+   - 唯一动作色：Apple 蓝 #0071e3（链接 #0066cc，暗景 #2997ff）
+   - SF Pro 字体（Display 标题紧凑行高负字距 / Text 正文），回退 Inter/Helvetica
+   - 胶囊几何（18px+ 圆角）、8px 基准间距、克制阴影（0.08-0.22）
+   - 语义色补全：Apple 系统红 #ff3b30 / 橙 #ff9500 / 绿 #34c759
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* —— 中性基色（Neutral Triad） —— */
+  --black: #000000;                 /* 沉浸式黑幕章节 */
+  --gray-apple: #f5f5f7;            /* 淡苹果灰（浅表面/侧边栏） */
+  --white: #ffffff;                 /* 纯白（零售/密集表面） */
+  --ink: #1d1d1f;                   /* 近黑墨色（主文本） */
+  --ink-2: #1d1d1f;                 /* 正文 */
+  --ink-3: #6e6e73;                 /* 次级中性灰（辅助） */
+  --ink-4: #86868b;                 /* 三级灰（提示/元信息） */
+  --ink-faint: #a1a1a6;             /* 占位/禁用 */
+
+  /* —— 石墨阶梯（暗工具面） —— */
+  --graphite-a: #272729;
+  --graphite-b: #262629;
+  --graphite-c: #28282b;
+  --graphite-d: #2a2a2c;
+  --graphite-ink: #424245;          /* 暗面文字交叉色 */
+
+  /* —— 边框 —— */
+  --line: #d2d2d7;                  /* 软边框（分割线/描边） */
+  --line-strong: #86868b;           /* 中边框（输入框/配置字段） */
+
+  /* —— Apple 蓝（唯一动作色） —— */
+  --blue: #0071e3;                  /* 主动作填充 */
+  --blue-deep: #0066cc;             /* 正文链接蓝 */
+  --blue-bright: #2997ff;           /* 暗景高亮蓝 */
+
+  /* —— 语义（Apple 系统色补全 DESIGN.md 缺口） —— */
+  --danger: #ff3b30;
+  --danger-subtle: #fff0ef;
+  --warning: #ff9500;
+  --warning-subtle: #fff6eb;
+  --success: #34c759;
+  --success-subtle: #ecfaef;
+
+  /* —— 语义别名（兼容既有组件） —— */
+  --bg: #ffffff;                    /* 全局背景（纯白） */
+  --bg-soft: #f5f5f7;               /* 次级填充（侧边栏/浅灰气泡） */
+  --bg-hover: #e8e8ed;              /* hover 填充 */
+  --line-focus: #0071e3;            /* 聚焦描边（蓝） */
+  --accent: #0071e3;                /* 品牌强调（Apple 蓝） */
+  --on-accent: #ffffff;
+  --accent-soft: rgba(0, 113, 227, 0.12);   /* 选中态淡蓝底 */
+  --dark-fill: #1d1d1f;             /* 暗填充（黑底白字控件） */
+  --on-dark: #ffffff;
+
+  /* —— 字体（SF Pro Display / Text，回退 Inter） —— */
+  --font-display: "SF Pro Display", "Inter Tight", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-ui: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* —— 字号阶梯（Apple 层级；IM 密度取向） —— */
+  --text-xs: 0.6875rem;    /* 11px 元信息 */
+  --text-sm: 0.75rem;      /* 12px 微标签 */
+  --text-base: 0.8125rem;  /* 13px 辅助正文（IM 密度） */
+  --text-body: 0.875rem;   /* 14px 控件标签 */
+  --text-md: 1.0625rem;    /* 17px 标题/正文（Apple Body） */
+  --text-lg: 1.3125rem;    /* 21px 链接级标题 */
+  --text-xl: 1.5rem;       /* 24px 工具标题 */
+  --text-hero: 1.75rem;    /* 28px 卡片标题 */
+
+  /* —— 行高与字距（标题紧凑负字距） —— */
+  --lh-relaxed: 1.47;                /* Apple Body 行高 */
+  --track-display: -0.01em;
+  --track-tight: -0.02em;
+
+  /* —— 间距（8px 基准） —— */
+  --s-1: 0.25rem;    /* 4 */
+  --s-2: 0.5rem;     /* 8 */
+  --s-3: 0.75rem;    /* 12 */
+  --s-4: 1rem;       /* 16 */
+  --s-5: 1.25rem;    /* 20 */
+  --s-6: 1.5rem;     /* 24 */
+  --s-8: 2rem;       /* 32 */
+  --s-10: 2.5rem;    /* 40 */
+
+  /* —— 圆角分级（按组件类别，非一刀切） —— */
+  --r-sm: 5px;       /* 微型标签/工具 */
+  --r-md: 8px;       /* 标准控件/紧凑字段（Apple 按钮） */
+  --r-lg: 12px;      /* 面板/卡 */
+  --r-xl: 18px;      /* 模块框架/弹窗 */
+  --r-2xl: 24px;     /* 大模块 */
+  --r-pill: 980px;   /* 胶囊（签名动作语言） */
+  --r-bubble: 18px;  /* 消息气泡（iMessage 圆角） */
+  --r-agent: 8px;    /* 智能体头像 */
+
+  /* —— 阴影（克制：仅拾高模块使用） —— */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+
+  /* —— 动效（Apple 缓动） —— */
+  --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --dur-fast: 150ms;
+  --dur-normal: 220ms;
+  --dur-slow: 300ms;
+
+  /* —— 布局 —— */
+  --topbar-h: 48px;
+  --sidebar-w: 264px;
+  --panel-w: 316px;
+}

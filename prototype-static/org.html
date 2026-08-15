@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turing Agent — 组织与治理</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/global.css" />
+  <link rel="stylesheet" href="styles/org.css" />
+</head>
+<body>
+  <div class="org-page">
+    <!-- ================= 顶栏 ================= -->
+    <header class="org-topbar">
+      <a class="back-link" href="index.html">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        返回工作台
+      </a>
+      <div class="org-title">
+        <h1>组织与治理</h1>
+        <div class="sub mono">演示企业 · 6 成员 · 3 部门 · 6 智能体 · 管理员：赵主任</div>
+      </div>
+      <div class="org-actions">
+        <button class="btn btn-solid" id="inviteBtn">＋ 邀请成员</button>
+      </div>
+    </header>
+
+    <!-- ================= 主体 ================= -->
+    <div class="org-body">
+      <div class="org-tabs" role="tablist" aria-label="组织治理视图">
+        <button class="org-tab" role="tab" aria-selected="true" data-view="members">成员与部门</button>
+        <button class="org-tab" role="tab" aria-selected="false" data-view="roles">角色权限</button>
+        <button class="org-tab" role="tab" aria-selected="false" data-view="agents">智能体管理</button>
+        <button class="org-tab" role="tab" aria-selected="false" data-view="audit">审计日志</button>
+      </div>
+
+      <div class="org-content">
+        <!-- 成员与部门 -->
+        <div class="org-view" data-view="members">
+          <div class="org-split">
+            <aside class="dept-panel" aria-label="部门">
+              <div class="dept-head">部门</div>
+              <div id="deptTree"></div>
+            </aside>
+            <section class="member-panel" aria-label="成员列表">
+              <div class="member-head" id="memberHead">全部成员</div>
+              <div id="memberList"></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- 角色权限 -->
+        <div class="org-view" data-view="roles" hidden>
+          <div class="matrix-note">角色权限矩阵（PRD 5.1.1 · MVP）· 权限在 API 层强制生效，越权请求返回 403 并记审计</div>
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>角色</th>
+                <th>建项目</th>
+                <th>群发言</th>
+                <th>需求确认</th>
+                <th>审批</th>
+                <th>看代码</th>
+                <th>配置权限</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody"></tbody>
+          </table>
+        </div>
+
+        <!-- 智能体管理 -->
+        <div class="org-view" data-view="agents" hidden>
+          <div class="matrix-note">智能体配额与熔断（FR-ORG-04）· 超额自动熔断并通知管理员 · 模型可插拔（多供应商/国产/私有）</div>
+          <div class="agent-grid" id="agentGrid"></div>
+        </div>
+
+        <!-- 审计日志 -->
+        <div class="org-view" data-view="audit" hidden>
+          <div class="audit-bar">
+            <div class="filter-row" role="group" aria-label="审计筛选">
+              <button class="filter-chip active" data-filter="all">全部</button>
+              <button class="filter-chip" data-filter="approval">审批</button>
+              <button class="filter-chip" data-filter="task">任务</button>
+              <button class="filter-chip" data-filter="perm">权限</button>
+              <button class="filter-chip" data-filter="agent">智能体</button>
+            </div>
+            <button class="btn btn-outline" id="exportAudit">导出 CSV</button>
+          </div>
+          <div class="audit-list" id="auditList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 邀请成员弹窗 ================= -->
+  <div class="modal-overlay" id="inviteModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+      <h2 id="inviteTitle">邀请成员</h2>
+      <div class="field">
+        <label for="inviteName">姓名</label>
+        <input id="inviteName" type="text" placeholder="例：刘敏" />
+      </div>
+      <div class="field">
+        <label for="inviteEmail">企业邮箱</label>
+        <input id="inviteEmail" type="email" placeholder="name@corp.cn" />
+      </div>
+      <div class="field">
+        <label for="inviteDept">部门</label>
+        <select id="inviteDept">
+          <option>财务部</option>
+          <option>研发部</option>
+          <option>产品部</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="inviteRole">角色</label>
+        <select id="inviteRole">
+          <option>需求方</option>
+          <option>普通成员</option>
+          <option>技术负责人</option>
+          <option>审批人</option>
+          <option>只读成员</option>
+          <option>项目管理员</option>
+        </select>
+        <div class="help">邀请后将发送企业邀请链接（演示环境直接生效）。</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelInvite">取消</button>
+        <button class="btn btn-solid" id="submitInvite">发送邀请</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast 容器 -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/data.js"></script>
+  <script src="scripts/org.js"></script>
+</body>
+</html>

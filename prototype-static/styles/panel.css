@@ -1,0 +1,411 @@
+/* ============================================================
+   Turing Agent 原型 · 右侧上下文面板（进度/看板/记忆/交付物）
+   极简白：白底 hairline 分区，进度条黑色填充
+   ============================================================ */
+
+.context-panel .panel-head {
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+.panel-head .proj {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+.panel-head .proj .icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.panel-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+.panel-tab {
+  position: relative;
+  padding: 8px 2px;
+  margin-right: var(--s-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-4);
+  transition: color var(--dur-fast);
+}
+.panel-tab:hover {
+  color: var(--ink-3);
+}
+.panel-tab[aria-selected="true"] {
+  color: var(--ink);
+}
+.panel-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--s-3) var(--s-4) var(--s-5);
+}
+.panel-view[hidden] {
+  display: none;
+}
+
+/* —— 进度视图 —— */
+.overall {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--bg-soft);
+  margin-bottom: var(--s-4);
+}
+.overall .pct {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--ink);
+}
+.overall .desc {
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  flex: 1;
+}
+.overall .bar {
+  flex: 1;
+  min-width: 60px;
+}
+
+.milestone {
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+.milestone:last-child {
+  border-bottom: none;
+}
+.milestone .top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: 6px;
+}
+.milestone .name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink-2);
+  flex: 1;
+  min-width: 0;
+}
+.milestone .due {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+.milestone .meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: 6px;
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+.mini-avatar {
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+  color: var(--ink-3);
+}
+.mini-avatar.agent {
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* —— 看板视图（迷你） —— */
+.mini-board {
+  display: flex;
+  gap: var(--s-2);
+}
+.mini-col {
+  flex: 1;
+  min-width: 0;
+}
+.mini-col .col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.mini-col .col-head .n {
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+}
+.mini-card {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: var(--r-md);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--dur-fast);
+}
+.mini-card:hover {
+  border-color: var(--ink-faint);
+}
+.mini-card .t {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-2);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.mini-card .f {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.mini-card .tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+}
+.mini-card .tag.ai {
+  color: var(--ink-3);
+  background: var(--bg-hover);
+}
+.mini-card .tag.human {
+  color: var(--ink-3);
+  background: var(--bg-soft);
+}
+.prio {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.prio.p0 { background: var(--accent); }
+.prio.p1 { background: var(--ink-4); }
+.prio.p2 { background: var(--ink-faint); }
+
+.board-link {
+  display: block;
+  margin-top: var(--s-3);
+  padding: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-3);
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.board-link:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* —— 记忆文档视图 —— */
+.doc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: opacity var(--dur-fast);
+}
+.doc-item:hover {
+  opacity: 0.75;
+}
+.doc-item:last-child {
+  border-bottom: none;
+}
+.doc-item .icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  color: var(--ink-3);
+  flex: none;
+}
+.doc-item .meta {
+  min-width: 0;
+  flex: 1;
+}
+.doc-item .name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.doc-item .sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* —— 交付物视图 —— */
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+.file-item:last-child {
+  border-bottom: none;
+}
+.file-item .icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  color: var(--ink-3);
+  flex: none;
+}
+.file-item .meta {
+  flex: 1;
+  min-width: 0;
+}
+.file-item .name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.file-item .sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+.file-item .icon-btn {
+  width: 26px;
+  height: 26px;
+}
+
+/* 文档预览弹窗内容 */
+.doc-preview .doc-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  margin-bottom: var(--s-3);
+}
+.doc-preview .doc-body {
+  padding: var(--s-3);
+  background: var(--bg-soft);
+  border-radius: var(--r-md);
+  font-size: var(--text-base);
+  color: var(--ink-2);
+  line-height: var(--lh-relaxed);
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.doc-preview textarea.doc-body {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  resize: vertical;
+}
+.doc-preview textarea.doc-body:focus {
+  border-color: var(--line-focus);
+}
+.doc-versions {
+  margin-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+.doc-versions-head {
+  padding: var(--s-3) 0 var(--s-1);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.doc-version {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-sm);
+}
+.doc-version:last-child {
+  border-bottom: none;
+}
+.doc-version .v-tag {
+  background: var(--bg-hover);
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.doc-version .v-meta {
+  color: var(--ink-faint);
+}
+
+/* —— 交付物筛选（FR-CHAT-08） —— */
+.files-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+.files-chip {
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.files-chip:hover {
+  border-color: var(--ink-faint);
+}
+.files-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.files-count {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
