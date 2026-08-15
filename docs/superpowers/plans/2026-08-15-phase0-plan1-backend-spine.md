@@ -326,6 +326,7 @@ git commit -m "feat(contracts): 核心类型与消息内容类型守卫"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.13",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^3.2.4",
@@ -624,23 +625,28 @@ const OPEN = 1
 export function registerWs(app: FastifyInstance, config: Config): void {
   app.get('/ws', { websocket: true }, (socket: WebSocket, request) => {
     const token = (request.query as { token?: string }).token
+    // 消息监听必须在鉴权 await 之前挂载：窗口期到达的客户端消息不能丢（竞态修复）
+    let authed = false
+    socket.on('message', (raw) => {
+      if (!authed || socket.readyState !== OPEN) return
+      socket.send(JSON.stringify({ type: 'echo', data: raw.toString() }))
+    })
     void (async () => {
       const user = token ? await verifyToken(token, config) : null
       if (!user) {
         socket.close(4401, 'unauthorized')
         return
       }
+      authed = true
       if (socket.readyState === OPEN) {
         socket.send(JSON.stringify({ type: 'welcome', user: { id: user.id, name: user.name } }))
       }
-      socket.on('message', (raw) => {
-        if (socket.readyState !== OPEN) return
-        socket.send(JSON.stringify({ type: 'echo', data: raw.toString() }))
-      })
     })()
   })
 }
 ```
+
+> 注：`@types/ws` 已加入 gateway devDependencies（Task 3 Step 1），供 `import type { WebSocket } from 'ws'` 使用。
 
 - [ ] **Step 2: 写 src/ws.test.ts**
 
