@@ -130,4 +130,44 @@ describe('message repository', () => {
     expect(replay.message.sessionId).toBe(sessionId)
     expect(replay.message.content).toBe('A')
   })
+
+  it('assigns unique seqs under concurrent sends (并发性质)', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        createMessage(pool, {
+          sessionId,
+          senderId: `u-w${i}`,
+          senderKind: 'human',
+          contentType: 'text',
+          content: `w${i}`,
+          clientMsgId: `w-${i}`,
+        }),
+      ),
+    )
+    const seqs = results.map((r) => r.message.seq).sort((a, b) => a - b)
+    expect(new Set(seqs).size).toBe(10)
+    expect(seqs[0]).toBe(1)
+    expect(seqs[9]).toBe(10)
+  })
+
+  it('dedupes concurrent sends with the same clientMsgId (并发幂等，可捕获池死锁)', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        createMessage(pool, {
+          sessionId,
+          senderId: 'u-alice',
+          senderKind: 'human',
+          contentType: 'text',
+          content: '同一条',
+          clientMsgId: 'same-1',
+        }),
+      ),
+    )
+    const created = results.filter((r) => r.created)
+    expect(created).toHaveLength(1)
+    const ids = new Set(results.map((r) => r.message.id))
+    expect(ids.size).toBe(1)
+    const count = await pool.query('SELECT count(*)::int AS n FROM messages WHERE session_id = $1', [sessionId])
+    expect(count.rows[0]!.n).toBe(1)
+  })
 })

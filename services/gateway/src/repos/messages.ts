@@ -72,7 +72,9 @@ export async function createMessage(
   } catch (err) {
     await client.query('ROLLBACK')
     if (isUniqueViolation(err, 'messages_sender_id_client_msg_id_key')) {
-      const dup = await pool.query<MessageRow>(
+      // 必须在同一 client 上回查（Blocker 修复）：此时 client 已 ROLLBACK 空闲；
+      // 若用 pool.query 借新连接，并发重复发送 ≥ 池上限时会池自死锁
+      const dup = await client.query<MessageRow>(
         'SELECT * FROM messages WHERE sender_id = $1 AND client_msg_id = $2',
         [input.senderId, input.clientMsgId],
       )
