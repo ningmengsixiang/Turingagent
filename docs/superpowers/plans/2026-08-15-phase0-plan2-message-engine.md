@@ -538,7 +538,7 @@ export async function listMessages(
 - [ ] **Step 4: 写 repos/sessions.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { createTestPool, truncateAll } from './test-helpers.js'
 import { createSession, isMember, listSessionsForUser, markRead } from './sessions.js'
@@ -607,7 +607,7 @@ describe('session repository', () => {
 - [ ] **Step 5: 写 repos/messages.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { createTestPool, truncateAll } from './test-helpers.js'
 import { createSession } from './sessions.js'
@@ -1040,7 +1040,7 @@ export async function buildApp(overrides?: Partial<Config>): Promise<BuiltApp> {
 - [ ] **Step 5: 写 routes/sessions.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { buildApp, type BuiltApp } from '../server.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
@@ -1129,7 +1129,7 @@ describe('session routes', () => {
 - [ ] **Step 6: 写 routes/messages.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { buildApp, type BuiltApp } from '../server.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
@@ -1443,7 +1443,7 @@ export function registerWs(
 - [ ] **Step 5: 写 src/ws-push.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import WebSocket from 'ws'
 import pg from 'pg'
