@@ -1,0 +1,27 @@
+{
+  "name": "@ta/gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node lib/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^11.0.2",
+    "@ta/contracts": "workspace:*",
+    "fastify": "^5.2.1",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4",
+    "ws": "^8.18.0"
+  }
+}
