@@ -867,8 +867,11 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
       if (!title || title.length > 200) {
         return reply.code(400).send({ error: 'title is required (<=200 chars)' })
       }
-      if (!Array.isArray(memberIds) || memberIds.length === 0) {
-        return reply.code(400).send({ error: 'memberIds must be a non-empty array' })
+      if (!Array.isArray(memberIds) || memberIds.length === 0 || memberIds.length > 100) {
+        return reply.code(400).send({ error: 'memberIds must be a non-empty array (<=100)' })
+      }
+      if (!memberIds.every((m) => typeof m === 'string' && m.length > 0 && m.length <= 128)) {
+        return reply.code(400).send({ error: 'memberIds must contain non-empty strings (<=128 chars)' })
       }
       const userId = request.user!.id
       const session = await createSession(pool, {
@@ -1093,20 +1096,38 @@ describe('session routes', () => {
 
   it('lists only my sessions', async () => {
     const alice = await loginAs('alice')
-    await built.app.inject({
+    const created = await built.app.inject({
       method: 'POST',
       url: '/api/v1/sessions',
       headers: { authorization: `Bearer ${alice}` },
-      payload: { kind: 'project', title: '我的项目', memberIds: [] },
+      payload: { kind: 'project', title: '我的项目', memberIds: ['u-alice'] },
     })
+    expect(created.statusCode).toBe(201)
+    const aliceList = await built.app.inject({
+      method: 'GET',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(aliceList.json().sessions).toHaveLength(1)
     const bob = await loginAs('bob')
-    const res = await built.app.inject({
+    const bobList = await built.app.inject({
       method: 'GET',
       url: '/api/v1/sessions',
       headers: { authorization: `Bearer ${bob}` },
     })
-    expect(res.statusCode).toBe(200)
-    expect(res.json().sessions).toHaveLength(0)
+    expect(bobList.statusCode).toBe(200)
+    expect(bobList.json().sessions).toHaveLength(0)
+  })
+
+  it('rejects non-string memberIds', async () => {
+    const alice = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'group', title: '群', memberIds: [123] },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('denies non-members reading a session', async () => {
