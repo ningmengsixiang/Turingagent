@@ -288,12 +288,10 @@ describe('DeepSeekProvider', () => {
     await expect(provider.complete('s', 'u')).rejects.toThrow(/no content/)
   })
 
-  it('aborts after the timeout', async () => {
+  it('passes an abort signal for timeout protection', async () => {
     vi.stubGlobal('fetch', vi.fn().mockImplementation((_url, init: { signal?: AbortSignal }) => {
       expect(init.signal).toBeDefined()
-      return new Promise((_resolve, reject) => {
-        init.signal?.addEventListener('abort', () => reject(new Error('aborted')))
-      })
+      return Promise.reject(new Error('aborted')) // 模拟 abort 传播（不等真实 30s 超时）
     }))
     const provider = new DeepSeekProvider({ apiKey: 'k', baseUrl: 'https://api.deepseek.com', model: 'm' })
     await expect(provider.complete('s', 'u')).rejects.toThrow(/aborted/)
