@@ -167,8 +167,9 @@ CREATE TABLE IF NOT EXISTS messages (
   UNIQUE (sender_id, client_msg_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_messages_session_seq ON messages (session_id, seq);
+CREATE INDEX IF NOT EXISTS idx_session_members_user ON session_members (user_id);
 ```
+> 注：`(session_id, seq)` 的 UNIQUE 约束已自带索引，不再显式建 `idx_messages_session_seq`（冗余，质量审查结论）；`session_members.user_id` 单列索引服务 `listSessionsForUser` 反前缀查询（Important 修复）。001 若已在 dev 库应用，改动需对现库手工收敛（`CREATE INDEX IF NOT EXISTS idx_session_members_user ON session_members (user_id);`），001 本身为全新环境保持正确。
 
 - [ ] **Step 5: 写 scripts/migrate.ts**
 
@@ -181,33 +182,39 @@ import pg from 'pg'
 const MIGRATIONS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
 
 export async function runMigrations(pool: pg.Pool): Promise<string[]> {
-  await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+  // 并发 runner 串行化（质量审查：双进程同时迁移时败者 23505 崩溃）
+  await pool.query('SELECT pg_advisory_lock(726827367)')
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
     name TEXT PRIMARY KEY,
     applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`)
-  const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort()
-  const applied = new Set(
-    (await pool.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name as string),
-  )
-  const ran: string[] = []
-  for (const file of files) {
-    if (applied.has(file)) continue
-    const sql = await readFile(path.join(MIGRATIONS_DIR, file), 'utf8')
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-      await client.query(sql)
-      await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file])
-      await client.query('COMMIT')
-      ran.push(file)
-    } catch (err) {
-      await client.query('ROLLBACK')
-      throw err
-    } finally {
-      client.release()
+    const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort()
+    const applied = new Set(
+      (await pool.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name as string),
+    )
+    const ran: string[] = []
+    for (const file of files) {
+      if (applied.has(file)) continue
+      const sql = await readFile(path.join(MIGRATIONS_DIR, file), 'utf8')
+      const client = await pool.connect()
+      try {
+        await client.query('BEGIN')
+        await client.query(sql)
+        await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file])
+        await client.query('COMMIT')
+        ran.push(file)
+      } catch (err) {
+        await client.query('ROLLBACK')
+        throw err
+      } finally {
+        client.release()
+      }
     }
+    return ran
+  } finally {
+    await pool.query('SELECT pg_advisory_unlock(726827367)')
   }
-  return ran
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -231,7 +238,7 @@ dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；devDependencies �
 
 - [ ] **Step 6b: 修正既有 config 测试（DATABASE_URL 新守卫影响）**
 
-`src/config.test.ts` 的「accepts strong secret outside test/development」用例必须显式传 `DATABASE_URL`（否则新的非 dev 环境 DATABASE_URL 守卫先抛错）：
+`src/config.test.ts` 的「accepts strong secret outside test/development」用例必须显式传 `DATABASE_URL`（否则新的非 dev 环境 DATABASE_URL 守卫先抛错），并新增 DATABASE_URL 守卫用例（质量审查补充）：
 ```ts
   it('accepts strong secret outside test/development', () => {
     const config = loadConfig({
@@ -240,6 +247,21 @@ dependencies 增 `"pg": "^8.13.1"`（在 `"jose"` 之后）；devDependencies �
       DATABASE_URL: 'postgres://prod:prod@db:5432/ta_prod',
     })
     expect(config.jwtSecret).toHaveLength(40)
+  })
+
+  it('rejects missing or dev DATABASE_URL outside test/development', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(40) })).toThrow(/DATABASE_URL/)
+    expect(() =>
+      loadConfig({
+        NODE_ENV: 'production',
+        JWT_SECRET: 'x'.repeat(40),
+        DATABASE_URL: 'postgres://ta:ta@localhost:5432/ta_dev',
+      }),
+    ).toThrow(/DATABASE_URL/)
+  })
+
+  it('accepts dev DATABASE_URL in development', () => {
+    expect(loadConfig({ NODE_ENV: 'development' }).databaseUrl).toBe('postgres://ta:ta@localhost:5432/ta_dev')
   })
 ```
 
@@ -684,6 +706,33 @@ describe('message repository', () => {
         clientMsgId: 'x1',
       }),
     ).rejects.toThrow(/session not found/)
+  })
+
+  it('treats clientMsgId as globally unique per sender across sessions (幂等契约)', async () => {
+    const session2 = await createSession(pool, {
+      kind: 'project',
+      title: '另一个项目',
+      memberIds: ['u-alice'],
+    })
+    const first = await createMessage(pool, {
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: 'A',
+      clientMsgId: 'global-1',
+    })
+    const replay = await createMessage(pool, {
+      sessionId: session2.id,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: 'B',
+      clientMsgId: 'global-1',
+    })
+    expect(replay.created).toBe(false)
+    expect(replay.message.sessionId).toBe(sessionId)
+    expect(replay.message.content).toBe('A')
   })
 })
 ```
@@ -1567,3 +1616,10 @@ Expected: 推送成功，`origin/main` 更新。
 - **类型一致性**：`buildApp` 返回 `{app, config, pool, registry}` 在 Task 3/4 测试中一致；`createMessage` 返回 `{message, created}` 在仓储/路由/测试一致；`WsEvent` 的 `message.new` 与 ws.ts 广播 payload、ws-push 测试断言一致；`Config.databaseUrl` 在 config/db/server/测试一致。
 - **环境事实**：Docker 28 可用；PG 16 镜像拉取需网络（首次）；`gen_random_uuid()` PG13+ 内置无需扩展。
 - **已知取舍**：用户表延后（senderId 为 `u-<username>` 字符串，来自演示登录 JWT）；Redis 延后（进程内注册表，单实例）；echo 调试消息保留至 Plan 3；未读数在列表接口实时 count（MVP 够用）。
+
+## 决策记录（T1 质量审查后）
+
+1. **clientMsgId 幂等契约（定死）**：`clientMsgId` 必须**全局唯一**（每个发送者全局，建议客户端生成 UUID）。约束 `UNIQUE (sender_id, client_msg_id)` 保持不变；同一 sender 跨会话复用同一 id 返回既有消息（幂等重放语义，跨会话复用属客户端 bug，行为由测试固化）。不做每会话计数 id（那需要 `(session_id, sender_id, client_msg_id)` 三列约束，本计划不采用）。
+2. **索引修正**：`session_members.user_id` 加单列索引（Important）；`idx_messages_session_seq` 删除（`(session_id, seq)` UNIQUE 已自带索引，冗余）。001 已应用的环境手工收敛 DDL。
+3. **迁移 runner 并发防护**：`pg_advisory_lock(726827367)` 串行化（双进程迁移时败者不再 23505 崩溃）。
+4. **DATABASE_URL 守卫**：非 dev 环境缺失或使用 dev 默认串即抛错；守卫测试补齐。
