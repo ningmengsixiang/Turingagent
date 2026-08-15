@@ -3,6 +3,11 @@ export interface Config {
   jwtSecret: string
   jwtExpiresIn: string
   databaseUrl: string
+  modelApiKey: string
+  modelBaseUrl: string
+  modelName: string
+  agentEnabled: boolean
+  agentMaxPromptChars: number
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
@@ -26,10 +31,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!isDev && databaseUrl === DEV_DATABASE_URL) {
     throw new Error(`DATABASE_URL must be set in non-development environments (NODE_ENV=${envName})`)
   }
+  const modelApiKey = env.MODEL_API_KEY ?? env.DEEPSEEK_API_KEY ?? ''
   return {
     port,
     jwtSecret,
     jwtExpiresIn: env.JWT_EXPIRES_IN ?? '7d',
     databaseUrl,
+    modelApiKey,
+    modelBaseUrl: env.MODEL_BASE_URL ?? 'https://api.deepseek.com',
+    modelName: env.MODEL_NAME ?? 'deepseek-chat',
+    agentEnabled: modelApiKey.length > 0,
+    agentMaxPromptChars: Number(env.AGENT_MAX_PROMPT_CHARS ?? 4000),
   }
 }
