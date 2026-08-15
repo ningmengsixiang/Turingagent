@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ta-db
+    environment:
+      POSTGRES_USER: ta
+      POSTGRES_PASSWORD: ta
+      POSTGRES_DB: ta_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - ta-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ta -d ta_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ta-pgdata:

@@ -9,16 +9,19 @@
     "dev": "NODE_ENV=development tsx watch src/index.ts",
     "start": "node lib/index.js",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^11.0.2",
     "@ta/contracts": "workspace:*",
     "fastify": "^5.2.1",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.10",
     "@types/ws": "^8.5.13",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",

@@ -14,7 +14,11 @@ describe('loadConfig', () => {
   })
 
   it('accepts strong secret outside test/development', () => {
-    const config = loadConfig({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(40) })
+    const config = loadConfig({
+      NODE_ENV: 'production',
+      JWT_SECRET: 'x'.repeat(40),
+      DATABASE_URL: 'postgres://prod:prod@db:5432/ta_prod',
+    })
     expect(config.jwtSecret).toHaveLength(40)
   })
 

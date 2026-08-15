@@ -2,10 +2,12 @@ export interface Config {
   port: number
   jwtSecret: string
   jwtExpiresIn: string
+  databaseUrl: string
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
 const MIN_SECRET_LENGTH = 32
+const DEV_DATABASE_URL = 'postgres://ta:ta@localhost:5432/ta_dev'
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const jwtSecret = env.JWT_SECRET ?? DEV_SECRET
@@ -20,9 +22,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error(`PORT must be an integer in [1, 65535], got: ${env.PORT}`)
   }
+  const databaseUrl = env.DATABASE_URL ?? DEV_DATABASE_URL
+  if (!isDev && databaseUrl === DEV_DATABASE_URL) {
+    throw new Error(`DATABASE_URL must be set in non-development environments (NODE_ENV=${envName})`)
+  }
   return {
     port,
     jwtSecret,
     jwtExpiresIn: env.JWT_EXPIRES_IN ?? '7d',
+    databaseUrl,
   }
 }
