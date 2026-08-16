@@ -15,6 +15,7 @@ import { registerMessageRoutes } from './routes/messages.js'
 import { registerApprovalRoutes } from './routes/approvals.js'
 import { registerTaskRoutes } from './routes/tasks.js'
 import { registerOrgRoutes } from './routes/org.js'
+import { registerSkillRoutes } from './routes/skills.js'
 import { registerFileRoutes } from './routes/files.js'
 import { registerMemoryRoutes } from './routes/memories.js'
 import { registerWs } from './ws.js'
@@ -74,6 +75,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     (message) => events.emit('message.updated', message),
   )
   registerOrgRoutes(app, config, pool)
+  registerSkillRoutes(app, config, pool)
   registerFileRoutes(app, config, pool, storage, (message) => events.emit('message.created', message))
   registerWs(app, config, pool, registry, events)
 
