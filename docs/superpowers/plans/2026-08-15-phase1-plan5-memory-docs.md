@@ -762,3 +762,9 @@ Expected: 推送成功。
 - **占位符扫描**：无 TBD；Task 3 的 editing 状态机（'new' | Memory | null）注明。
 - **类型一致性**：`Memory`/`MemoryVersion` 在 contracts/repo/map/路由/前端一致；`updateMemoryContent` 返回 Memory 在 repo/路由/测试一致。
 - **已知取舍**：自动沉淀（LLM 摘要讨论）Phase 2；记忆不绑审批/任务（Phase 2 关联）；编辑权限=会话成员（无单独 author 权限）；版本表 append-only（无删除路径）。
+
+## 决策记录（T1 质量审查后）
+
+1. **并发版本回归测试**：`memories.test.ts` 补 Promise.all 双并发编辑 → 断言版本 {2,3} 无重复（版本递增是本功能核心保证）。
+2. **MemoryStateError 具名错误**：`updateMemoryContent` 的 not-found 改抛 `MemoryStateError('NOT_FOUND', 'memory not found')`（与 ApprovalStateError 同构，路由可类型捕获）。
+3. **truncateAll 显式化**：test-helpers 补 `memories, memory_versions, tasks`（消除对 FK CASCADE 的隐式依赖，防未来新增无 FK 表时测试静默泄漏）。
