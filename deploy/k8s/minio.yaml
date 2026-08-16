@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: ta-prod
+spec:
+  selector:
+    app: ta-minio
+  ports:
+    - port: 9000
+      targetPort: 9000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ta-minio
+  namespace: ta-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ta-minio
+  template:
+    metadata:
+      labels:
+        app: ta-minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server", "/data", "--console-address", ":9001"]
+          env:
+            - name: MINIO_ROOT_USER
+              value: "taadmin"
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ta-secret
+                  key: MINIO_ROOT_PASSWORD
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: ta-minio-data
+              mountPath: /data
+      # 注（计划修正）：Deployment 不能用 volumeClaimTemplates——minio 用独立 PVC（下述 PersistentVolumeClaim），
+      # Deployment volumes 段引用该 PVC
+      volumes:
+        - name: ta-minio-data
+          persistentVolumeClaim:
+            claimName: ta-minio-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ta-minio-data
+  namespace: ta-prod
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
