@@ -3,6 +3,7 @@ import { requireAuth, requireRoleFor } from '../middleware.js'
 import { AdminLockoutError, listMembers, setRole, type UserRole } from '../repos/users.js'
 import { listAudit, recordAudit } from '../repos/audit.js'
 import { getQuota, setQuotaBudget } from '../repos/quota.js'
+import { createTenant, listTenants, suspendTenant } from '../repos/tenants.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -137,6 +138,55 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
         detail: { departmentId },
       }).catch((err) => console.error('[audit] department assign failed:', err))
       return { assigned: true }
+    },
+  )
+
+  // 租户管理（管理员；FR-ORG-01）：创建租户
+  app.post<{ Body: { name?: string } }>(
+    '/api/v1/org/tenants',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const name = request.body?.name?.trim()
+      if (!name || name.length > 100) return reply.code(400).send({ error: 'name is required (<=100 chars)' })
+      try {
+        const tenant = await createTenant(pool, name)
+        void recordAudit(pool, {
+          actorId: request.user!.id,
+          action: 'tenant.created',
+          target: tenant.id,
+          detail: { name },
+        }).catch((err) => console.error('[audit] tenant create failed:', err))
+        return reply.code(201).send({ tenant })
+      } catch (err) {
+        // tenants.name UNIQUE：重名 → 409
+        return reply.code(409).send({ error: 'tenant name already exists' })
+      }
+    },
+  )
+
+  // 租户列表（管理员）
+  app.get('/api/v1/org/tenants', { preHandler: adminOnly }, async () => {
+    return { tenants: await listTenants(pool) }
+  })
+
+  // 停用租户（管理员；理由入审计；数据保留）
+  app.post<{ Params: { id: string }; Body: { reason?: string } }>(
+    '/api/v1/org/tenants/:id/suspend',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const id = request.params.id
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+        return reply.code(400).send({ error: 'tenant id must be a uuid' })
+      }
+      const tenant = await suspendTenant(pool, id)
+      if (!tenant) return reply.code(409).send({ error: 'tenant not found or already suspended' })
+      void recordAudit(pool, {
+        actorId: request.user!.id,
+        action: 'tenant.suspended',
+        target: id,
+        detail: { reason: request.body?.reason?.trim() || null },
+      }).catch((err) => console.error('[audit] tenant suspend failed:', err))
+      return { tenant }
     },
   )
 }
