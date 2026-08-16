@@ -12,6 +12,8 @@
 
 **质量审查决策（T1 后追加）：** `MENTION_RE` 收窄为 Ta 系白名单 `/@\s*Ta[-_]?(?:PM|Architect|Fullstack|QA)(?![\w-])/i`（与 registry 一致；消除 email `a@b.com`、镜像 `nginx@sha256:…`、分支名 `feature@dev` 误报，`\w` 不含中文故 `@所有人` 本不匹配）；决策正则移除「同意|通过」（授予侧非审批请求侧，消除「我通过了考试」「打卡通过了」误报）——两项修正实证对评测集准确率影响为 0（100% 保持）。**关键锚定用例（T1 修复点）已固化为 vitest 硬断言**（`silence.test.ts` 的 `does not fire on emails, code fragments or approval-ack phrases`：admin@example.com/nginx@sha256/feature@dev/我同意/我通过了考试/打卡通过了/@所有人 必须 silent）——发布门禁除 ≥95% 阈值外，这些硬断言独立于评测集生效。**已知误报类（记 Phase 2，修需联动重生成 decision 模板，当前 10 条模板 7 条依赖这些模式）**：闲聊决策「你决定去哪吃饭/选哪个餐厅/红烧肉还是清蒸鱼好/哪个更好吃/股票跌了怎么办」；**已知漏报类（记 Phase 2 LLM 分类器）**：`吗`-问句（「这个需求要做吗」）、「进度怎么样」、空格敏感（「版本 1 和版本 2」vs「版本1和版本2」、`方案1 vs 方案2`）。评测集结构性弱点已记录：100% 源于模板与正则同源设计，靠 idle 模板补易混淆负例（Task 2 已含「我通过了考试 / admin@example.com / @所有人 / docker pull nginx@sha256:…」）与持续扩充缓解；频率限制器（≤3 条/轮、≥30s）兜底刷屏。
 
+**质量审查决策（T4 后追加）：** 非 @ 触发路由 Ta-PM 改为按 id 查找（`AGENTS.find(a => a.id === 'agent-ta-pm')`，找不到显式报错跳过，防 AGENTS 调序静默改道）；非 @ 分支补 `agentMaxPromptChars` 护栏（与 @ 分支一致，防长文本绕过 4000 字符限制直接进 LLM）；确认无重复触发（@ 分支先行短路）、错误路径完整（provider 失败回错误回复、持久化失败返回 error）、幂等（clientMsgId 去重）。**P0 后续（放量前必须闭环，Phase 2 首项）**：频率限制器（≤3 条/轮、≥30s，PRD §6.7）+ per-session 并发护栏（在途 ≥1 排队/丢弃）——当前未实现，爆发 N 条决策点消息 → N 个并行在途 LLM 调用 + 429 刷屏；误报类（闲聊决策 5 类）每次误报 = 1 次完整 LLM 调用（有界线性，无放大回路，agent 互聊已短路）。记后续：非 @ too-long / 非 @ provider 失败 / @+决策点共存 3 个测试用例；emit 异常双回复 nit；多副本 outbox 前提；回复乱序（与护栏同修）。
+
 **质量审查决策（T3 后追加）：** runner 本体补固定集规模/类别/唯一性校验（`raw.length !== 1000`、四类各 250、input 唯一 1000，防手改缩集 5 条全对即 100% 绕过门禁）+ `JSON.parse` try/catch 友好报错（非法语法 exit 1）；门禁阈值 `<95% exit 1` 与 PRD「≥95% 为门槛」一致（恰好 95% 通过，浮点 950/1000 精确相等实证）；`eval:silence` 为独立脚本（tsx src，vitest 不执行），**CI/CD 接线记 Phase 2 M2.3**（CI 须同时跑 eval:silence exit-code 门禁 + vitest，落地前发布流程手动执行）；runner 退出码测试（抽导出函数方案）与 lib/ 产物不含 silence-cases.json 记入后续任务。
 
 **质量审查决策（T2 后追加）：** ① keyword 类改为**无放回抽样**（rng 洗牌 1600 组合取前 250）消除 18 组重复；② **per-category seed**（mention/decision/keyword/idle 各自 `mulberry32(42+类别序号)`）隔离 rng 消费，新增模板不再导致其他类别漂移；③ 生成器提炼 `take()` 辅助并修正「无词重叠」注释（`交付里程碑` 含 B 词 `交付`，因词表 includes 去重不影响分数）；④ reason 字段携带增益信息（keyword 记分值、decision 记命中正则索引）便于调试；⑤ runner 增加 JSON 运行时校验（input/expected/category/reason 四字段 + expected ∈ {respond,silent}），防手改 JSON 静默抬高准确率；⑥ 门禁生效依赖 Task 3 落地（runner + vitest + 脚本），此前「≥95% 发布门禁」无执行点——Task 3 完成后闭环。**门禁防退化实证**：≥95% 阈值允许 50 例失败，单条正则删除多逃逸（4/8 条决策正则删除 0 失败，模板双锚定遮蔽）；核心防线 = 关键锚定硬断言（见上）+ 三大机制整体存在性（删整条 keyword/MENTION 路径 → 75% 红）。记 Phase 2：补回 slice 截断的 8 个 idle 模板、`吗`-问句/进度/空格敏感正例、mention 边界负例（`@@`/`@bob`/全角 ＠/多 agent）、真实多句长消息语料、三重常量（generator/classifier/registry）去重或一致性测试。
@@ -183,7 +185,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/agent/silence.test.ts
 
 Expected: typecheck exit 0；silence.test.ts 5 用例全 PASS（若「这个比较好吃」或「我看看方案」误报 respond，是正则过宽——先读分类器修正正则再继续，不得放宽测试断言）。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/agent/silence.ts services/gateway/src/agent/silence.test.ts
@@ -603,7 +605,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 - Modify: `services/gateway/src/agent/bridge.ts`
 - Modify: `services/gateway/src/agent/bridge.test.ts`
 
-- [ ] **Step 1: bridge.ts 接入分类器**
+- [x] **Step 1: bridge.ts 接入分类器**
 
 读 `services/gateway/src/agent/bridge.ts`，做三处修改：
 
@@ -688,7 +690,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 
 `AgentDefinition` 类型需从 registry import（改 import 行为 `import { AGENTS, findAgentByMention, type AgentDefinition } from './registry.js'`）。同时更新 `MentionResult` 注释说明 silent。
 
-- [ ] **Step 2: bridge.test.ts 补用例**
+- [x] **Step 2: bridge.test.ts 补用例**
 
 读 `services/gateway/src/agent/bridge.test.ts`，在既有用例后追加（沿用现有 setup：StubProvider、临时池、`bridge.handle` 调用方式）：
 
@@ -724,7 +726,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 
 注意：既有测试若用 `expect.objectContaining` 或精确 `skippedReason` 断言，需核对不受新分支影响（@ 提及路径不变）。
 
-- [ ] **Step 3: 跑测试**
+- [x] **Step 3: 跑测试**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
