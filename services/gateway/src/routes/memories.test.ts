@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import pg from 'pg'
 import { buildApp, type BuiltApp } from '../server.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
+import { StubProvider } from '../model/stub.js'
 
 describe('memory routes', () => {
   let built: BuiltApp
@@ -123,5 +124,43 @@ describe('memory routes', () => {
       payload: { content: 'v2' },
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  it('summarizes session messages into a memory with a provider', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    for (const [i, content] of ['需要报销系统', '支持差旅类型', '审批流要两级'].entries()) {
+      await built.app.inject({
+        method: 'POST',
+        url: `/api/v1/sessions/${sessionId}/messages`,
+        headers: { authorization: `Bearer ${alice}` },
+        payload: { clientMsgId: `sum-${i}`, contentType: 'text', content },
+      })
+    }
+    // 关闭当前 app，用带 provider 的重建
+    await built.app.close()
+    built = await buildApp(
+      { databaseUrl: 'postgres://ta:ta@localhost:5432/ta_dev' },
+      { provider: new StubProvider('【需求基线】\n- 报销系统\n【关键决策】\n- 两级审批') },
+    )
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/memories/summarize`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().memory.content).toContain('需求基线')
+    expect(res.json().memory.title).toMatch(/会话记忆 \d{4}-\d{2}-\d{2}/)
+  })
+
+  it('returns 503 for summarize without a provider', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/memories/summarize`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(res.statusCode).toBe(503)
   })
 })

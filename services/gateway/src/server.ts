@@ -68,11 +68,11 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     (message) => events.emit('message.created', message),
     (message) => events.emit('message.updated', message),
   )
-  registerMemoryRoutes(app, config, pool)
   registerOrgRoutes(app, config, pool)
   registerWs(app, config, pool, registry, events)
 
   const provider = deps?.provider ?? createModelProvider(config)
+  registerMemoryRoutes(app, config, pool, provider)
   const bridge =
     provider === null
       ? null

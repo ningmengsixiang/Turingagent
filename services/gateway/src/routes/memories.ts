@@ -4,10 +4,14 @@ import { isMember } from '../repos/sessions.js'
 import { createMemory, getMemory, listMemoriesForSession, updateMemoryContent, listMemoryVersions, MemoryStateError } from '../repos/memories.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
+import type { Message } from '@ta/contracts'
+import type { ModelProvider } from '../model/provider.js'
+import { mapMessage } from '../repos/messages.js'
+import { MEMORY_SUMMARY_PROMPT, collectMessagesForSummary, memoryTitleForToday } from '../agent/memory-summary.js'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
+export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool: pg.Pool, provider: ModelProvider | null): void {
   const auth = requireAuth(config, pool)
 
   app.get<{ Params: { id: string } }>(
@@ -105,4 +109,55 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
       return { versions }
     },
   )
+
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/sessions/:id/memories/summarize',
+    { preHandler: auth },
+    async (request, reply) => {
+      const sessionId = request.params.id
+      if (!UUID_PATTERN.test(sessionId)) {
+        return reply.code(400).send({ error: 'session id must be a uuid' })
+      }
+      const userId = request.user!.id
+      if (!(await isMember(pool, sessionId, userId))) {
+        return reply.code(403).send({ error: 'not a member of this session' })
+      }
+      if (!provider) {
+        return reply.code(503).send({ error: 'agent disabled: model provider not configured' })
+      }
+      const recent = await listRecentTextMessages(pool, sessionId)
+      const transcript = collectMessagesForSummary(recent)
+      if (!transcript) {
+        return reply.code(400).send({ error: 'no text messages to summarize' })
+      }
+      const completion = await provider.complete(MEMORY_SUMMARY_PROMPT, transcript)
+      const title = memoryTitleForToday()
+      // 当天已有该标题记忆则更新为新版本，否则新建
+      const existing = await findMemoryByTitle(pool, sessionId, title)
+      let memory
+      if (existing) {
+        memory = await updateMemoryContent(pool, { id: existing.id, content: completion.content, editedBy: userId })
+      } else {
+        memory = await createMemory(pool, { sessionId, title, content: completion.content, createdBy: userId })
+      }
+      return { memory }
+    },
+  )
+}
+
+async function listRecentTextMessages(pool: pg.Pool, sessionId: string): Promise<Message[]> {
+  const res = await pool.query(
+    'SELECT * FROM messages WHERE session_id = $1 AND content_type = $2 ORDER BY seq DESC LIMIT 50',
+    [sessionId, 'text'],
+  )
+  return res.rows.reverse().map(mapMessage)
+}
+
+async function findMemoryByTitle(pool: pg.Pool, sessionId: string, title: string) {
+  const res = await pool.query(
+    'SELECT * FROM memories WHERE session_id = $1 AND title = $2 ORDER BY updated_at DESC LIMIT 1',
+    [sessionId, title],
+  )
+  if (!res.rows[0]) return null
+  return getMemory(pool, res.rows[0].id)
 }
