@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
-import { createMemory, getMemory, listMemoriesForSession, updateMemoryContent, listMemoryVersions } from '../repos/memories.js'
+import { createMemory, getMemory, listMemoriesForSession, updateMemoryContent, listMemoryVersions, MemoryStateError } from '../repos/memories.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -71,7 +71,18 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
         return reply.code(400).send({ error: 'content is required (<=20000 chars)' })
       }
       const title = request.body?.title?.trim()
-      const updated = await updateMemoryContent(pool, { id: memoryId, title, content, editedBy: userId })
+      if (title !== undefined && (title.length === 0 || title.length > 200)) {
+        return reply.code(400).send({ error: 'title must be 1-200 chars' })
+      }
+      let updated
+      try {
+        updated = await updateMemoryContent(pool, { id: memoryId, title, content, editedBy: userId })
+      } catch (err) {
+        if (err instanceof MemoryStateError) {
+          return reply.code(404).send({ error: err.message })
+        }
+        throw err
+      }
       return { memory: updated }
     },
   )

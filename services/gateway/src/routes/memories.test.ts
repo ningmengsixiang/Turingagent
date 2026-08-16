@@ -94,4 +94,34 @@ describe('memory routes', () => {
     })
     expect(res.statusCode).toBe(403)
   })
+
+  it('rejects emptying the title on edit with 400', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/memories`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '需求基线', content: 'v1' },
+    })
+    const memoryId = created.json().memory.id as string
+    const res = await built.app.inject({
+      method: 'PUT',
+      url: `/api/v1/memories/${memoryId}`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '  ', content: 'v2' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('returns 404 for an unknown memory edit', async () => {
+    const alice = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'PUT',
+      url: '/api/v1/memories/00000000-0000-0000-0000-000000000000',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { content: 'v2' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
 })
