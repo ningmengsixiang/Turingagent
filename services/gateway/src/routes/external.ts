@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { FastifyInstance, FastifyRequest } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { verifyApiKey } from '../repos/api-keys.js'
 import { isMember } from '../repos/sessions.js'
 import { createMessage, listMessages } from '../repos/messages.js'
@@ -11,9 +11,31 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 const MAX_LIMIT = 100
 
-/** 外部系统鉴权：X-API-Key → 绑定用户 id（挂 request.apiKeyUser） */
-function apiKeyAuth(config: Config, pool: pg.Pool) {
-  return async (request: FastifyRequest, reply: { code: (n: number) => { send: (b: object) => void } }) => {
+/** 内存令牌桶：每 key 每窗口（60s）限 externalRateLimit 次；超限 429 */
+function createRateLimiter(limit: number, windowMs = 60_000) {
+  const buckets = new Map<string, { count: number; resetAt: number }>()
+  return (key: string): { allowed: boolean; retryAfterSec: number } => {
+    const now = Date.now()
+    const bucket = buckets.get(key)
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(key, { count: 1, resetAt: now + windowMs })
+      return { allowed: true, retryAfterSec: 0 }
+    }
+    if (bucket.count >= limit) {
+      return { allowed: false, retryAfterSec: Math.ceil((bucket.resetAt - now) / 1000) }
+    }
+    bucket.count += 1
+    return { allowed: true, retryAfterSec: 0 }
+  }
+}
+
+/** 外部系统鉴权：X-API-Key → 绑定用户 id（挂 request.apiKeyUser）；认证通过后按 key 限流（429 + Retry-After） */
+function apiKeyAuth(
+  config: Config,
+  pool: pg.Pool,
+  rateLimit: (key: string) => { allowed: boolean; retryAfterSec: number },
+) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
     const key = request.headers['x-api-key']
     if (typeof key !== 'string' || key.length === 0) {
       return reply.code(401).send({ error: 'X-API-Key header is required' })
@@ -23,11 +45,18 @@ function apiKeyAuth(config: Config, pool: pg.Pool) {
       return reply.code(401).send({ error: 'invalid or revoked api key' })
     }
     ;(request as FastifyRequest & { apiKeyUser?: string }).apiKeyUser = memberUserId
+    // 开放 API 限流（FR-SEC-03）：认证通过后按绑定用户 key 检查——两个外部端点共享
+    const { allowed, retryAfterSec } = rateLimit(memberUserId)
+    if (!allowed) {
+      return reply.code(429).header('Retry-After', retryAfterSec).send({ error: 'rate limit exceeded' })
+    }
   }
 }
 
 export function registerExternalRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
-  const auth = apiKeyAuth(config, pool)
+  // 开放 API 限流：内存令牌桶（每 key 每 60s 窗口限 config.externalRateLimit 次；内部端点不受限）
+  const rateLimit = createRateLimiter(config.externalRateLimit)
+  const auth = apiKeyAuth(config, pool, rateLimit)
 
   // 外部系统向会话发消息（以绑定用户身份）
   app.post<{ Params: { id: string }; Body: { content?: string } }>(

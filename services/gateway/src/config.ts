@@ -14,6 +14,7 @@ export interface Config {
   minioBucket: string
   minioUseSsl: boolean
   escalationCron: string
+  externalRateLimit: number
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
@@ -58,5 +59,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     minioBucket: env.MINIO_BUCKET ?? 'ta-files',
     minioUseSsl: env.MINIO_USE_SSL === 'true',
     escalationCron: env.ESCALATION_CRON ?? '0 * * * *',
+    externalRateLimit: Number.isFinite(Number(env.EXTERNAL_RATE_LIMIT ?? 60)) && Number(env.EXTERNAL_RATE_LIMIT ?? 60) > 0 ? Number(env.EXTERNAL_RATE_LIMIT ?? 60) : 60,
   }
 }
