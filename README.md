@@ -116,6 +116,21 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
   -d '{"clientMsgId":"m2","contentType":"text","content":"引用回复","replyTo":"<被引消息id>"}'
 ```
 
+### 多级审批（FR-APP-02）
+
+审批流支持串行多节点（单人/会签 all/或签 any）：会签需全部审批人通过、任一驳回整体拒绝；或签任一通过即过。支持转办（当前节点审批人换人，audit 留痕）、驳回修改（↩️ 退回 → 发起人修订后重新提交，版本 +1）、发起人撤销。审批人必须是人类（agent 提交审批返回 400）。
+
+```bash
+# 创建两级审批（第一节点单人 → 第二节点会签）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/approvals \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"title":"两级审批","nodes":[{"mode":"single","approverIds":["u-bob"]},{"mode":"all","approverIds":["u-carol","u-dave"]}]}'
+# 当前节点审批：POST /api/v1/approvals/<id>/decide {decision}
+# 转办：POST /api/v1/approvals/<id>/transfer {newApproverId}
+# 退回修改：POST /api/v1/approvals/<id>/return {reason}；发起人重提：POST /api/v1/approvals/<id>/resubmit
+# 撤销（发起人）：POST /api/v1/approvals/<id>/cancel
+```
+
 ### 任务看板
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
