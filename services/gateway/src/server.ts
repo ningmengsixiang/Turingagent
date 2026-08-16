@@ -92,14 +92,17 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   registerTemplateRoutes(app, config, pool)
   registerMarketplaceRoutes(app, config, pool)
   // 开放 API 限流：可插拔后端（memory 默认；redis 多副本共享——连不上降级内存 + 警告）
+  // 注意：registerExternalRoutes 以参数传值，闭包捕获的是绑定（原 limiter），故此处用可变容器
+  // holder（wrapper 转发 holder.current）——redis error 时仅替换内部实现，降级对 external 生效。
   let rateLimiter: RateLimiter
   if (config.rateLimitBackend === 'redis') {
     const redis = new Redis(config.redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 })
-    rateLimiter = createRedisRateLimiter(redis, config.externalRateLimit)
-    // 连接失败降级内存（fail-open + 警告）
+    const holder: { current: RateLimiter } = { current: createRedisRateLimiter(redis, config.externalRateLimit) }
+    // wrapper 转发 holder.current；error 时替换内部实现（降级内存）
+    rateLimiter = { check: (key) => holder.current.check(key) }
     redis.on('error', (err) => {
       console.error('[redis] connection error, falling back to memory rate limit:', err.message)
-      rateLimiter = createMemoryRateLimiter(config.externalRateLimit)
+      holder.current = createMemoryRateLimiter(config.externalRateLimit)
     })
   } else {
     rateLimiter = createMemoryRateLimiter(config.externalRateLimit)
