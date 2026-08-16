@@ -118,5 +118,8 @@ export const updateMemory = (
 export const listMemoryVersions = (memoryId: string): Promise<{ versions: MemoryVersion[] }> =>
   request(`/api/v1/memories/${memoryId}/versions`)
 
+export const summarizeMemory = (sessionId: string): Promise<{ memory: Memory }> =>
+  request(`/api/v1/sessions/${sessionId}/memories/summarize`, { method: 'POST' })
+
 export const listSessionMembers = (sessionId: string): Promise<{ members: SessionMember[] }> =>
   request(`/api/v1/sessions/${sessionId}/members`)

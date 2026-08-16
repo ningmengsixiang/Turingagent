@@ -191,6 +191,22 @@ describe('Chat', () => {
     expect(screen.getByText(/1 进行中/)).toBeTruthy()
   })
 
+  it('summarizes memories via the button', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [{ id: 'mem1', sessionId: 's1', title: '会话记忆 2026-08-16', content: '【需求基线】…', currentVersion: 1, createdBy: 'u-alice', createdAt: '', updatedAt: '' }] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+      '/api/v1/sessions/s1/memories/summarize': { memory: { id: 'mem1', sessionId: 's1', title: '会话记忆 2026-08-16', content: '【需求基线】…', currentVersion: 2, createdBy: 'u-alice', createdAt: '', updatedAt: '' } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('会话记忆 2026-08-16')).toBeTruthy()
+    await userEvent.click(screen.getByRole('button', { name: /沉淀/ }))
+    await waitFor(() => expect(screen.getByText('会话记忆 2026-08-16')).toBeTruthy())
+  })
+
   it('renders a pending confirmation card with decide buttons', async () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },

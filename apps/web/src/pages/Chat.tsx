@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
-import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
+import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, summarizeMemory, updateMemory, updateTaskStatus } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -32,6 +32,7 @@ export function Chat({ onLogout }: ChatProps) {
   const [showMembers, setShowMembers] = useState(false)
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [showMention, setShowMention] = useState(false)
+  const [summarizing, setSummarizing] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
   const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
@@ -239,6 +240,21 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }
 
+  async function summarize() {
+    if (!activeId || summarizing) return
+    setSummarizing(true)
+    setError(null)
+    try {
+      await summarizeMemory(activeId)
+      const res = await listMemories(activeId)
+      setMemories(res.memories)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '沉淀失败')
+    } finally {
+      setSummarizing(false)
+    }
+  }
+
   return (
     <div className="chat-layout mention-host">
       <aside className="session-sidebar">
@@ -264,6 +280,9 @@ export function Chat({ onLogout }: ChatProps) {
           <div className="memory-head">
             <strong>记忆</strong>
             <button className="ghost" onClick={openNewMemory}>＋</button>
+            <button className="ghost" onClick={() => void summarize()} disabled={summarizing}>
+              {summarizing ? '沉淀中…' : '沉淀'}
+            </button>
           </div>
           {memories.map((mem) => (
             <div key={mem.id} className="memory-item">
