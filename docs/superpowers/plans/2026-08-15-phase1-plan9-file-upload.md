@@ -661,7 +661,7 @@ git commit -m "feat(web): 文件上传（按钮/拖拽）与文件消息"
 **Files:**
 - Modify: `README.md`（根）
 
-- [ ] **Step 1: README 追加「文件」节**
+- [x] **Step 1: README 追加「文件」节**
 
 在「### 任务看板」之后追加：
 
@@ -676,7 +676,7 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/files \
 ```
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -688,7 +688,7 @@ pnpm install --frozen-lockfile
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 125 + web 19 = 146）；frozen-lockfile 通过；`git status` 干净（除 README）。
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md
