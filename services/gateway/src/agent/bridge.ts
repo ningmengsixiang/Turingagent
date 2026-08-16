@@ -25,6 +25,7 @@ export class AgentBridge {
 
   async handle(message: Message): Promise<MentionResult> {
     if (message.senderKind === 'agent') return { triggered: false, skippedReason: 'agent-message' }
+    if (message.contentType !== 'text') return { triggered: false, skippedReason: 'not-a-mention' } // 卡片内嵌 @ 提及不触发（T2 质量审查）
     if (!this.options.config.agentEnabled) return { triggered: false, skippedReason: 'disabled' }
 
     const hit = findAgentByMention(message.content)

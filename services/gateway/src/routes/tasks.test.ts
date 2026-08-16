@@ -126,4 +126,36 @@ describe('task routes', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+
+  it('rejects a non-member status transition with 403', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/tasks`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '任务', assigneeId: 'u-bob', assigneeKind: 'human' },
+    })
+    const taskId = created.json().task.id as string
+    const carol = await loginAs('carol')
+    const res = await built.app.inject({
+      method: 'PATCH',
+      url: `/api/v1/tasks/${taskId}/status`,
+      headers: { authorization: `Bearer ${carol}` },
+      payload: { status: 'in_progress' },
+    })
+    expect(res.statusCode).toBe(403)
+  })
+
+  it('rejects a loose date string like 2026 with 400', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/tasks`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '任务', assigneeId: 'u-bob', assigneeKind: 'human', dueAt: '2026' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 })

@@ -3,7 +3,7 @@ import type { Message, TaskStatus } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
 import { createMessage, updateMessageContent } from '../repos/messages.js'
-import { createTask, listTasksForSession, updateTaskStatus, taskCardContent, TaskStateError } from '../repos/tasks.js'
+import { createTask, getTask, listTasksForSession, updateTaskStatus, taskCardContent, TaskStateError } from '../repos/tasks.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -11,7 +11,14 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'blocked', 'done']
 
 function isIsoDate(value: string): boolean {
-  return !Number.isNaN(Date.parse(value))
+  // 严格 ISO-8601：正则拦形状 + Date.UTC 校验日历合法性，避免 Date.parse 宽松解析与 PG 失配
+  const m = /^(\d{4})-(\d{2})-(\d{2})(T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(value)
+  if (!m) return false
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  const d = new Date(Date.UTC(year, month - 1, day))
+  return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day
 }
 
 export function registerTaskRoutes(
@@ -87,11 +94,17 @@ export function registerTaskRoutes(
       if (!UUID_PATTERN.test(taskId)) {
         return reply.code(400).send({ error: 'task id must be a uuid' })
       }
+      const userId = request.user!.id
       const status = request.body?.status as TaskStatus | undefined
       if (!status || !STATUSES.includes(status)) {
         return reply.code(400).send({ error: 'status must be todo|in_progress|blocked|done' })
       }
       try {
+        const existing = await getTask(pool, taskId)
+        if (!existing) throw new TaskStateError('task not found')
+        if (!(await isMember(pool, existing.sessionId, userId))) {
+          return reply.code(403).send({ error: 'not a member of the task session' })
+        }
         const task = await updateTaskStatus(pool, { id: taskId, status })
         const cardId = await findTaskCardId(pool, task.id)
         if (cardId) {

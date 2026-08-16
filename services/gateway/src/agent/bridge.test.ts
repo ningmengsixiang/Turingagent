@@ -108,6 +108,14 @@ describe('agent bridge', () => {
     expect(provider.calls).toHaveLength(0)
   })
 
+  it('skips card messages even if they contain @-mentions (T2 质量审查)', async () => {
+    const { bridge, provider } = makeBridge()
+    const card = { ...userMessage('📋 待开始：支付网关对接（负责人 @Ta-Fullstack）'), contentType: 'task_card' as const }
+    const result = await bridge.handle(card)
+    expect(result.skippedReason).toBe('not-a-mention')
+    expect(provider.calls).toHaveLength(0)
+  })
+
   it('skips agent messages (loop breaker)', async () => {
     const { bridge, provider } = makeBridge()
     const result = await bridge.handle({ ...userMessage('@Ta-Fullstack x'), senderKind: 'agent', senderId: 'agent-ta-fullstack' })
