@@ -8,7 +8,9 @@
 
 **Tech Stack:** `node-cron`（gateway 依赖）+ 现有 escalateOverdueApprovals。
 
-**决策记录：** 定时器用进程内 node-cron（单实例 MVP；多副本部署时需分布式锁/外部调度记后续——多副本下多个 gateway 实例都会跑 cron 导致重复升级——**防护**：escalateOverdueApprovals 已有行锁（FOR UPDATE）+ escalated_count 递增，重复执行幂等（第二实例锁后看到已升级节点 non-pending 跳过）✓）；调度不进 buildApp（测试隔离）；cron 表达式可配置（env ESCALATION_CRON）；升级结果日志（console.info 记录升级数量）；L1 通知（消息推送）记后续；tick 手动触发仍可用（POST /approvals/:id/escalate 保留）。
+**质量审查决策（T1-T2 后追加）：** ① runEscalationTick 透传 now（测试可控）；② scheduler.test 导入路径修正 + admin 用户注入（escalateOverdueApprovals 无 admin 提前返回）；③ 多副本幂等表述修正——升级不改节点状态，防护靠激活时间重置（后续 tick 不再选中；同 tick 窗口双实例竞态可致重复升级，落地多副本时补锁内超时条件重检）。**记录观察**：@types/node-cron 冗余（node-cron 4.x 自带类型）；scheduler.test 未用导入；config.test 无 escalationCron 用例（可选补）。
+
+**决策记录：** 定时器用进程内 node-cron（单实例 MVP；多副本部署时需分布式锁/外部调度记后续——多副本下多个 gateway 实例都会跑 cron 导致重复升级——**防护**：escalateOverdueApprovals 已有行锁（FOR UPDATE）+ escalated_count 递增，重复执行幂等（激活时间重置使后续 tick 不再选中；同 tick 窗口双实例竞态可致重复升级——落地多副本时补锁内超时条件重检）✓）；调度不进 buildApp（测试隔离）；cron 表达式可配置（env ESCALATION_CRON）；升级结果日志（console.info 记录升级数量）；L1 通知（消息推送）记后续；tick 手动触发仍可用（POST /approvals/:id/escalate 保留）。
 
 ---
 
@@ -32,7 +34,7 @@
 - Modify: `services/gateway/src/config.ts`
 - Create: `services/gateway/src/scheduler.ts`
 
-- [ ] **Step 1: 增 node-cron 依赖**
+- [x] **Step 1: 增 node-cron 依赖**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -42,7 +44,7 @@ pnpm --filter @ta/gateway add -D @types/node-cron
 
 （或手改 package.json + pnpm install——用 pnpm add 自动更新 lockfile。）
 
-- [ ] **Step 2: config.ts 增 escalationCron**
+- [x] **Step 2: config.ts 增 escalationCron**
 
 读 `services/gateway/src/config.ts`，Config 接口增 `escalationCron: string`，loadConfig 增：
 
@@ -50,7 +52,7 @@ pnpm --filter @ta/gateway add -D @types/node-cron
   escalationCron: env.ESCALATION_CRON ?? '0 * * * *',
 ```
 
-- [ ] **Step 3: 写 scheduler.ts**
+- [x] **Step 3: 写 scheduler.ts**
 
 创建 `services/gateway/src/scheduler.ts`：
 
@@ -78,7 +80,7 @@ export function startScheduler(pool: pg.Pool, cronExpr = '0 * * * *'): { stop: (
 }
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -87,7 +89,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/package.json services/gateway/src/config.ts services/gateway/src/scheduler.ts pnpm-lock.yaml
@@ -102,7 +104,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(schedule
 - Modify: `services/gateway/src/index.ts`
 - Create: `services/gateway/src/scheduler.test.ts`
 
-- [ ] **Step 1: index.ts 启动调度器**
+- [x] **Step 1: index.ts 启动调度器**
 
 读 `services/gateway/src/index.ts`（入口：buildApp + listen），在 buildApp 后启动：
 
@@ -114,7 +116,7 @@ import { startScheduler } from './scheduler.js'
 
 （核对 built 的字段名——server.ts 的 BuiltApp 含 pool/config？读现状；若无 pool 暴露，用 buildApp 返回的 pool 或另取。）
 
-- [ ] **Step 2: scheduler.test.ts**
+- [x] **Step 2: scheduler.test.ts**
 
 创建 `services/gateway/src/scheduler.test.ts`（复用 repos 测试风格：临时池/truncate/真实会话）：
 
@@ -175,7 +177,7 @@ describe('scheduler', () => {
 
 > 注：`runEscalationTick` 的 `now` 参数——escalateOverdueApprovals 接受 now 但 runEscalationTick 未透传（计划 Step 3 代码）——测试用 `new Date(Date.now() + 1000)` 需透传。**修正**：runEscalationTick 加可选 `now` 参数透传（`runEscalationTick(pool, now?)` → `escalateOverdueApprovals(pool, now)`），实现时按此。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -187,7 +189,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；scheduler.test.ts 2 用例全 PASS；全量 gateway 203 用例（201+2）全 PASS。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/index.ts services/gateway/src/scheduler.ts services/gateway/src/scheduler.test.ts
@@ -198,7 +200,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(schedule
 
 ## Task 3: README + 全仓验收 + 推送
 
-- [ ] **Step 1: README 追加「自动定时器」说明**
+- [x] **Step 1: README 追加「自动定时器」说明**
 
 在 README「### K8s 部署（M2.5 扩展）」节之后追加：
 
@@ -208,7 +210,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(schedule
 进程内 cron（node-cron，默认每小时，`ESCALATION_CRON` 可配 cron 表达式）自动执行超时审批升级（FR-APP-06 自动触发，此前仅手动端点）；升级幂等（行锁 + escalated_count，多副本安全）。L1 升级通知记后续。
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -221,7 +223,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 203 + web 34 ≈ 239）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 3: 真实验收**
+- [x] **Step 3: 真实验收**
 
 ```bash
 cd /tmp
@@ -232,7 +234,7 @@ cd /tmp
 
 （真实 cron 触发等待较长——验收以「启动日志 cron started」+ 测试覆盖 tick 逻辑为准；如需实时验证用 ESCALATION_CRON 每分钟。）
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase3-plan8-scheduler.md
