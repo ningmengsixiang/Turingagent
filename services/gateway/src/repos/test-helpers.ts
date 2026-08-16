@@ -14,5 +14,5 @@ export async function truncateAll(pool: pg.Pool): Promise<void> {
   // 熔断用例依赖它存在（调额端点 UPDATE 命中该行）；agent_usage 每次清空（用量从零计量）
   // departments 随清空（ABAC 用例每轮建 '研发部'，UNIQUE name 防撞 409）；users/sessions 的
   // department_id FK 由 CASCADE 覆盖
-  await pool.query('TRUNCATE messages, session_members, sessions, users, audit_events, memories, memory_versions, tasks, agent_usage, departments RESTART IDENTITY CASCADE')
+  await pool.query('TRUNCATE messages, session_members, sessions, users, audit_events, api_keys, memories, memory_versions, tasks, agent_usage, departments RESTART IDENTITY CASCADE')
 }

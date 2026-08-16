@@ -179,6 +179,19 @@ Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行
 
 部门属性 + 数据行级可见性：项目会话可归属部门（`departmentId`），访问规则 = 管理员全可见 / 会话成员可见 / 同部门成员可见（读端点），写操作仍需会话成员身份。部门管理：管理员 `POST /api/v1/org/departments` 创建、`POST /api/v1/org/users/:id/department` 分配用户部门。会话列表按可见性过滤。完整属性规则引擎记后续。
 
+### 开放 API（M3.3 / FR-INT-02）
+
+API Key 集成：管理员 `POST /api/v1/api-keys` 生成（返回明文一次，绑定成员用户，SHA-256 哈希存储）→ 外部系统带 `X-API-Key` 调用 `POST/GET /api/v1/external/sessions/:id/messages`（以绑定用户身份发消息/查消息，isMember 可见性）。撤销：`POST /api/v1/api-keys/:id/revoke`。SSO/财务/工单具体适配记后续。
+
+```bash
+# 生成 key（管理员）
+curl -s -X POST localhost:3001/api/v1/api-keys -H "authorization: Bearer $ADMIN_TOKEN" \
+  -H 'content-type: application/json' -d '{"name":"工单系统","memberUser":"alice"}'
+# 外部系统发消息
+curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
+  -H "x-api-key: ta_xxx" -H 'content-type: application/json' -d '{"content":"工单 #123 已创建"}'
+```
+
 ### 文件上传
 
 ```bash
