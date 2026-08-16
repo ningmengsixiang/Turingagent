@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。crypto SHA-256 + PG + Fastify。
 
+**质量审查决策（T1-T3 后追加）：** 通过（M1 流程收尾）。**记录建议**：maskedKey 基于哈希尾 8 位（计划代码原文——与明文无法对照识别，nit 记录，后续可另存明文尾缀列）；无 rate limiting（记后续）；X-API-Key 明文传输需生产 TLS；外部系统可冒充绑定用户发言（信任管理员设计取舍）；撤销后 401 与非成员 403 测试已补（见 T3 修复）；external GET 的 listMessages 按实际 4 参签名适配；apiKeyAuth 去 async 编译修复。
+
 **决策记录：** API Key 存 SHA-256 哈希（明文仅生成时返回一次，防泄库即用）；key 前缀 `ta_` + 32 字节随机（crypto.randomBytes）→ base64url；外部端点可见性 = isMember（外部系统需先有会话成员身份语义——用管理员生成 key 时绑定可访问会话列表？MVP 简化：key 不限会话，调用时校验目标会话 isMember（外部调用方以 key 身份，非用户——**设计**：api_keys 增 `member_user_id`（绑定一个用户 id，外部调用以该用户身份参与会话）——外部系统以绑定用户身份发消息（senderId = 绑定用户），继承其 isMember 可见性）。撤销 = revoked_at 置 now（verify 查 revoked_at IS NULL）；key 列表脱敏（只显示前缀后 6 位 `ta_****abcd`）。SSO/财务/工单具体适配记后续（本计划提供通用端点）。
 
 ---
@@ -34,7 +36,7 @@
 - Create: `services/gateway/migrations/013_api_keys.sql`
 - Create: `services/gateway/src/repos/api-keys.ts`
 
-- [ ] **Step 1: 契约**
+- [x] **Step 1: 契约**
 
 读 `packages/contracts/src/index.ts`，文件末尾（Department 之后）追加：
 
@@ -51,7 +53,7 @@ export interface ApiKeyInfo {
 }
 ```
 
-- [ ] **Step 2: 迁移 013**
+- [x] **Step 2: 迁移 013**
 
 创建 `services/gateway/migrations/013_api_keys.sql`：
 
@@ -70,7 +72,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys (key_hash);
 ```
 
-- [ ] **Step 3: 写 repos/api-keys.ts**
+- [x] **Step 3: 写 repos/api-keys.ts**
 
 创建 `services/gateway/src/repos/api-keys.ts`：
 
@@ -152,7 +154,7 @@ export async function verifyApiKey(pool: pg.Pool, key: string): Promise<string |
 }
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -163,7 +165,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 全 exit 0；013 应用。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/013_api_keys.sql services/gateway/src/repos/api-keys.ts
@@ -179,7 +181,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(api): �
 - Create: `services/gateway/src/routes/external.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 写 routes/api-keys.ts**
+- [x] **Step 1: 写 routes/api-keys.ts**
 
 创建 `services/gateway/src/routes/api-keys.ts`：
 
@@ -250,7 +252,7 @@ export function registerApiKeyRoutes(app: FastifyInstance, config: Config, pool:
 
 > 注：`getUserByUsername` 需在 repos/users.ts 存在（读现状——若无此函数，用 `SELECT user_id FROM users WHERE name = $1` 内联或新增导出；先读 users.ts）。
 
-- [ ] **Step 2: 写 routes/external.ts**
+- [x] **Step 2: 写 routes/external.ts**
 
 创建 `services/gateway/src/routes/external.ts`：
 
@@ -352,7 +354,7 @@ function requireUuid(): string {
 
 > 注：`cryptoRandomUuid` 写法笨拙——改为顶部 `import { randomUUID } from 'node:crypto'` 直接使用（实现时修正为简洁 import）。`listMessages` 的签名核对 repos/messages.ts（返回 `{ messages }` 或 `messages`——以实际为准）。
 
-- [ ] **Step 3: server.ts 注册**
+- [x] **Step 3: server.ts 注册**
 
 读 `services/gateway/src/server.ts`，在 `registerKbRoutes(app, config, pool)` 之后增：
 
@@ -363,7 +365,7 @@ function requireUuid(): string {
 
 （import 增两函数。）
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -373,7 +375,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0（若 listMessages/getUserByUsername 签名不符，读现状适配并在汇报说明）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/routes/api-keys.ts services/gateway/src/routes/external.ts services/gateway/src/server.ts
@@ -389,11 +391,11 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(api): AP
 - Modify: `README.md`
 - Modify: `services/gateway/src/repos/test-helpers.ts`（truncate 增 api_keys）
 
-- [ ] **Step 1: test-helpers truncate 增 api_keys**
+- [x] **Step 1: test-helpers truncate 增 api_keys**
 
 读 `services/gateway/src/repos/test-helpers.ts`，truncate 清单增 `api_keys`。
 
-- [ ] **Step 2: api-keys.test.ts**
+- [x] **Step 2: api-keys.test.ts**
 
 创建 `services/gateway/src/routes/api-keys.test.ts`（复用既有路由测试风格）：
 
@@ -515,7 +517,7 @@ describe('api key routes', () => {
 
 （用户 id 用既有风格 u-alice；建会话 memberIds 用 'u-bob'——先读既有测试确认。）
 
-- [ ] **Step 3: README 追加「开放 API」节**
+- [x] **Step 3: README 追加「开放 API」节**
 
 在 README「### ABAC 数据行级权限（M3.2 / FR-PERM-02）」节之后追加：
 
@@ -534,7 +536,7 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 ```
 ```
 
-- [ ] **Step 4: 全仓验收**
+- [x] **Step 4: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -547,7 +549,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 178+3≈181 + web 34 ≈ 217）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 5: 真实验收（外部集成链路）**
+- [x] **Step 5: 真实验收（外部集成链路）**
 
 ```bash
 cd /tmp
@@ -558,7 +560,7 @@ cd /tmp
 # 5) key 绑定用户非会话成员 → 403
 ```
 
-- [ ] **Step 6: 提交 + 推送**
+- [x] **Step 6: 提交 + 推送**
 
 ```bash
 git add README.md services/gateway/src/repos/test-helpers.ts services/gateway/src/routes/api-keys.test.ts docs/superpowers/plans/2026-08-15-phase3-plan2-openapi.md
