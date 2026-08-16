@@ -148,6 +148,17 @@ pnpm dev:gateway
 
 > 未配置 `MODEL_API_KEY` 时智能体自动禁用。`MODEL_BASE_URL` / `MODEL_NAME`（默认 `deepseek-chat`）可覆盖。
 
+### 静默策略（FR-CHAT-05）
+
+智能体仅在必要时机发言：`@提及` 必响应；无提及时由静默策略分类器判定——命中决策点（你定/选 A 还是 B/对比一下/审批）或项目关键词（打分 ≥3）→ 路由 Ta-PM 仲裁响应；闲聊静默（仅落库，零 LLM 成本）。
+
+```bash
+# 评测集门禁（1,000 组固定评测集，准确率 ≥95% 为发布门槛）
+pnpm --filter @ta/gateway eval:silence
+# 重新生成固定评测集（确定性，seed=42）
+pnpm --filter @ta/gateway gen:silence-cases
+```
+
 ### Web 前端
 
 ```bash
