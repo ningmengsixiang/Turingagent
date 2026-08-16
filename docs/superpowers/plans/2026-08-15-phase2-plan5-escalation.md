@@ -344,7 +344,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 
 ## Task 4: README + 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: README 追加超时升级说明**
+- [x] **Step 1: README 追加超时升级说明**
 
 在 README「### 技能包与配额（M2.4 / FR-ORG-04 / FR-ORG-07）」节之后追加：
 
@@ -354,7 +354,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 审批节点超时（默认 24h，`approval_timeout` 表可配置）可手动升级：`POST /api/v1/approvals/<id>/escalate` 把当前节点审批人替换为管理员并计数（escalated_count，审计留痕）；推进节点/重新提交会重置激活时间。自动定时器（cron 调用该端点）记 Phase 2 后续。
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -367,7 +367,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 169+5≈174 + web 33 ≈ 209）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 3: 真实验收（超时升级链）**
+- [x] **Step 3: 真实验收（超时升级链）**
 
 ```bash
 cd /tmp
@@ -381,7 +381,7 @@ cd /tmp
 
 Expected: 升级链完整；升级后原审批人失效；审计 approval.escalated 落库。
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan5-escalation.md
