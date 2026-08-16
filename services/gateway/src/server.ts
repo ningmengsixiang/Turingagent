@@ -106,11 +106,13 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
         })
   if (bridge) {
     events.on('message.created', (message) => {
-      // 消息计数埋点（Task 3 Step 0 补充：messages_created_total 已注册未埋点）
-      messagesCreatedTotal.inc()
       // 异步触发智能体；失败不崩溃进程（桥接内部已全函数化）
       void bridge.handle(message).catch((err) => console.error('[agent] unhandled:', err))
     })
   }
+  // 消息计数埋点：顶层独立监听（与 agent 是否启用无关，所有消息均计数）
+  events.on('message.created', () => {
+    messagesCreatedTotal.inc()
+  })
   return { app, config, pool, registry, bridge }
 }
