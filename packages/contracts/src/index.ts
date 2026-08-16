@@ -271,3 +271,15 @@ export interface Tenant {
   status: TenantStatus
   createdAt: string
 }
+
+export interface ProjectTemplate {
+  id: string
+  name: string
+  description: string
+  /** 模板预设技能包 */
+  skillIds: string[]
+  /** 预留：审批流模板（Phase 3 后续消费） */
+  approvalFlow?: unknown
+  /** 预留：角色权限模板（Phase 3 后续消费） */
+  roles?: unknown
+}

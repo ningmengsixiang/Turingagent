@@ -1,0 +1,8 @@
+{
+  "id": "requirements-mgmt",
+  "name": "需求管理",
+  "description": "需求收集、变更管理、影响评估与基线同步",
+  "skillIds": ["pm"],
+  "approvalFlow": null,
+  "roles": null
+}

@@ -1,0 +1,8 @@
+{
+  "id": "software-delivery",
+  "name": "软件交付",
+  "description": "软件需求到交付的标准流程：需求澄清、技术评审、编码交付、测试验收",
+  "skillIds": ["pm", "fullstack"],
+  "approvalFlow": null,
+  "roles": null
+}
