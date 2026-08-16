@@ -1,0 +1,6 @@
+{
+  "id": "fullstack",
+  "name": "全栈开发",
+  "description": "软件生成与交付：代码编写、测试、部署编排",
+  "toolAllowlist": ["read", "write", "edit", "bash", "web_search", "subagent"]
+}

@@ -1,0 +1,6 @@
+{
+  "id": "pm",
+  "name": "项目管理",
+  "description": "需求澄清与流程推进：需求分析、任务拆解、评审组织",
+  "toolAllowlist": ["read", "write", "bash", "web_search"]
+}

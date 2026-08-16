@@ -197,3 +197,30 @@ export interface FileInfo {
   uploadedBy: string
   createdAt: string
 }
+
+export interface Skill {
+  id: string
+  name: string
+  description: string
+  /** 工具白名单（声明式元数据；实际工具执行层 Phase 2 落地） */
+  toolAllowlist: string[]
+}
+
+export const QuotaLevel = {
+  Enterprise: 'enterprise',
+  Project: 'project',
+  Task: 'task',
+} as const
+export type QuotaLevel = (typeof QuotaLevel)[keyof typeof QuotaLevel]
+
+export interface QuotaStatus {
+  level: QuotaLevel
+  /** 预算（tokens） */
+  budget: number
+  /** 已用（tokens） */
+  used: number
+  /** 0-1 比例 */
+  ratio: number
+  /** 是否熔断（used >= budget） */
+  tripped: boolean
+}
