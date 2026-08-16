@@ -67,23 +67,32 @@ export function Chat({ onLogout }: ChatProps) {
     if (activeId) void loadMessages(activeId)
   }, [activeId, loadMessages])
 
-  async function ensureSession(): Promise<string> {
+  const creatingRef = useRef(false)
+
+  async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
     const me = sessions[0]
     if (me) return me.id
-    const res = await createSession('project', '报销系统', [])
-    setSessions((prev) => [...prev, { ...res.session, unreadCount: 0 }])
-    setActiveId(res.session.id)
-    return res.session.id
+    if (creatingRef.current) return null // 并发锁：双击不重复建群
+    creatingRef.current = true
+    try {
+      const res = await createSession('project', '报销系统', [])
+      setSessions((prev) => [...prev, { ...res.session, unreadCount: 0 }])
+      setActiveId(res.session.id)
+      return res.session.id
+    } finally {
+      creatingRef.current = false
+    }
   }
 
   async function send() {
     const content = input.trim()
     if (!content || busy) return
-    const sessionId = await ensureSession()
     setBusy(true)
     setError(null)
     try {
+      const sessionId = await ensureSession()
+      if (!sessionId) return
       const clientMsgId = crypto.randomUUID()
       await sendMessage(sessionId, { clientMsgId, contentType: 'text', content })
       setInput('')
