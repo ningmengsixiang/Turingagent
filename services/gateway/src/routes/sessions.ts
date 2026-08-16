@@ -26,8 +26,9 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
       if (!title || title.length > 200) {
         return reply.code(400).send({ error: 'title is required (<=200 chars)' })
       }
-      if (!Array.isArray(memberIds) || memberIds.length === 0 || memberIds.length > 100) {
-        return reply.code(400).send({ error: 'memberIds must be a non-empty array (<=100)' })
+      // 允许空 memberIds：创建者自动加入（createSession 内 [...new Set([userId, ...memberIds])]）
+      if (!Array.isArray(memberIds) || memberIds.length > 100) {
+        return reply.code(400).send({ error: 'memberIds must be an array (<=100)' })
       }
       if (!memberIds.every((m) => typeof m === 'string' && m.length > 0 && m.length <= 128)) {
         return reply.code(400).send({ error: 'memberIds must contain non-empty strings (<=128 chars)' })

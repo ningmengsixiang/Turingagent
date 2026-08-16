@@ -131,6 +131,22 @@ describe('session routes', () => {
     expect(members.some((m: { userId: string; kind: string }) => m.userId === 'agent-ta-fullstack' && m.kind === 'agent')).toBe(true)
   })
 
+  it('creates a session with empty memberIds (creator auto-joined)', async () => {
+    const login = await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'alice' } })
+    const token = login.json().token as string
+    const res = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { kind: 'project', title: '单人会话', memberIds: [] },
+    })
+    expect(res.statusCode).toBe(201)
+    const sessionId = res.json().session.id as string
+    const members = await built.app.inject({ method: 'GET', url: `/api/v1/sessions/${sessionId}/members`, headers: { authorization: `Bearer ${token}` } })
+    const userIds = (members.json().members as Array<{ userId: string }>).map((m) => m.userId)
+    expect(userIds).toContain('u-alice')
+  })
+
   it('persists templateId on session', async () => {
     const admin = await loginAs('alice')
     const created = await built.app.inject({
