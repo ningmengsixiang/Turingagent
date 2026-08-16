@@ -139,6 +139,19 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/approvals \
 
 GitHub Actions CI 管道（push/PR 触发）作为合并门禁：pnpm install --frozen-lockfile → 数据库迁移 → typecheck → 全量测试 → **静默评测集门禁**（1,000 组 ≥95%）→ build → **安全审计**（pnpm audit，high/critical 失败即红）。本地可复跑安全门禁：`pnpm audit:security`。部署联动：`.github/workflows/deploy.yml` 两级审批 environment 骨架（staging/production 人工审批后执行，实际部署命令随 M2.5 私有化安装器落地）。
 
+### 技能包与配额（M2.4 / FR-ORG-04 / FR-ORG-07）
+
+技能包 = `services/gateway/skills/<id>.json` manifest（id/name/description/toolAllowlist），热加载（改文件即时生效）：`GET /api/v1/skills` 列表、`POST /sessions/:id/skills` 绑定。配额 = 企业级 token 预算（默认 1,000,000）：智能体每次运行前检查，≥预算即熔断（只影响智能体执行，IM 不受影响）；80% 前端配额条预警。调额：`POST /api/v1/org/quota {budget}`。
+
+```bash
+# 查看配额与技能包
+curl -s localhost:3001/api/v1/skills -H "authorization: Bearer $TOKEN"
+curl -s localhost:3001/api/v1/org/quota -H "authorization: Bearer $TOKEN"
+# 调额（示例：降到 100 tokens 观察熔断）
+curl -s -X POST localhost:3001/api/v1/org/quota -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"budget":100}'
+```
+
 ### 任务看板
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
