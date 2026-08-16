@@ -114,6 +114,8 @@ describe('Chat', () => {
     vi.unstubAllGlobals()
     FakeWebSocket.instances = []
     localStorage.clear()
+    mockStop.mockClear()
+    mockSpeechSession.start.mockClear()
   })
 
   it('renders sessions and messages, sends a message', async () => {
@@ -364,5 +366,22 @@ describe('Chat', () => {
     // 语音气泡渲染「🎤 语音消息」（不显示文件名）→ 断言该文本与播放按钮
     expect(await screen.findByText(/🎤 语音消息/)).toBeTruthy()
     expect(screen.getByRole('button', { name: /播放/ })).toBeTruthy()
+  })
+
+  it('hides the mic button when recording is unsupported', async () => {
+    mockSpeechSession.canRecord = false
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    // 会话标题同时出现在侧边栏与聊天头部，findByText 会命中多个元素 → 用 role 查询等待会话加载完成
+    await screen.findByRole('button', { name: '报销系统' })
+    expect(screen.queryByRole('button', { name: /🎤/ })).toBeNull()
+    mockSpeechSession.canRecord = true
   })
 })
