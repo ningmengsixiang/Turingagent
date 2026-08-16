@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Chat } from './Chat.js'
 
@@ -52,6 +52,9 @@ function mockFetch(routes: Record<string, unknown>) {
   // 发送走 POST → 服务端记录 → 组件重拉 after_seq 增量；模拟后端存下已发消息，
   // 否则发送后重拉永远返回空列表（静态路由无法表达"发送后"的状态）
   const createdMessages: Array<Record<string, unknown>> = []
+  // PATCH 状态变更同款：记录被改状态的任务，GET tasks 时按 id 覆盖种子，
+  // 否则拖拽改状态后重拉永远返回旧状态（静态路由无法表达"改状态后"的状态）
+  const patchedTasks: Array<Record<string, unknown>> = []
   vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET'
     if (method === 'POST' && /\/messages$/.test(url)) {
@@ -71,9 +74,37 @@ function mockFetch(routes: Record<string, unknown>) {
       if (body.message) createdMessages.push(body.message)
       return { ok: true, status: 201, json: async () => body }
     }
+    if (method === 'PATCH' && /\/tasks\/([^/]+)\/status$/.test(url)) {
+      const taskId = /\/tasks\/([^/]+)\/status$/.exec(url)![1]
+      const input = JSON.parse(String(init?.body ?? '{}')) as { status?: string }
+      // 从会话 tasks 种子路由取原任务（保留 title/assignee 等字段）后覆盖 status；
+      // 种子缺失时回退 PATCH 静态路由的 task（既有「status buttons」用例依赖该返回体）
+      const tasksRoute = Object.values(routes).find(
+        (v) => !!v && typeof v === 'object' && Array.isArray((v as { tasks?: unknown[] }).tasks),
+      ) as { tasks: Array<Record<string, unknown>> } | undefined
+      const fallback = (routes[url] as { task?: Record<string, unknown> } | undefined)?.task
+      const seed = tasksRoute?.tasks.find((t) => t.id === taskId) ?? fallback ?? {}
+      const task = { ...seed, id: taskId, status: input.status }
+      const idx = patchedTasks.findIndex((t) => (t as { id?: string }).id === taskId)
+      if (idx >= 0) patchedTasks[idx] = task
+      else patchedTasks.push(task)
+      return { ok: true, status: 200, json: async () => ({ task }) }
+    }
     if (method === 'GET' && url.includes('?after_seq=')) {
       const seeded = (routes[url] as { messages?: unknown[] } | undefined)?.messages ?? []
       return { ok: true, status: 200, json: async () => ({ messages: [...seeded, ...createdMessages] }) }
+    }
+    if (method === 'GET' && /\/sessions\/[^/]+\/tasks$/.test(url)) {
+      const seeded = (routes[url] as { tasks?: unknown[] } | undefined)?.tasks ?? []
+      // 种子 + patched 覆盖：PATCH 后的任务状态优先；无种子时并入 patched 任务。
+      // 未发生 PATCH 时 patchedTasks 为空 → 原样返回种子（既有用例语义不变）
+      const merged = [
+        ...seeded.map((t) => patchedTasks.find((p) => (p as { id?: string }).id === (t as { id?: string }).id) ?? t),
+        ...patchedTasks.filter(
+          (p) => !(seeded as Array<Record<string, unknown>>).some((t) => (t as { id?: string }).id === (p as { id?: string }).id),
+        ),
+      ]
+      return { ok: true, status: 200, json: async () => ({ tasks: merged }) }
     }
     const body = routes[url]
     if (body !== undefined) {
@@ -470,7 +501,8 @@ describe('Chat', () => {
           { id: 't1', sessionId: 's1', title: '写登录页', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'todo' },
         ],
       },
-      // PATCH /api/v1/tasks/t1/status 命中 URL 查表（mockFetch 按 url 精确匹配，不区分 method）
+      // PATCH /api/v1/tasks/t1/status 由 mockFetch 的 PATCH 分支拦截（状态写入 patchedTasks，
+      // 供 GET tasks 合并）；此静态路由仅在种子缺失时作返回体回退
       '/api/v1/tasks/t1/status': { task: { id: 't1', sessionId: 's1', title: '写登录页', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'in_progress' } },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
@@ -481,7 +513,14 @@ describe('Chat', () => {
     fireEvent.dragStart(card.closest('.kanban-card')!)
     fireEvent.dragOver(doneColumn.closest('.kanban-column')!)
     fireEvent.drop(doneColumn.closest('.kanban-column')!)
-    expect(await screen.findByText(/🔄 进行中/)).toBeTruthy()
+    // 真实证明移动：列头「🔄 进行中」恒渲染，仅断言它无法证明任务移动（空转）。
+    // 改为断言 ① PATCH 状态路由被调用（mockFetch 的 patchedTasks 使重拉返回新状态）
+    // ② 任务卡出现在进行中列内（within 限定列作用域，等待重拉后卡片迁移）
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith('/api/v1/tasks/t1/status', expect.objectContaining({ method: 'PATCH' })),
+    )
+    const inProgressColumn = screen.getByText(/🔄 进行中/).closest('.kanban-column')! as HTMLElement
+    expect(await within(inProgressColumn).findByText(/写登录页/)).toBeTruthy()
   })
 
   it('sends a daily report message', async () => {
