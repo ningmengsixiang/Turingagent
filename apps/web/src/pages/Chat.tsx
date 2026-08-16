@@ -3,6 +3,7 @@ import type { Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contr
 import { createMemory, createSession, decideApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, summarizeMemory, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
+import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
 
 export interface ChatProps {
   onLogout: () => void
@@ -34,6 +35,10 @@ export function Chat({ onLogout }: ChatProps) {
   const [showMention, setShowMention] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [speech, setSpeech] = useState<SpeechSession | null>(null)
+  const [recording, setRecording] = useState(false)
+  const speechRef = useRef<SpeechSession | null>(null)
+  const recordingRef = useRef(false)
   const [tasks, setTasks] = useState<Task[]>([])
   const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
@@ -115,6 +120,15 @@ export function Chat({ onLogout }: ChatProps) {
       ws.close()
     }
   }, [refreshSessions])
+
+  useEffect(() => {
+    const s = createSpeechSession()
+    speechRef.current = s
+    setSpeech(s)
+    return () => {
+      speechRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (activeId) {
@@ -280,6 +294,43 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }
 
+  async function handleSpeechStop() {
+    recordingRef.current = false
+    setRecording(false)
+    const s = speechRef.current
+    if (!s || !activeId) return
+    try {
+      const result = await s.stop()
+      if (result.kind === 'transcript' && result.text) {
+        // 转写成功 → 文字消息（直接走发送链路，避免 setInput 异步读旧值）
+        setBusy(true)
+        setError(null)
+        try {
+          const sessionId = await ensureSession()
+          if (sessionId) {
+            const clientMsgId = crypto.randomUUID()
+            await sendMessage(sessionId, { clientMsgId, contentType: 'text', content: result.text, replyTo: replyingTo?.id })
+            await loadMessages(sessionId)
+            void refreshSessions()
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : '发送失败')
+        } finally {
+          setBusy(false)
+        }
+      } else if (result.kind === 'audio' && result.blob.size > 0) {
+        // 降级：语音文件上传（决策 D6）
+        const file = new File([result.blob], `语音-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`, {
+          type: result.mime,
+        })
+        await uploadFile(activeId, file)
+        await loadMessages(activeId)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '语音发送失败')
+    }
+  }
+
   return (
     <div className="chat-layout mention-host">
       <aside className="session-sidebar">
@@ -328,6 +379,7 @@ export function Chat({ onLogout }: ChatProps) {
             const isCard = m.contentType === 'confirmation_card'
             const isTask = m.contentType === 'task_card'
             const isFile = m.contentType === 'file'
+            const isVoice = m.contentType === 'voice' || (isFile && /audio\//.test(m.file?.mime ?? ''))
             const isPending = isCard && m.content.startsWith('待审批')
             return (
               <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
@@ -368,6 +420,13 @@ export function Chat({ onLogout }: ChatProps) {
                       </div>
                     ) : null}
                   </div>
+                ) : isVoice ? (
+                  <div className="file-bubble voice-bubble">
+                    <span>🎤 语音消息</span>
+                    {m.ref?.kind === 'file' ? (
+                      <button className="ghost small" onClick={() => void downloadFile(m.ref!.id, m.content)}>播放</button>
+                    ) : null}
+                  </div>
                 ) : isFile ? (
                   <div className="file-bubble">
                     <span>📎 {m.content}</span>
@@ -401,6 +460,24 @@ export function Chat({ onLogout }: ChatProps) {
             onChange={(e) => { void upload(e.target.files); e.target.value = '' }}
           />
           <button className="ghost" onClick={() => fileInputRef.current?.click()}>📎</button>
+          {speech?.canRecord ? (
+            <button
+              className={`ghost ${recording ? 'recording' : ''}`}
+              title={recording ? '松开发送' : '按住说话'}
+              onPointerDown={(e) => {
+                e.preventDefault()
+                recordingRef.current = true
+                setRecording(true)
+                speechRef.current?.start()
+              }}
+              onPointerUp={() => void handleSpeechStop()}
+              onPointerLeave={() => {
+                if (recordingRef.current) void handleSpeechStop()
+              }}
+            >
+              🎤
+            </button>
+          ) : null}
           <button className="ghost" onClick={() => setShowMention((v) => !v)}>@</button>
           <input
             value={input}
