@@ -89,7 +89,7 @@ export function registerFileRoutes(
       const keyRes = await pool.query<{ storage_key: string }>('SELECT storage_key FROM files WHERE id = $1', [fileId])
       const storageKey = keyRes.rows[0]?.storage_key
       if (!storageKey) return reply.code(404).send({ error: 'file not found' })
-      const url = await presignedGetUrl(storage, config.minioBucket, storageKey)
+      const url = await presignedGetUrl(storage, config.minioBucket, storageKey, 900, file.name)
       return { url, file }
     },
   )

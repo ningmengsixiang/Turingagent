@@ -76,5 +76,10 @@ describe('file routes', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.url).toContain('X-Amz-Signature') // 预签名 URL
+    // presigned URL 必须带 attachment Content-Disposition：浏览器强制下载而非内联预览，且保留原始文件名
+    const url = new URL(body.url)
+    const disposition = url.searchParams.get('response-content-disposition')
+    expect(disposition).toContain('attachment')
+    expect(disposition).toContain("filename*=UTF-8''a.txt")
   })
 })

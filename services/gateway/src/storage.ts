@@ -35,6 +35,14 @@ export async function presignedGetUrl(
   bucket: string,
   key: string,
   expiresSeconds = 900,
+  name?: string,
 ): Promise<string> {
-  return client.presignedGetObject(bucket, key, expiresSeconds)
+  // name 存在时附加 response-content-disposition，强制浏览器附件下载（attachment）而非内联预览，并保留原始文件名
+  // minio 8.0.7 presignedGetObject(bucket, key, expires, respHeaders) 第 4 参 respHeaders: PreSignRequestParams 支持
+  return client.presignedGetObject(
+    bucket,
+    key,
+    expiresSeconds,
+    name ? { 'response-content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(name)}` } : undefined,
+  )
 }
