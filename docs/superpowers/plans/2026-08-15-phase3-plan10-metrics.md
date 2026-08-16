@@ -8,6 +8,8 @@
 
 **Tech Stack:** `prom-client`（Prometheus 标准库）+ Fastify。
 
+**质量审查决策（T1-T3 后追加）：** ① messages 计数顶层独立监听（与 agent 启停无关）；② WS counted 守卫（鉴权成功才 inc、close 单次 dec，error 后必 close 无泄漏）；③ route 用 request.routeOptions.url（Fastify 5 等价）；④ 提交边界偏离合理（T1 含 quota gauge、T3 含 server.ts、83ad528 修正）。**记录后续**：metrics 埋点无直接测试断言（可选补）；bridge success 埋点在持久化前（complete 成功但持久化失败会双计 success+error，可后移）；/metrics DB 故障时 500（Prometheus 记 scrape 失败）。
+
 **决策记录：** 用 prom-client（标准格式，后续 Grafana 直接可用）；`/metrics` 无鉴权（与 /healthz 一致——生产在 LB/内网暴露，公网需网络隔离）；HTTP 计数用 onResponse hook（route 匹配——Fastify reply.routeOptions.url 取 route）；指标覆盖核心可观测面（消息/agent/配额/WS/升级）；配额 gauge 每次 /metrics 拉取时实时读（prom-client 的 collect 回调或缓存刷新）；`agent_runs_total` 标签含 agent id 与 outcome（success/quota/error）；DEPLOYMENT.md §8 更新为已落地 + Grafana 配置指引。
 
 ---
@@ -33,14 +35,14 @@
 - Create: `services/gateway/src/metrics.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 增 prom-client 依赖**
+- [x] **Step 1: 增 prom-client 依赖**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
 pnpm --filter @ta/gateway add prom-client
 ```
 
-- [ ] **Step 2: 写 metrics.ts**
+- [x] **Step 2: 写 metrics.ts**
 
 创建 `services/gateway/src/metrics.ts`：
 
@@ -115,14 +117,14 @@ export function registerMetricsRoutes(app: FastifyInstance): void {
 }
 ```
 
-- [ ] **Step 3: server.ts 注册**
+- [x] **Step 3: server.ts 注册**
 
 读 `services/gateway/src/server.ts`：
 1. import 增 `registerMetricsRoutes, metricsOnResponse` from './metrics.js'。
 2. `registerHealth(app)` 附近注册 `registerMetricsRoutes(app)`（**无 auth**）。
 3. `app.addHook('onResponse', metricsOnResponse)`。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -131,7 +133,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/package.json services/gateway/src/metrics.ts services/gateway/src/server.ts pnpm-lock.yaml
@@ -147,22 +149,22 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(metrics)
 - Modify: `services/gateway/src/ws.ts`
 - Modify: `services/gateway/src/scheduler.ts`
 
-- [ ] **Step 1: bridge.ts 埋点**
+- [x] **Step 1: bridge.ts 埋点**
 
 读 `services/gateway/src/agent/bridge.ts`，import 增 `agentRunsTotal, agentTokensTotal`；`runAgent` 内三处：
 1. 熔断分支（quota trip）：`agentRunsTotal.inc({ agent: agent.id, outcome: 'quota' })`。
 2. 成功（provider.complete 后）：`agentRunsTotal.inc({ agent: agent.id, outcome: 'success' })` + `agentTokensTotal.inc(completion.promptTokens + completion.completionTokens)`。
 3. error reply 分支：`agentRunsTotal.inc({ agent: agent.id, outcome: 'error' })`。
 
-- [ ] **Step 2: ws.ts 连接计数**
+- [x] **Step 2: ws.ts 连接计数**
 
 读 `services/gateway/src/ws.ts`，import 增 `wsConnections`；连接建立 `wsConnections.inc()`，close 时 `wsConnections.dec()`（找到 socket close 处理处）。
 
-- [ ] **Step 3: scheduler.ts 升级计数**
+- [x] **Step 3: scheduler.ts 升级计数**
 
 读 `services/gateway/src/scheduler.ts`，import 增 `escalationRunsTotal`；`runEscalationTick` 升级后 `escalationRunsTotal.inc(escalated.length)`。
 
-- [ ] **Step 4: 配额 gauge 实时**
+- [x] **Step 4: 配额 gauge 实时**
 
 读 `services/gateway/src/routes/org.ts` 或 getQuota 调用处——`/metrics` 拉取时配额 gauge 需实时。**方案**：metrics.ts 的 /metrics handler 内调用 `getQuota(pool)` 更新 gauge（需 pool——registerMetricsRoutes 增参数）。修改：
 
@@ -180,7 +182,7 @@ export function registerMetricsRoutes(app: FastifyInstance, pool: pg.Pool): void
 
 （import 增 getQuota from './repos/quota.js'；server.ts 调用处传 pool。）
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -190,7 +192,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add services/gateway/src/agent/bridge.ts services/gateway/src/ws.ts services/gateway/src/scheduler.ts services/gateway/src/metrics.ts services/gateway/src/server.ts
@@ -205,7 +207,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(metrics)
 - Create: `services/gateway/src/metrics.test.ts`
 - Modify: `DEPLOYMENT.md`
 
-- [ ] **Step 1: metrics.test.ts**
+- [x] **Step 1: metrics.test.ts**
 
 创建 `services/gateway/src/metrics.test.ts`（复用既有路由测试风格）：
 
@@ -252,7 +254,7 @@ describe('metrics', () => {
 })
 ```
 
-- [ ] **Step 2: DEPLOYMENT.md §8 更新**
+- [x] **Step 2: DEPLOYMENT.md §8 更新**
 
 读 DEPLOYMENT.md §8（监控建议），替换为已落地说明：
 
@@ -270,7 +272,7 @@ describe('metrics', () => {
 - 日志采集：容器 stdout（docker compose logs / K8s 收集）记后续
 ```
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -282,14 +284,14 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；metrics.test.ts 2 用例 PASS；全量 gateway 206 用例（204+2）全 PASS。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/metrics.test.ts DEPLOYMENT.md
 git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(metrics): 指标端点测试 + DEPLOYMENT 监控节落地"
 ```
 
-- [ ] **Step 5: 全仓验收 + 推送**
+- [x] **Step 5: 全仓验收 + 推送**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -302,7 +304,7 @@ git push
 
 Expected: 全绿；推送成功（CI 应绿）。
 
-- [ ] **Step 6: 真实验收**
+- [x] **Step 6: 真实验收**
 
 ```bash
 cd /tmp
