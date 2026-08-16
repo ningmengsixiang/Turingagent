@@ -8,6 +8,8 @@
 
 **Tech Stack:** GitHub Actions（ubuntu-latest + pnpm/action-setup + node 24 + postgres/minio 服务容器供 gateway 测试）+ pnpm audit。无新依赖。
 
+**质量审查决策（T1-T3 后追加）：** ① **CI 数据库用 ta_dev**——gateway 测试 15 处硬编码 `ta_dev`（test-helpers.ts:4 不读 env、13 测试文件显式传 databaseUrl），ci.yml 原建 ta_test 导致 CI 全挂；最小修复：CI postgres 建 ta_dev（容器隔离无本地冲突），test-helpers 支持 env 覆盖记入后续优化；② **minio health check 换 bash /dev/tcp**——minio/minio:latest 自 2023 已移除 curl（上游 #18371），curl 探活必失败；③ pnpm/action-setup version 9 与本地 11.7 不符但 lockfileVersion 9.0 兼容（对齐 11 记入后续）；④ node 22 满足 engines>=22（本地 24，计划内部 22/24 表述统一为 22）。**后续优化**：test-helpers 读 `process.env.DATABASE_URL ?? ta_dev`、CI 对齐 pnpm 11。
+
 **决策记录：** CI 用 GitHub Actions（仓库在 GitHub）；gateway 测试需 PG → services 容器 postgres:16（复用本地 ta_dev schema 语义，CI 用独立库名避免与本地冲突）；MinIO 测试用 services 容器 minio（CI 起容器，避免本地依赖）；`eval:silence` 门禁正式接入 CI（此前仅手动，roadmap 风险表第 1 条发布门禁闭环）；安全门禁用 `pnpm audit --audit-level high`（severity high/critical 失败；audit 需联网，GitHub Actions 可用）；部署联动为「两级审批 environment + workflow_dispatch」骨架（无真实服务器，实际部署命令/SSH 配置记 Phase 2 后续——私有化安装器 M2.5 联动）；代码评审门禁 = CI 必过（无独立 reviewdog，git 环境 github 自带 PR 检查）。注意：`pnpm audit` 在 CI 若因 registry 网络问题失败，用 `--no-audit` 降级选项记录（不绕过门禁）。
 
 ---
@@ -49,7 +51,7 @@ jobs:
         env:
           POSTGRES_USER: ta
           POSTGRES_PASSWORD: ta
-          POSTGRES_DB: ta_test
+          POSTGRES_DB: ta_dev
         ports:
           - 5432:5432
         options: >-
@@ -65,13 +67,13 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo >&3 && exec 3>&-' || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+      DATABASE_URL: postgres://ta:ta@localhost:5432/ta_dev
       MINIO_ENDPOINT: localhost:9000
       MINIO_ACCESS_KEY: taadmin
       MINIO_SECRET_KEY: ta12345678
@@ -95,7 +97,7 @@ jobs:
       - name: Migrate database
         run: pnpm --filter @ta/gateway migrate
         env:
-          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_dev
 
       - name: Typecheck
         run: pnpm -r typecheck
@@ -103,7 +105,7 @@ jobs:
       - name: Test
         run: pnpm test
         env:
-          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_dev
 
       - name: Silence eval gate (发布门禁)
         run: pnpm --filter @ta/gateway eval:silence
