@@ -102,8 +102,8 @@ export function Chat({ onLogout }: ChatProps) {
         if (ev.type === 'message.updated' && ev.message) {
           if (ev.message.sessionId === activeIdRef.current) {
             setMessages((prev) => prev.map((m) => (m.id === ev.message!.id ? ev.message! : m)))
+            if (ev.message.contentType === 'task_card') void loadTasks(ev.message.sessionId)
           }
-          if (ev.message.contentType === 'task_card') void loadTasks(ev.message.sessionId)
         }
       },
     )
