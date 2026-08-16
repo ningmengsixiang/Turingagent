@@ -10,7 +10,9 @@
 
 **决策记录：** 分类器与评测集按同一产品规则（PRD §6.7 触发矩阵）构建，评测集为固定资产入库（生成器可复现、JSON 即真源）；准确率门禁 ≥95% 是发布门槛（roadmap 风险表第 1 条）；分类器不可用时降级为纯 @ 必响应（现有行为，PRD §6.7 关键交互规则 1）；非 @ 触发一律路由 Ta-PM（仲裁者，不并行多个 agent，避免刷屏）；关键词打分 ≥3 分触发（强词 2-3 分、普通词 1 分，防闲聊误报）；决策点正则刻意收紧（如「对比一下」而非裸「比较」，防「这个比较好吃」误报）。后续（记入 Phase 2）：分类器升级为 LLM/embedding 打分、评测集持续扩充、误报回归流程。
 
-**质量审查决策（T1 后追加）：** `MENTION_RE` 收窄为 Ta 系白名单 `/@\s*Ta[-_]?(?:PM|Architect|Fullstack|QA)(?![\w-])/i`（与 registry 一致；消除 email `a@b.com`、镜像 `nginx@sha256:…`、分支名 `feature@dev` 误报，`\w` 不含中文故 `@所有人` 本不匹配）；决策正则移除「同意|通过」（授予侧非审批请求侧，消除「我通过了考试」「打卡通过了」误报）——两项修正实证对评测集准确率影响为 0（100% 保持）。**已知误报类（记 Phase 2，修需联动重生成 decision 模板，当前 10 条模板 7 条依赖这些模式）**：闲聊决策「你决定去哪吃饭/选哪个餐厅/红烧肉还是清蒸鱼好/哪个更好吃/股票跌了怎么办」；**已知漏报类（记 Phase 2 LLM 分类器）**：`吗`-问句（「这个需求要做吗」）、「进度怎么样」、空格敏感（「版本 1 和版本 2」vs「版本1和版本2」、`方案1 vs 方案2`）。评测集结构性弱点已记录：100% 源于模板与正则同源设计，靠 idle 模板补易混淆负例（Task 2 已含「我通过了考试 / admin@example.com / @所有人 / docker pull nginx@sha256:…」）与持续扩充缓解；频率限制器（≤3 条/轮、≥30s）兜底刷屏。
+**质量审查决策（T1 后追加）：** `MENTION_RE` 收窄为 Ta 系白名单 `/@\s*Ta[-_]?(?:PM|Architect|Fullstack|QA)(?![\w-])/i`（与 registry 一致；消除 email `a@b.com`、镜像 `nginx@sha256:…`、分支名 `feature@dev` 误报，`\w` 不含中文故 `@所有人` 本不匹配）；决策正则移除「同意|通过」（授予侧非审批请求侧，消除「我通过了考试」「打卡通过了」误报）——两项修正实证对评测集准确率影响为 0（100% 保持）。**关键锚定用例（T1 修复点）已固化为 vitest 硬断言**（`silence.test.ts` 的 `does not fire on emails, code fragments or approval-ack phrases`：admin@example.com/nginx@sha256/feature@dev/我同意/我通过了考试/打卡通过了/@所有人 必须 silent）——发布门禁除 ≥95% 阈值外，这些硬断言独立于评测集生效。**已知误报类（记 Phase 2，修需联动重生成 decision 模板，当前 10 条模板 7 条依赖这些模式）**：闲聊决策「你决定去哪吃饭/选哪个餐厅/红烧肉还是清蒸鱼好/哪个更好吃/股票跌了怎么办」；**已知漏报类（记 Phase 2 LLM 分类器）**：`吗`-问句（「这个需求要做吗」）、「进度怎么样」、空格敏感（「版本 1 和版本 2」vs「版本1和版本2」、`方案1 vs 方案2`）。评测集结构性弱点已记录：100% 源于模板与正则同源设计，靠 idle 模板补易混淆负例（Task 2 已含「我通过了考试 / admin@example.com / @所有人 / docker pull nginx@sha256:…」）与持续扩充缓解；频率限制器（≤3 条/轮、≥30s）兜底刷屏。
+
+**质量审查决策（T2 后追加）：** ① keyword 类改为**无放回抽样**（rng 洗牌 1600 组合取前 250）消除 18 组重复；② **per-category seed**（mention/decision/keyword/idle 各自 `mulberry32(42+类别序号)`）隔离 rng 消费，新增模板不再导致其他类别漂移；③ 生成器提炼 `take()` 辅助并修正「无词重叠」注释（`交付里程碑` 含 B 词 `交付`，因词表 includes 去重不影响分数）；④ reason 字段携带增益信息（keyword 记分值、decision 记命中正则索引）便于调试；⑤ runner 增加 JSON 运行时校验（input/expected/category/reason 四字段 + expected ∈ {respond,silent}），防手改 JSON 静默抬高准确率；⑥ 门禁生效依赖 Task 3 落地（runner + vitest + 脚本），此前「≥95% 发布门禁」无执行点——Task 3 完成后闭环。**门禁防退化实证**：≥95% 阈值允许 50 例失败，单条正则删除多逃逸（4/8 条决策正则删除 0 失败，模板双锚定遮蔽）；核心防线 = 关键锚定硬断言（见上）+ 三大机制整体存在性（删整条 keyword/MENTION 路径 → 75% 红）。记 Phase 2：补回 slice 截断的 8 个 idle 模板、`吗`-问句/进度/空格敏感正例、mention 边界负例（`@@`/`@bob`/全角 ＠/多 agent）、真实多句长消息语料、三重常量（generator/classifier/registry）去重或一致性测试。
 
 ---
 
@@ -196,11 +198,11 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 
 - [ ] **Step 1: 写生成器**
 
-创建 `services/gateway/src/eval/gen-cases.ts`，内容逐字如下（mulberry32 seed=42，确定性）：
+创建 `services/gateway/src/eval/gen-cases.ts`，内容逐字如下（mulberry32 per-category seed，无放回抽样，确定性）：
 
 ```ts
 /** 生成 1,000 组固定评测集（4×250：@提及/决策点/关键词/闲聊）到 silence-cases.json。
- *  确定性：mulberry32(42) + 固定模板；每次运行产出相同 JSON。 */
+ *  确定性：每类独立 seed（42+类别序号）+ 固定模板；无放回抽样保证 keyword 类不重复；每次运行产出相同 JSON。 */
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -219,6 +221,21 @@ function mulberry32(seed: number): () => number {
 
 function pick<T>(rng: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length)]!
+}
+
+/** 无放回抽样：rng 洗牌后取前 n（Fisher-Yates） */
+function sample<T>(rng: () => number, arr: readonly T[], n: number): T[] {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j]!, copy[i]!]
+  }
+  return copy.slice(0, n)
+}
+
+/** 取前 n（保序） */
+function take<T>(arr: readonly T[], n: number): T[] {
+  return arr.slice(0, n)
 }
 
 interface Case {
@@ -272,7 +289,8 @@ const KEYWORD_A = [
   '需求文档', '后端接口', '测试用例', '这个功能', '架构方案', 'prd', '代码审查', '数据库表', '前端页面', '性能优化',
   '接口文档', '交付里程碑', '任务清单', '项目进度', '测试脚本', '版本计划', '需求评审', '技术方案', 'bug 清单', '里程碑',
 ]
-// KEYWORD_A 各项为 1-3 分词（普通 1 分/强 2 分/极强 3 分），与 KEYWORD_B 无词重叠（避免词表去重后分数不足）；任一 A + B 组合总分 ≥3
+// KEYWORD_A 各项为 1-3 分词（普通 1 分/强 2 分/极强 3 分），KEYWORD_B 全为 2 分词；
+// 与词表 includes 判定下无去重分数损失（A 含 B 词仅影响去重计数，不影响总分），任一 A + B 组合总分 ≥3
 const KEYWORD_B = [
   '上线', '部署', '验收', '交付', '重构', '排期', '联调', '压测',
 ]
@@ -325,49 +343,50 @@ const IDLE_TEMPLATES = [
 ]
 const IDLE_SUFFIXES = ['', '，大家呢？', '～', '!', '……', '？', '～啦']
 
-// ---- 展开：每类恰 250 组（确定性 slice） ----
+// ---- 展开：每类恰 250 组（per-category seed，无放回抽样，均匀覆盖模板面） ----
 function buildCases(): Case[] {
-  const rng = mulberry32(42)
   const cases: Case[] = []
 
-  // 1) @提及 250：前缀×agent×任务 穷举取前 250
-  const mention: Case[] = []
+  // 1) @提及 250：640 组合无放回抽样（per-category seed=42，覆盖全部前缀/agent/任务）
+  const mentionRng = mulberry32(42)
+  const mentionPool: Case[] = []
   for (const prefix of MENTION_PREFIXES) {
     for (const agent of MENTION_AGENTS) {
       for (const task of MENTION_TASKS) {
-        mention.push({ input: `${prefix}${agent} ${task}`, expected: 'respond', category: 'mention', reason: 'mention' })
+        mentionPool.push({ input: `${prefix}${agent} ${task}`, expected: 'respond', category: 'mention', reason: 'mention' })
       }
     }
   }
-  cases.push(...mention.slice(0, 250))
+  cases.push(...sample(mentionRng, mentionPool, 250))
 
-  // 2) 决策点 250：模板×主语 穷举取前 250
-  const decision: Case[] = []
+  // 2) 决策点 250：模板×主语 穷举恰 250（10×25，保序，无 rng）
   for (const tpl of DECISION_TEMPLATES) {
     for (const subj of DECISION_SUBJECTS) {
-      decision.push({ input: tpl(subj), expected: 'respond', category: 'decision', reason: 'decision-point' })
+      cases.push({ input: tpl(subj), expected: 'respond', category: 'decision', reason: 'decision-point' })
     }
   }
-  cases.push(...decision.slice(0, 250))
 
-  // 3) 关键词 250：模板×A×B 抽样 250（rng 驱动，固定 seed 可复现）
-  const keyword: Case[] = []
-  while (keyword.length < 250) {
-    const a = pick(rng, KEYWORD_A)
-    const b = pick(rng, KEYWORD_B)
-    const tpl = pick(rng, KEYWORD_TEMPLATES)
-    keyword.push({ input: tpl(a, b), expected: 'respond', category: 'keyword', reason: 'keyword-score' })
+  // 3) 关键词 250：1600 组合无放回抽样（per-category seed=44，不重复）
+  const keywordRng = mulberry32(44)
+  const keywordPool: Case[] = []
+  for (const tpl of KEYWORD_TEMPLATES) {
+    for (const a of KEYWORD_A) {
+      for (const b of KEYWORD_B) {
+        keywordPool.push({ input: tpl(a, b), expected: 'respond', category: 'keyword', reason: 'keyword-score' })
+      }
+    }
   }
-  cases.push(...keyword)
+  cases.push(...sample(keywordRng, keywordPool, 250))
 
-  // 4) 闲聊 250：模板×后缀 穷举取前 250（含易混淆负例）
-  const idle: Case[] = []
+  // 4) 闲聊 250：308 组合无放回抽样（per-category seed=46，覆盖全部模板含易混淆负例）
+  const idleRng = mulberry32(46)
+  const idlePool: Case[] = []
   for (const tpl of IDLE_TEMPLATES) {
     for (const suffix of IDLE_SUFFIXES) {
-      idle.push({ input: `${tpl()}${suffix}`, expected: 'silent', category: 'idle', reason: 'idle-chat' })
+      idlePool.push({ input: `${tpl()}${suffix}`, expected: 'silent', category: 'idle', reason: 'idle-chat' })
     }
   }
-  cases.push(...idle.slice(0, 250))
+  cases.push(...sample(idleRng, idlePool, 250))
 
   return cases
 }
@@ -376,9 +395,17 @@ const all = buildCases()
 if (all.length !== 1000) {
   throw new Error(`expected 1000 cases, got ${all.length}`)
 }
+for (const cat of ['mention', 'decision', 'keyword', 'idle'] as const) {
+  const n = all.filter((c) => c.category === cat).length
+  if (n !== 250) throw new Error(`expected 250 ${cat} cases, got ${n}`)
+}
+const uniqueInputs = new Set(all.map((c) => c.input))
+if (uniqueInputs.size !== 1000) {
+  throw new Error(`expected 1000 unique inputs, got ${uniqueInputs.size}`)
+}
 const outPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'silence-cases.json')
 writeFileSync(outPath, JSON.stringify(all, null, 2) + '\n')
-console.log(`generated ${all.length} cases -> ${outPath}`)
+console.log(`generated ${all.length} cases (${uniqueInputs.size} unique) -> ${outPath}`)
 ```
 
 - [ ] **Step 2: 运行生成器并核对**
@@ -391,12 +418,13 @@ import json
 c=json.load(open('services/gateway/src/eval/silence-cases.json'))
 from collections import Counter
 print('total', len(c))
+print('unique', len({x['input'] for x in c}))
 print(Counter(x['category'] for x in c))
 print(Counter(x['expected'] for x in c))
 "
 ```
 
-Expected: total 1000；category 四类各 250；expected respond 750 / silent 250。生成器幂等（再跑一次 `git diff --stat` 无变化）。
+Expected: total 1000；unique 1000；category 四类各 250；expected respond 750 / silent 250。生成器幂等（再跑一次 `git diff --stat` 无变化）；总数/分类/唯一性不满足时生成器自行 throw（先读报错，不自行改代码）。
 
 - [ ] **Step 3: 提交**
 
