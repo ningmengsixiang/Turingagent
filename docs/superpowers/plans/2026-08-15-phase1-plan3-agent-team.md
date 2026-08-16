@@ -128,28 +128,28 @@ export const AGENTS: AgentDefinition[] = [
   {
     id: 'agent-ta-pm',
     displayName: 'Ta-PM',
-    mentionPattern: /@\s*Ta[-_]?PM/i,
+    mentionPattern: /@\s*Ta[-_]?PM(?![\w-])/i,
     persona: TA_PM_PERSONA,
     description: '需求澄清与流程推进',
   },
   {
     id: 'agent-ta-architect',
     displayName: 'Ta-Architect',
-    mentionPattern: /@\s*Ta[-_]?Architect/i,
+    mentionPattern: /@\s*Ta[-_]?Architect(?![\w-])/i,
     persona: TA_ARCHITECT_PERSONA,
     description: '技术评审与影响评估',
   },
   {
     id: 'agent-ta-fullstack',
     displayName: 'Ta-Fullstack',
-    mentionPattern: /@\s*Ta[-_]?Fullstack/i,
+    mentionPattern: /@\s*Ta[-_]?Fullstack(?![\w-])/i,
     persona: TA_FULLSTACK_PERSONA,
     description: '软件生成与交付',
   },
   {
     id: 'agent-ta-qa',
     displayName: 'Ta-QA',
-    mentionPattern: /@\s*Ta[-_]?QA/i,
+    mentionPattern: /@\s*Ta[-_]?QA(?![\w-])/i,
     persona: TA_QA_PERSONA,
     description: '测试与验收',
   },
@@ -161,6 +161,7 @@ export function findAgentByMention(content: string): { agent: AgentDefinition; r
     const match = agent.mentionPattern.exec(content)
     if (match) {
       const requirement = content.slice(match.index + match[0].length).trim()
+      if (requirement.length === 0) return null // 空提及视为无需求（保持旧语义）
       return { agent, requirement }
     }
   }
