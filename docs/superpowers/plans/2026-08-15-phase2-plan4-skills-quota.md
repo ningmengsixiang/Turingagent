@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。Node fs 读 manifest + PG（agent_usage 表）+ Fastify 路由 + AgentBridge 集成。
 
+**质量审查决策（T2-T4 后追加）：** ① `tripped: used >= budget`（计划原文 `budget > 0 &&` 使预算=0 永不熔断，与契约注释及熔断用例矛盾——修正）；② POST 调额端点用 `adminOnly`（users 仓储已有 admin/member 角色机制，符合决策记录「admin 角色校验」），GET 配额用 `auth`（登录可见）；③ test-helpers truncate 增 agent_usage、刻意保留 quota_config（迁移默认预算行，防全量熔断）；④ 熔断用例额外断言 provider.calls=0（真实验证未调 LLM）。**记录 nit（后续）**：setQuotaBudget 无自愈 INSERT（quota_config 行丢失 → 永久熔断，建议加 ON CONFLICT DO NOTHING）；listSkills 排序在 try/catch 外（缺 id manifest 会使列表 500）；org quota 端点无直接路由测试；GET 端点提前到 Task 3 落地（无害重排）。
+
 **决策记录：** 技能包 MVP 用静态 manifest 文件（零 DB、文件即真源、热加载=重读；技能包市场/安装流程记 Phase 2 后续）；工具白名单为声明式元数据（当前 agent 无真实工具执行——工具执行层在 D1 改判 B（自建编排层）时落地，manifest 先行）；配额三层简化为「企业级总量」一级计量（项目/单任务子配额记 Phase 2 后续，避免过度建模；契约保留 level 字段扩展）；80% 预警为返回 usage 比例（前端配额条展示，L2 通知记后续）；熔断仅拦截 provider 调用（人类消息/IM 不受影响，PRD 硬约束）；管理员调额端点无 RBAC 角色校验（MVP 演示登录仅 member/admin 两级，用 admin 角色校验——先核对 users 角色现状，若无 admin 角色机制则记录并允许 member 调用，Phase 2 RBAC 完整化时收紧）；agent 用量按 agent.id 累计（无用户维度——单机 MVP 够用，多租户记 Phase 3）。
 
 ---
@@ -133,7 +135,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: contracts build exit 0；typecheck exit 0（新增类型无消费方，无报错）；migrate 应用 009。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/009_quota.sql services/gateway/skills
@@ -150,7 +152,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(skill): 
 - Create: `services/gateway/src/routes/skills.test.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 写 repos/skills.ts**
+- [x] **Step 1: 写 repos/skills.ts**
 
 创建 `services/gateway/src/repos/skills.ts`，内容逐字如下：
 
@@ -182,7 +184,7 @@ export function getSkill(id: string): Skill | null {
 }
 ```
 
-- [ ] **Step 2: 写 routes/skills.ts**
+- [x] **Step 2: 写 routes/skills.ts**
 
 创建 `services/gateway/src/routes/skills.ts`，内容逐字如下：
 
@@ -232,7 +234,7 @@ export function registerSkillRoutes(app: FastifyInstance, config: Config, pool: 
 }
 ```
 
-- [ ] **Step 3: 写 skills.test.ts**
+- [x] **Step 3: 写 skills.test.ts**
 
 创建 `services/gateway/src/routes/skills.test.ts`，内容逐字如下（复用既有路由测试风格——先读 routes/approvals.test.ts 或 files.test.ts 的 setup：buildApp/登录/建会话 helper）：
 
@@ -315,7 +317,7 @@ describe('skill routes', () => {
 })
 ```
 
-- [ ] **Step 4: server.ts 注册**
+- [x] **Step 4: server.ts 注册**
 
 读 `services/gateway/src/server.ts`，在 `registerOrgRoutes(app, config, pool)` 之后增：
 
@@ -325,7 +327,7 @@ describe('skill routes', () => {
 
 （import 增 `registerSkillRoutes` from `./routes/skills.js`。）
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -336,7 +338,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/routes/skills.test.ts
 
 Expected: typecheck exit 0；skills.test.ts 3 用例全 PASS。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add services/gateway/src/repos/skills.ts services/gateway/src/routes/skills.ts services/gateway/src/routes/skills.test.ts services/gateway/src/server.ts
@@ -354,7 +356,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(skill): 
 - Modify: `services/gateway/src/routes/org.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 写 repos/quota.ts**
+- [x] **Step 1: 写 repos/quota.ts**
 
 创建 `services/gateway/src/repos/quota.ts`，内容逐字如下：
 
@@ -409,7 +411,7 @@ export async function setQuotaBudget(pool: pg.Pool, budget: number): Promise<Quo
 }
 ```
 
-- [ ] **Step 2: bridge.ts 集成熔断**
+- [x] **Step 2: bridge.ts 集成熔断**
 
 读 `services/gateway/src/agent/bridge.ts`，做三处修改：
 
@@ -488,7 +490,7 @@ export async function setQuotaBudget(pool: pg.Pool, budget: number): Promise<Quo
 
 （`MentionResult.skippedReason` 联合类型增 `'quota'`。）
 
-- [ ] **Step 3: org.ts 增调额端点**
+- [x] **Step 3: org.ts 增调额端点**
 
 读 `services/gateway/src/routes/org.ts`，追加：
 
@@ -519,7 +521,7 @@ export async function setQuotaBudget(pool: pg.Pool, budget: number): Promise<Quo
 
 （import 增 setQuotaBudget、recordAudit；auth 已存在。）
 
-- [ ] **Step 4: bridge.test.ts 补熔断用例**
+- [x] **Step 4: bridge.test.ts 补熔断用例**
 
 读 `services/gateway/src/agent/bridge.test.ts`（setup：StubProvider/临时池），追加：
 
@@ -552,11 +554,11 @@ export async function setQuotaBudget(pool: pg.Pool, budget: number): Promise<Quo
 
 （`pool` 与 `bridge` 变量名以现有测试为准；`as Message` 字面量沿用现有风格。）
 
-- [ ] **Step 5: server.ts 传 quota 相关（无改动即可——bridge 内部用 pool 访问 quota）**
+- [x] **Step 5: server.ts 传 quota 相关（无改动即可——bridge 内部用 pool 访问 quota）**
 
 核对：bridge 已有 pool 依赖，`checkQuota(pool)`/`recordUsage(pool, ...)` 直接用 options.pool，无需 server.ts 改动。org.ts 已注册（server.ts 现有 registerOrgRoutes）。
 
-- [ ] **Step 6: 验证**
+- [x] **Step 6: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -567,7 +569,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/agent/bridge.test.ts src/r
 
 Expected: typecheck exit 0；bridge.test.ts 14 用例（12 + 2 新增）、org.test.ts 既有用例全 PASS。注意：既有 bridge 用例在 runAgent 前多了 checkQuota（预算默认 1000000 不会熔断）与 run 后 recordUsage（写 agent_usage 表）——truncateAll 需含 agent_usage（读 test-helpers.ts 确认 truncate 表清单，若无则加）。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add services/gateway/src/repos/quota.ts services/gateway/src/agent/bridge.ts services/gateway/src/agent/bridge.test.ts services/gateway/src/routes/org.ts services/gateway/src/routes/org.test.ts services/gateway/src/repos/test-helpers.ts
@@ -583,7 +585,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(quota): 
 - Modify: `apps/web/src/pages/Chat.tsx`
 - Modify: `apps/web/src/pages/Chat.test.tsx`
 
-- [ ] **Step 1: client.ts 增 API**
+- [x] **Step 1: client.ts 增 API**
 
 读 `apps/web/src/api/client.ts`，在文件末尾追加：
 
@@ -595,7 +597,7 @@ export const getQuota = (): Promise<{ quota: QuotaStatus }> => request('/api/v1/
 
 （import 增 `Skill, QuotaStatus` from '@ta/contracts'；**注意**：`GET /api/v1/org/quota` 端点 Task 3 未定义——本计划在此补充：routes/org.ts 增 `app.get('/api/v1/org/quota', { preHandler: auth }, async () => ({ quota: await getQuota(pool) }))`（import getQuota）。）
 
-- [ ] **Step 2: Chat.tsx 展示**
+- [x] **Step 2: Chat.tsx 展示**
 
 读 `apps/web/src/pages/Chat.tsx`，在右侧面板「看板」之前或之后增「技能包」区（简化为会话加载后拉一次 skills + quota）：
 
@@ -629,7 +631,7 @@ export const getQuota = (): Promise<{ quota: QuotaStatus }> => request('/api/v1/
 
 4. app.css 增样式（skill-panel/skill-chip/quota-bar/quota-track/quota-fill/warn/tripped）——在 kanban 样式后追加。
 
-- [ ] **Step 3: Chat.test.tsx 补用例**
+- [x] **Step 3: Chat.test.tsx 补用例**
 
 在现有用例后追加：
 
@@ -653,7 +655,7 @@ export const getQuota = (): Promise<{ quota: QuotaStatus }> => request('/api/v1/
 
 （mockFetch key 形式与现有风格一致；若 init effect 在登录后触发，核对渲染时机。）
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
