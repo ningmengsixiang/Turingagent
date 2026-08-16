@@ -22,6 +22,8 @@ import { registerApiKeyRoutes } from './routes/api-keys.js'
 import { registerTemplateRoutes } from './routes/templates.js'
 import { registerMarketplaceRoutes } from './routes/marketplace.js'
 import { registerExternalRoutes } from './routes/external.js'
+import { createMemoryRateLimiter, createRedisRateLimiter, type RateLimiter } from './rate-limit.js'
+import { Redis } from 'ioredis'
 import { registerFileRoutes } from './routes/files.js'
 import { registerMemoryRoutes } from './routes/memories.js'
 import { registerWs } from './ws.js'
@@ -89,7 +91,20 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   registerApiKeyRoutes(app, config, pool)
   registerTemplateRoutes(app, config, pool)
   registerMarketplaceRoutes(app, config, pool)
-  registerExternalRoutes(app, config, pool)
+  // 开放 API 限流：可插拔后端（memory 默认；redis 多副本共享——连不上降级内存 + 警告）
+  let rateLimiter: RateLimiter
+  if (config.rateLimitBackend === 'redis') {
+    const redis = new Redis(config.redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 })
+    rateLimiter = createRedisRateLimiter(redis, config.externalRateLimit)
+    // 连接失败降级内存（fail-open + 警告）
+    redis.on('error', (err) => {
+      console.error('[redis] connection error, falling back to memory rate limit:', err.message)
+      rateLimiter = createMemoryRateLimiter(config.externalRateLimit)
+    })
+  } else {
+    rateLimiter = createMemoryRateLimiter(config.externalRateLimit)
+  }
+  registerExternalRoutes(app, config, pool, rateLimiter)
   registerFileRoutes(app, config, pool, storage, (message) => events.emit('message.created', message))
   registerWs(app, config, pool, registry, events)
 

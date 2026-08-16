@@ -5,36 +5,15 @@ import { isMember } from '../repos/sessions.js'
 import { createMessage, listMessages } from '../repos/messages.js'
 import { recordAudit } from '../repos/audit.js'
 import type { Config } from '../config.js'
+import type { RateLimiter } from '../rate-limit.js'
 import pg from 'pg'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const MAX_LIMIT = 100
 
-/** 内存令牌桶：每 key 每窗口（60s）限 externalRateLimit 次；超限 429 */
-function createRateLimiter(limit: number, windowMs = 60_000) {
-  const buckets = new Map<string, { count: number; resetAt: number }>()
-  return (key: string): { allowed: boolean; retryAfterSec: number } => {
-    const now = Date.now()
-    const bucket = buckets.get(key)
-    if (!bucket || bucket.resetAt <= now) {
-      buckets.set(key, { count: 1, resetAt: now + windowMs })
-      return { allowed: true, retryAfterSec: 0 }
-    }
-    if (bucket.count >= limit) {
-      return { allowed: false, retryAfterSec: Math.ceil((bucket.resetAt - now) / 1000) }
-    }
-    bucket.count += 1
-    return { allowed: true, retryAfterSec: 0 }
-  }
-}
-
 /** 外部系统鉴权：X-API-Key → 绑定用户 id（挂 request.apiKeyUser）；认证通过后按 key 限流（429 + Retry-After） */
-function apiKeyAuth(
-  config: Config,
-  pool: pg.Pool,
-  rateLimit: (key: string) => { allowed: boolean; retryAfterSec: number },
-) {
+function apiKeyAuth(config: Config, pool: pg.Pool, rateLimiter: RateLimiter) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const key = request.headers['x-api-key']
     if (typeof key !== 'string' || key.length === 0) {
@@ -46,17 +25,27 @@ function apiKeyAuth(
     }
     ;(request as FastifyRequest & { apiKeyUser?: string }).apiKeyUser = memberUserId
     // 开放 API 限流（FR-SEC-03）：认证通过后按绑定用户 key 检查——两个外部端点共享
-    const { allowed, retryAfterSec } = rateLimit(memberUserId)
-    if (!allowed) {
-      return reply.code(429).header('Retry-After', retryAfterSec).send({ error: 'rate limit exceeded' })
+    // Redis 后端 incr 失败（连接不可用）→ 降级放行（fail-open）+ 警告日志（决策记录）
+    let rl: { allowed: boolean; retryAfterSec: number }
+    try {
+      rl = await rateLimiter.check(memberUserId)
+    } catch (err) {
+      console.warn('[ratelimit] check failed, allowing request (fail-open):', (err as Error).message)
+      return
+    }
+    if (!rl.allowed) {
+      return reply.code(429).header('Retry-After', rl.retryAfterSec).send({ error: 'rate limit exceeded' })
     }
   }
 }
 
-export function registerExternalRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
-  // 开放 API 限流：内存令牌桶（每 key 每 60s 窗口限 config.externalRateLimit 次；内部端点不受限）
-  const rateLimit = createRateLimiter(config.externalRateLimit)
-  const auth = apiKeyAuth(config, pool, rateLimit)
+export function registerExternalRoutes(
+  app: FastifyInstance,
+  config: Config,
+  pool: pg.Pool,
+  rateLimiter: RateLimiter,
+): void {
+  const auth = apiKeyAuth(config, pool, rateLimiter)
 
   // 外部系统向会话发消息（以绑定用户身份）
   app.post<{ Params: { id: string }; Body: { content?: string } }>(

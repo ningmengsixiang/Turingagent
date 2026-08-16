@@ -15,6 +15,8 @@ export interface Config {
   minioUseSsl: boolean
   escalationCron: string
   externalRateLimit: number
+  rateLimitBackend: 'memory' | 'redis'
+  redisUrl: string
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
@@ -60,5 +62,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     minioUseSsl: env.MINIO_USE_SSL === 'true',
     escalationCron: env.ESCALATION_CRON ?? '0 * * * *',
     externalRateLimit: Number.isFinite(Number(env.EXTERNAL_RATE_LIMIT ?? 60)) && Number(env.EXTERNAL_RATE_LIMIT ?? 60) > 0 ? Number(env.EXTERNAL_RATE_LIMIT ?? 60) : 60,
+    rateLimitBackend: env.RATE_LIMIT_BACKEND === 'redis' ? 'redis' : 'memory',
+    redisUrl: env.REDIS_URL ?? 'redis://localhost:6379',
   }
 }

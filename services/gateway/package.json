@@ -19,6 +19,7 @@
     "@fastify/websocket": "^11.0.2",
     "@ta/contracts": "workspace:*",
     "fastify": "^5.2.1",
+    "ioredis": "^6.0.0",
     "jose": "^5.9.6",
     "minio": "^8.0.2",
     "node-cron": "^4.6.0",
