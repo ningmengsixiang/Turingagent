@@ -309,6 +309,46 @@ export function Chat({ onLogout }: ChatProps) {
     setDragOverStatus(null)
   }
 
+  async function sendTaskReport(kind: 'daily' | 'weekly') {
+    if (!activeId || tasks.length === 0) {
+      setError('当前没有任务可汇总')
+      return
+    }
+    const now = new Date()
+    const rangeStart =
+      kind === 'daily'
+        ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6)
+    const inRange = tasks.filter((t) => !t.dueAt || new Date(t.dueAt) >= rangeStart)
+    const byStatus = (s: TaskStatus) => inRange.filter((t) => t.status === s)
+    const line = (t: Task) => `- ${t.title}（${t.assigneeKind === 'agent' ? '🤖' : '👤'}${t.assigneeId}）`
+    const lines = [
+      `【${kind === 'daily' ? '日报' : '周报'}】${now.toISOString().slice(0, 10)}`,
+      '',
+      `✅ 完成 ${byStatus('done').length} 项：`,
+      ...byStatus('done').map(line),
+      `🔄 进行中 ${byStatus('in_progress').length} 项：`,
+      ...byStatus('in_progress').map(line),
+      `⛔ 阻塞 ${byStatus('blocked').length} 项：`,
+      ...byStatus('blocked').map(line),
+      `📋 待开始 ${byStatus('todo').length} 项：`,
+      ...byStatus('todo').map(line),
+    ].join('\n')
+    try {
+      setBusy(true)
+      setError(null)
+      const sessionId = await ensureSession()
+      if (sessionId) {
+        await sendMessage(sessionId, { clientMsgId: crypto.randomUUID(), contentType: 'text', content: lines })
+        await loadMessages(sessionId)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '生成报告失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   function mentionAgent() {
     setInput((prev) => (prev.startsWith(AGENT_HINT) ? prev : AGENT_HINT + prev))
   }
@@ -629,6 +669,10 @@ export function Chat({ onLogout }: ChatProps) {
         </div>
         {panelOpen && (
           <>
+            <div className="kanban-report-actions">
+              <button className="ghost small" onClick={() => void sendTaskReport('daily')}>📅 日报</button>
+              <button className="ghost small" onClick={() => void sendTaskReport('weekly')}>📆 周报</button>
+            </div>
             <div className="kanban-stats">
               <span className="stat">{tasks.length} 总</span>
               <span className="stat">{tasks.filter((t) => t.status === 'in_progress').length} 进行中</span>
