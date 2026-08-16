@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: ta-prod
+spec:
+  selector:
+    app: ta-gateway
+  ports:
+    - port: 3001
+      targetPort: 3001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ta-gateway
+  namespace: ta-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ta-gateway
+  template:
+    metadata:
+      labels:
+        app: ta-gateway
+    spec:
+      initContainers:
+        - name: migrate
+          # 注（计划修正）：${IMAGE_PREFIX} 是 K8s 清单不支持的变量——用固定占位 REPLACE_IMAGE_PREFIX，install.sh sed 替换
+          image: REPLACE_IMAGE_PREFIXgateway:latest
+          command: ["node", "lib/migrate.js"]
+          envFrom:
+            - configMapRef:
+                name: ta-config
+            - secretRef:
+                name: ta-secret
+          env:
+            - name: DATABASE_URL
+              # $(POSTGRES_PASSWORD) 引用 envFrom 注入的 secret 变量——K8s 支持 env 的 value 中 $(VAR) 展开
+              # （先处理 envFrom，再按序展开 env；官方语义见 Kubernetes "Interdependent environment variables"）
+              value: "postgres://ta:$(POSTGRES_PASSWORD)@postgres:5432/ta_prod"
+      containers:
+        - name: gateway
+          image: REPLACE_IMAGE_PREFIXgateway:latest
+          env:
+            - name: DATABASE_URL
+              value: "postgres://ta:$(POSTGRES_PASSWORD)@postgres:5432/ta_prod"
+          envFrom:
+            - configMapRef:
+                name: ta-config
+            - secretRef:
+                name: ta-secret
+          ports:
+            - containerPort: 3001
+          readinessProbe:
+            httpGet:
+              path: /api/v1/auth/login
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
