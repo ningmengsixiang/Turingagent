@@ -44,6 +44,13 @@ function isUniqueViolation(err: unknown, constraint: string): boolean {
   return e.code === '23505' && e.constraint === constraint
 }
 
+export class MessageRefError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'MessageRefError'
+  }
+}
+
 export async function createMessage(
   pool: pg.Pool,
   input: {
@@ -66,6 +73,13 @@ export async function createMessage(
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    if (input.replyTo) {
+      const ref = await client.query<{ id: string }>(
+        'SELECT id FROM messages WHERE id = $1 AND session_id = $2',
+        [input.replyTo, input.sessionId],
+      )
+      if (!ref.rows[0]) throw new MessageRefError('replyTo message not found in this session')
+    }
     const seqRes = await client.query<{ last_seq: string }>(
       'UPDATE sessions SET last_seq = last_seq + 1 WHERE id = $1 RETURNING last_seq',
       [input.sessionId],

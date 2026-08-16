@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { isMessageContentType, type Message } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember, markRead } from '../repos/sessions.js'
-import { createMessage, listMessages } from '../repos/messages.js'
+import { createMessage, listMessages, MessageRefError } from '../repos/messages.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -59,15 +59,24 @@ export function registerMessageRoutes(
       if (replyTo !== undefined && !UUID_PATTERN.test(replyTo)) {
         return reply.code(400).send({ error: 'replyTo must be a uuid' })
       }
-      const { message, created } = await createMessage(pool, {
-        sessionId,
-        senderId: userId,
-        senderKind: 'human',
-        contentType,
-        content,
-        clientMsgId,
-        replyTo,
-      })
+      let result
+      try {
+        result = await createMessage(pool, {
+          sessionId,
+          senderId: userId,
+          senderKind: 'human',
+          contentType,
+          content,
+          clientMsgId,
+          replyTo,
+        })
+      } catch (err) {
+        if (err instanceof MessageRefError) {
+          return reply.code(400).send({ error: err.message })
+        }
+        throw err
+      }
+      const { message, created } = result
       if (created) onMessageCreated(message)
       return reply.code(created ? 201 : 200).send({ message })
     },

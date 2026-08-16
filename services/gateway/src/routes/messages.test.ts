@@ -153,4 +153,16 @@ describe('message routes', () => {
     const reply = list.json().messages.find((m: { replyTo?: string }) => m.replyTo === firstId)
     expect(reply.replyPreview).toContain('被引用的消息')
   })
+
+  it('rejects replying to a nonexistent message with 400', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/messages`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { clientMsgId: 'm2', contentType: 'text', content: '引用不存在', replyTo: '00000000-0000-0000-0000-000000000000' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 })
