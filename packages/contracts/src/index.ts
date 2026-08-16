@@ -226,3 +226,12 @@ export interface QuotaStatus {
   /** 是否熔断（used >= budget） */
   tripped: boolean
 }
+
+export interface KbDocument {
+  id: string
+  sessionId: string
+  title: string
+  content: string
+  createdBy: string
+  createdAt: string
+}
