@@ -359,7 +359,21 @@ export async function decideApproval(
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    const votes = { ...node.votes, [input.approverId]: input.decision }
+    // 并发双裁决竞态修复：行锁串行化（先到者获胜，后到者重读抛 ALREADY_DECIDED/NOT_PENDING）
+    const lock = await client.query<ApprovalRow>('SELECT id FROM approvals WHERE id = $1 FOR UPDATE', [input.id])
+    if (lock.rowCount !== 1) throw new ApprovalStateError('NOT_FOUND', 'approval not found')
+    const fresh = await client.query<ApprovalNodeRow>(
+      `SELECT * FROM approval_nodes WHERE approval_id = $1 AND node_index = $2`,
+      [input.id, node.index],
+    )
+    const freshVotes = (fresh.rows[0]?.votes ?? {}) as Record<string, string>
+    if (fresh.rows[0] && fresh.rows[0].status !== 'pending') {
+      throw new ApprovalStateError('ALREADY_DECIDED', `node ${node.index} already ${fresh.rows[0].status}`)
+    }
+    if (freshVotes[input.approverId]) {
+      throw new ApprovalStateError('ALREADY_DECIDED', `approver ${input.approverId} already voted`)
+    }
+    const votes = { ...freshVotes, [input.approverId]: input.decision }
     await client.query(
       `UPDATE approval_nodes SET votes = $3, reason = $4 WHERE approval_id = $1 AND node_index = $2`,
       [input.id, node.index, votes, input.reason ?? null],
@@ -498,6 +512,8 @@ export async function cancelApproval(pool: pg.Pool, input: { id: string; operato
   return (await getApproval(pool, input.id))!
 }
 ```
+
+> 注 2（编译适配）：契约 `ApprovalNode` 无 `votes` 字段（votes 仅存 DB），`loadNodes` 内部返回 `ApprovalNode & { votes: Record<string,string> }`（对外映射为 ApprovalNode 时剥离 votes）；`decideApproval` 事务内以 `SELECT ... FOR UPDATE` 行锁串行化并发裁决（先到者获胜，后到者重读抛 ALREADY_DECIDED）——这是对既有「恰一次决策」并发保证的延续（T2 实现者发现计划初稿丢失此保证，按方案 A 修复）。
 
 > 注：`mapApproval` 签名变了（`nodes` 参数）——路由层与测试的调用要相应调整（Task 3）。`createApproval` 保持函数名但签名扩展（nodes 可选）。`ApprovalRow` 增了 mode/current_node_index/version 列。
 
