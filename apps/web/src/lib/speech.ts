@@ -42,78 +42,108 @@ export function createSpeechSession(): SpeechSession | null {
   let recorder: MediaRecorder | null = null
   let chunks: Blob[] = []
   let mime = 'audio/webm'
-  let stopResolve: ((v: { kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }) => void) | null = null
-  let maxTimer: ReturnType<typeof setTimeout> | null = null
+  let startGen = 0 // 代次计数：使未决 start 在 stop 后失效（防竞态麦克风泄漏）
+  let inflight: Promise<{ kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }> | null = null
+
+  function stopRecognition(rec: SpeechRecognitionLike): void {
+    try {
+      rec.stop()
+    } catch {
+      /* noop */
+    }
+  }
+
+  function pickMime(): string {
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+    return candidates.find((m) => window.MediaRecorder.isTypeSupported(m)) ?? ''
+  }
 
   return {
     canRecord,
     start() {
+      const gen = ++startGen
       void (async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          if (gen !== startGen) {
+            // 录音已停止：释放刚获取的麦克风（竞态修复）
+            stream.getTracks().forEach((t) => t.stop())
+            return
+          }
           chunks = []
-          mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm'
-          recorder = new MediaRecorder(stream, { mimeType: mime })
+          mime = pickMime()
+          recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
           recorder.ondataavailable = (e) => {
             if (e.data.size > 0) chunks.push(e.data)
           }
           recorder.start()
-          maxTimer = setTimeout(() => {
+          setTimeout(() => {
             void this.stop()
           }, RECORD_MAX_MS)
         } catch {
-          // 麦克风权限拒绝：录音失败，stop() 会走 audio 分支但 blob 为空 → 上层 catch
+          // 麦克风权限拒绝 / MIME 不支持：录音失败，stop() 走 audio 分支（空 blob → 上层 catch）
         }
       })()
     },
     stop() {
-      return new Promise((resolve) => {
-        stopResolve = resolve
-        if (maxTimer) clearTimeout(maxTimer)
+      if (inflight) return inflight
+      startGen++ // 使未决 start 失效
+      inflight = new Promise((resolve) => {
+        const settle = (v: { kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }) => {
+          if (inflight) inflight = null // 允许下一次 stop 新建
+          resolve(v)
+        }
         if (!recorder || recorder.state === 'inactive') {
-          resolve({ kind: 'audio', blob: new Blob([], { type: mime }), mime })
+          settle({ kind: 'audio', blob: new Blob([], { type: mime }), mime })
           return
         }
         const finish = () => {
           const blob = new Blob(chunks, { type: mime })
           recorder?.stream.getTracks().forEach((t) => t.stop())
-          // 有转写支持且录音非空 → 尝试转写；否则降级 audio
           if (useTranscript && SR && blob.size > 0) {
-            const rec = new SR()
+            let rec: SpeechRecognitionLike
+            try {
+              rec = new SR()
+            } catch {
+              settle({ kind: 'audio', blob, mime })
+              return
+            }
             rec.lang = 'zh-CN'
             rec.interimResults = false
             rec.continuous = true
+            let settled = false
+            const fallbackAudio = () => {
+              if (settled) return
+              settled = true
+              stopRecognition(rec)
+              settle({ kind: 'audio', blob, mime })
+            }
             rec.onresult = (e) => {
+              if (settled) return
               let text = ''
               for (let i = 0; i < e.results.length; i++) {
                 text += e.results[i][0]?.transcript ?? ''
               }
               text = text.trim()
               if (text) {
-                try {
-                  rec.stop()
-                } catch {
-                  /* noop */
-                }
-                stopResolve?.({ kind: 'transcript', text })
+                settled = true
+                stopRecognition(rec)
+                settle({ kind: 'transcript', text })
               } else {
-                stopResolve?.({ kind: 'audio', blob, mime })
+                fallbackAudio()
               }
             }
-            rec.onerror = () => stopResolve?.({ kind: 'audio', blob, mime })
-            rec.onend = () => {
-              // 无结果结束时降级 audio（避免 Promise 悬挂）
-              stopResolve?.({ kind: 'audio', blob, mime })
-            }
+            rec.onerror = () => fallbackAudio()
+            rec.onend = () => fallbackAudio()
+            // 转写兜底：3s 无结果降级（P95<3s 约束）
+            setTimeout(fallbackAudio, 3000)
             try {
               rec.start()
             } catch {
-              stopResolve?.({ kind: 'audio', blob, mime })
+              fallbackAudio()
             }
-            // 转写兜底：3s 无结果降级（P95<3s 约束）
-            setTimeout(() => stopResolve?.({ kind: 'audio', blob, mime }), 3000)
           } else {
-            stopResolve?.({ kind: 'audio', blob, mime })
+            settle({ kind: 'audio', blob, mime })
           }
         }
         recorder.onstop = () => finish()
@@ -123,6 +153,7 @@ export function createSpeechSession(): SpeechSession | null {
           finish()
         }
       })
+      return inflight
     },
   }
 }
