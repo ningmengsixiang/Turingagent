@@ -28,6 +28,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
   if (res.status === 401) {
     clearToken()
+    // 401 → 通知 UI 回到登录页（token 过期后不卡在聊天页）
+    window.dispatchEvent(new Event('ta:unauthorized'))
     throw new Error('unauthorized')
   }
   if (!res.ok) {
