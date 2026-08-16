@@ -573,3 +573,12 @@ Expected: 推送成功。
 
 1. **test-helpers.ts 的 truncateAll 必须扩展**：`TRUNCATE messages, session_members, sessions, users, audit_events RESTART IDENTITY CASCADE`——新增 users/audit_events 表后，既有清库语句漏掉它们导致用例间串扰（已实证）。
 2. **users.test.ts「sets and reads roles」必须自包含**：开头先 upsert `u-alice`（保证 `u-bob` 以 member 身份注册，不依赖前序用例残留）——清库修复后此用例原本依赖残留而确定性失败。
+
+### T2 质量审查修正（必须修 + 应修）
+
+3. **最后 admin 保护**（M1，必须修）：`setRole` 拒绝把最后一个 admin 降级（目标当前为 admin 且 admin 总数 ≤1 时抛 `AdminLockoutError`）；路由映射 409；补测试。
+4. **热路径轻读**（M2）：middleware 先用 `getUserRole` 读（无则 upsert），避免每个请求都 `ON CONFLICT DO UPDATE` 写放大。
+5. **鉴权失败 503**（M3）：authenticate 内 upsert/读库异常 → 503（而非 500）。
+6. **审计策略统一**（M4）：三处埋点（login / approval.decided / role.changed）统一 fire-and-forget + `console.error`（审计尽力写、不阻断主流程；注释说明该策略有意为之）。
+7. **audit limit 浮点**（M5）：路由 `Math.floor(Number(...))` 钳制，避免 `?limit=50.5` → 500。
+8. **补测试**：最后 admin 降级 409、未知成员 404、非法 role 400、非 admin 访问 /org/audit 403。
