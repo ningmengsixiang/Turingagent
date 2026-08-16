@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ta
+          POSTGRES_PASSWORD: ta
+          POSTGRES_DB: ta_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ta"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: taadmin
+          MINIO_ROOT_PASSWORD: ta12345678
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: taadmin
+      MINIO_SECRET_KEY: ta12345678
+      MINIO_BUCKET: ta-files
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate database
+        run: pnpm --filter @ta/gateway migrate
+        env:
+          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: postgres://ta:ta@localhost:5432/ta_test
+
+      - name: Silence eval gate (发布门禁)
+        run: pnpm --filter @ta/gateway eval:silence
+
+      - name: Build
+        run: pnpm build
+
+      - name: Security audit (安全门禁)
+        run: pnpm audit --audit-level high
+
+      - name: Check git clean
+        run: git diff --exit-code
