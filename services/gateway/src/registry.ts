@@ -11,6 +11,8 @@ export interface ConnectionRegistry {
   remove(socket: WebSocket): void
   broadcast(sessionId: string, payload: unknown): void
   socketsFor(sessionId: string): WebSocket[]
+  /** 活跃连接总数（调试/监控） */
+  total(): number
 }
 
 export function createRegistry(): ConnectionRegistry {
@@ -41,6 +43,9 @@ export function createRegistry(): ConnectionRegistry {
       for (const socket of this.socketsFor(sessionId)) {
         if (socket.readyState === 1) socket.send(text)
       }
+    },
+    total() {
+      return bySocket.size
     },
     socketsFor(sessionId) {
       return [...(bySession.get(sessionId) ?? [])]
