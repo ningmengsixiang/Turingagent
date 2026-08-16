@@ -64,6 +64,9 @@ jobs:
         env:
           DATABASE_URL: postgres://ta:ta@localhost:5432/ta_dev
 
+      - name: Build contracts (typecheck 依赖其 lib)
+        run: pnpm --filter @ta/contracts build
+
       - name: Typecheck
         run: pnpm -r typecheck
 
