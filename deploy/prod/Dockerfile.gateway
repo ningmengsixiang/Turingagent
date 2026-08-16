@@ -13,14 +13,13 @@ RUN pnpm --filter @ta/contracts build && pnpm --filter @ta/gateway build
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/packages/contracts/package.json /app/packages/contracts/package.json
-COPY --from=build /app/packages/contracts/lib /app/packages/contracts/lib
-COPY --from=build /app/services/gateway/package.json /app/services/gateway/package.json
-COPY --from=build /app/services/gateway/lib /app/services/gateway/lib
-COPY --from=build /app/services/gateway/migrations /app/services/gateway/migrations
-COPY --from=build /app/services/gateway/skills /app/services/gateway/skills
-# 迁移 001-011 在启动时由 entrypoint 执行（避免容器内 tsx；用编译产物直接跑 SQL）
-COPY --from=build /app/services/gateway/lib/migrate.js /app/services/gateway/lib/migrate.js
+# 拷贝全部 workspace（node_modules 符号链接结构一并带入，运行阶段无需再装依赖——可靠性优先，镜像较大可接受）
+COPY --from=build /app/package.json /app/package.json
+COPY --from=build /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+COPY --from=build /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/packages /app/packages
+COPY --from=build /app/services/gateway /app/services/gateway
 WORKDIR /app/services/gateway
 EXPOSE 3001
 CMD ["node", "lib/index.js"]
