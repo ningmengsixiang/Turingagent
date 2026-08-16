@@ -437,4 +437,51 @@ describe('approval routes', () => {
     })
     expect(missing.statusCode).toBe(404)
   })
+
+  it('escalates an overdue approval', async () => {
+    // users 表被 truncateAll 清空：先插入 admin（升级目标审批人；参考 repos 测试适配）
+    await pool.query(`INSERT INTO users (user_id, name, role) VALUES ('u-probe', 'Probe', 'admin')`)
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 0 WHERE id = 1`)
+    try {
+      const alice = await loginAs('alice')
+      const sessionId = await createProjectSession(alice)
+      const created = await built.app.inject({
+        method: 'POST',
+        url: `/api/v1/sessions/${sessionId}/approvals`,
+        headers: { authorization: `Bearer ${alice}` },
+        payload: { title: '超时升级', approverId: 'u-bob' },
+      })
+      const approvalId = created.json().approval.id as string
+      const res = await built.app.inject({
+        method: 'POST',
+        url: `/api/v1/approvals/${approvalId}/escalate`,
+        headers: { authorization: `Bearer ${alice}` },
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().approval.escalatedCount).toBe(1)
+    } finally {
+      // 恢复配置（approval_timeout 不在 truncateAll 清单内，跨用例残留会污染后续用例）
+      await pool.query(`UPDATE approval_timeout SET timeout_hours = 24 WHERE id = 1`)
+    }
+  })
+
+  it('rejects escalation of a fresh approval', async () => {
+    // 防御：显式恢复默认超时（防上一用例中途失败残留 timeout_hours=0）
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 24 WHERE id = 1`)
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '未超时', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/escalate`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(res.statusCode).toBe(409)
+  })
 })

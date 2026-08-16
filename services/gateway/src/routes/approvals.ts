@@ -12,6 +12,7 @@ import {
   returnApproval,
   resubmitApproval,
   cancelApproval,
+  escalateOverdueApprovals,
   ApprovalStateError,
 } from '../repos/approvals.js'
 import { recordAudit } from '../repos/audit.js'
@@ -316,6 +317,38 @@ export function registerApprovalRoutes(
         }
         throw err
       }
+    },
+  )
+
+  // 手动触发超时升级（供外部调度/演示调用；自动定时器记 Phase 2 后续）
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/approvals/:id/escalate',
+    { preHandler: auth },
+    async (request, reply) => {
+      const approvalId = request.params.id
+      if (!UUID_PATTERN.test(approvalId)) {
+        return reply.code(400).send({ error: 'approval id must be a uuid' })
+      }
+      const approval = await getApproval(pool, approvalId)
+      if (!approval) return reply.code(404).send({ error: 'approval not found' })
+      if (approval.status !== 'pending') {
+        return reply.code(409).send({ error: `approval is ${approval.status}, cannot escalate` })
+      }
+      if (!(await isMember(pool, approval.sessionId, request.user!.id))) {
+        return reply.code(403).send({ error: 'not a member of the approval session' })
+      }
+      const escalated = await escalateOverdueApprovals(pool)
+      const mine = escalated.find((a) => a.id === approvalId)
+      if (!mine) {
+        return reply.code(409).send({ error: 'approval is not overdue yet' })
+      }
+      void recordAudit(pool, {
+        actorId: request.user!.id,
+        action: 'approval.escalated',
+        target: approval.id,
+        detail: { escalatedCount: mine.escalatedCount, title: mine.title },
+      }).catch((err) => console.error('[audit] escalate record failed:', err))
+      return { approval: mine }
     },
   )
 }
