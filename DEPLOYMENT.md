@@ -40,5 +40,14 @@
 - 审计：`audit_events` 表 append-only（审批/配额/租户/API Key 等操作留痕）
 - 生产加固后续：RLS 双保险 / 多副本限流（Redis）/ 密钥管理（KMS）
 
-## 8. 监控建议（后续）
-- Prometheus 指标端点 / 日志采集 / 告警（gateway 健康、配额 80%、审批超时升级）
+## 8. 监控
+- 指标端点：`GET /metrics`（Prometheus 格式，无鉴权——生产在 LB/内网暴露）：`http_requests_total`（按 route/status）、`messages_created_total`、`agent_runs_total`（按 agent/outcome）、`agent_tokens_total`、`quota_used`/`quota_budget`、`ws_connections`、`escalation_runs_total`
+- 抓取：Prometheus scrape 配置示例：
+  ```yaml
+  scrape_configs:
+    - job_name: ta-gateway
+      static_configs:
+        - targets: ['gateway:3001']
+  ```
+- 告警建议（Grafana）：gateway 不可达 / quota_used/quota_budget > 0.8（配额 80% 预警）/ agent_runs_total 错误率 > 10% / 审批超时升级 escalation_runs_total 增长
+- 日志采集：容器 stdout（docker compose logs / K8s 收集）记后续
