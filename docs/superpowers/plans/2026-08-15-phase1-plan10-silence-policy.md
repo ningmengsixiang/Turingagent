@@ -750,7 +750,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 **Files:**
 - Modify: `README.md`（根）
 
-- [ ] **Step 1: README 追加「静默策略」节**
+- [x] **Step 1: README 追加「静默策略」节**
 
 在 README「### 智能体团队（四角色）」节之后追加：
 
@@ -767,7 +767,7 @@ pnpm --filter @ta/gateway gen:silence-cases
 ```
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -779,7 +779,7 @@ pnpm install --frozen-lockfile
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 125+5+2=132 + web 19 = 153）；frozen-lockfile 通过；`git status` 干净（除 README）。
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md
