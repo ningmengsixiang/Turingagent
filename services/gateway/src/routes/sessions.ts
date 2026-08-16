@@ -35,6 +35,9 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
         return reply.code(400).send({ error: 'departmentId must be a non-empty uuid' })
       }
       if (departmentId) {
+        if (!UUID_PATTERN.test(departmentId)) {
+          return reply.code(400).send({ error: 'departmentId must be a uuid' })
+        }
         const dept = await pool.query<{ id: string }>('SELECT id FROM departments WHERE id = $1', [departmentId])
         if (dept.rows.length === 0) return reply.code(400).send({ error: 'department not found' })
       }

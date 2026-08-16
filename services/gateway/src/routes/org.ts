@@ -124,6 +124,9 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
       const userId = request.params.id
       const departmentId = request.body?.departmentId?.trim()
       if (!departmentId) return reply.code(400).send({ error: 'departmentId is required' })
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(departmentId)) {
+        return reply.code(400).send({ error: 'departmentId must be a uuid' })
+      }
       const dept = await pool.query<{ id: string }>('SELECT id FROM departments WHERE id = $1', [departmentId])
       if (dept.rows.length === 0) return reply.code(400).send({ error: 'department not found' })
       await pool.query('UPDATE users SET department_id = $1 WHERE user_id = $2', [departmentId, userId])
