@@ -461,13 +461,11 @@ describe('org routes', () => {
   })
 
   it('member cannot access admin routes', async () => {
-    const alice = await loginAs('alice')
-    await loginAs('bob') // member
-    const bob = await loginAs('bob2') // hmm——需要 bob 的 token
-    void bob
-    // 直接再登 bob 拿 token
+    const alice = await loginAs('alice') // 第一个用户 → admin
+    await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } }) // 注册为 member
     const bobRes = await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } })
     const bobToken = bobRes.json().token as string
+    expect(bobRes.json().role).toBe('member')
     const res = await built.app.inject({
       method: 'GET',
       url: '/api/v1/org/members',
