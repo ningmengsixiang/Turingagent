@@ -260,4 +260,103 @@ describe('approval repository', () => {
       }),
     ).rejects.toMatchObject({ code: 'AGENT_NOT_ALLOWED' })
   })
+
+  it('countersign (all) aggregates mixed votes: any reject makes the whole flow rejected', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '三人会签混合票',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'all', approverIds: ['u-bob', 'u-carol', 'u-dave'] }],
+    })
+    const v1 = await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    expect(v1.status).toBe('pending')
+    const v2 = await decideApproval(pool, { id: created.id, approverId: 'u-carol', decision: 'rejected' })
+    expect(v2.status).toBe('pending') // 会签不早停：未齐票
+    const v3 = await decideApproval(pool, { id: created.id, approverId: 'u-dave', decision: 'approved' })
+    expect(v3.status).toBe('rejected') // 齐票聚合：任一驳回 → 整体 rejected
+  })
+
+  it('or-sign (any) stays pending after a reject and approves on a later approve', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '或签先拒后过',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'any', approverIds: ['u-bob', 'u-carol'] }],
+    })
+    const r1 = await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'rejected' })
+    expect(r1.status).toBe('pending')
+    const r2 = await decideApproval(pool, { id: created.id, approverId: 'u-carol', decision: 'approved' })
+    expect(r2.status).toBe('approved')
+  })
+
+  it('refuses to decide after cancel', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '撤销后裁决',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    await cancelApproval(pool, { id: created.id, operatorId: 'u-alice' })
+    await expect(
+      decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' }),
+    ).rejects.toMatchObject({ code: 'NOT_PENDING' })
+  })
+
+  it('refuses to decide after return', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '退回后裁决',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    await returnApproval(pool, { id: created.id, operatorId: 'u-bob', reason: '请补充预算' })
+    await expect(
+      decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' }),
+    ).rejects.toMatchObject({ code: 'NOT_PENDING' })
+  })
+
+  it('lets a v1 voter decide again in version 2 after return + resubmit', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '重提重走',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'all', approverIds: ['u-bob', 'u-carol'] }],
+    })
+    // 版本 1：bob 已投 approved（会签未齐票，节点仍 pending），carol 退回
+    await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    await returnApproval(pool, { id: created.id, operatorId: 'u-carol', reason: '请补充预算' })
+    await resubmitApproval(pool, { id: created.id, operatorId: 'u-alice' })
+    // 版本 2：投票重置，bob 可重新裁决
+    const v2 = await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    expect(v2.status).toBe('pending')
+    expect(v2.version).toBe(2)
+    const decided = await decideApproval(pool, { id: created.id, approverId: 'u-carol', decision: 'approved' })
+    expect(decided.status).toBe('approved')
+    expect(decided.version).toBe(2)
+  })
+
+  it('lets the new approver decide after transfer', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '转办后裁决',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    await transferApproval(pool, { id: created.id, operatorId: 'u-bob', newApproverId: 'u-carol' })
+    const decided = await decideApproval(pool, { id: created.id, approverId: 'u-carol', decision: 'approved' })
+    expect(decided.status).toBe('approved')
+    expect(decided.approverId).toBe('u-carol')
+  })
+
+  it('dedupes duplicate approver ids so one person still votes once (会签一人一票)', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '审批人去重',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'all', approverIds: ['u-bob', 'u-bob'] }],
+    })
+    expect(created.nodes[0]!.approverIds).toEqual(['u-bob']) // 去重后单席位
+    const decided = await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    expect(decided.status).toBe('approved') // 一人一票即齐票推进
+  })
 })

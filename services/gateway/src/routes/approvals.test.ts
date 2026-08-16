@@ -67,6 +67,26 @@ describe('approval routes', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('rejects an agent approver with 400 (AGENT_NOT_ALLOWED)', async () => {
+    const alice = await loginAs('alice')
+    // agent 先进会话成员，才能走到仓储层 AGENT_NOT_ALLOWED（而非「非成员」400）
+    const sessionRes = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob', 'agent-ta-pm'] },
+    })
+    const sessionId = sessionRes.json().session.id as string
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '上线审批', approverId: 'agent-ta-pm' },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toContain('approver must be a human')
+  })
+
   it('approver decides and the card updates', async () => {
     const alice = await loginAs('alice')
     const bob = await loginAs('bob')

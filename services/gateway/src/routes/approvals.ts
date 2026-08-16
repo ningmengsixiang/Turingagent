@@ -42,13 +42,22 @@ export function registerApprovalRoutes(
       if (!(await isMember(pool, sessionId, approverId))) {
         return reply.code(400).send({ error: 'approver must be a member of this session' })
       }
-      const approval = await createApproval(pool, {
-        sessionId,
-        title,
-        description: request.body?.description?.trim() || undefined,
-        approverId,
-        createdBy: userId,
-      })
+      let approval: Awaited<ReturnType<typeof createApproval>>
+      try {
+        approval = await createApproval(pool, {
+          sessionId,
+          title,
+          description: request.body?.description?.trim() || undefined,
+          approverId,
+          createdBy: userId,
+        })
+      } catch (err) {
+        // AGENT_NOT_ALLOWED：agent 只有建议权（PRD）→ 400（T2 质量审查 #2）
+        if (err instanceof ApprovalStateError && err.code === 'AGENT_NOT_ALLOWED') {
+          return reply.code(400).send({ error: err.message })
+        }
+        throw err
+      }
       try {
         // 审批卡片消息（PR-1：人类审批闸门的会话内载体）
         const { message } = await createMessage(pool, {
