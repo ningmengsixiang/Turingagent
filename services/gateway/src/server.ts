@@ -1,5 +1,6 @@
 import Fastify from 'fastify'
 import websocket from '@fastify/websocket'
+import multipart from '@fastify/multipart'
 import { loadConfig, type Config } from './config.js'
 import { createPool } from './db.js'
 import { createRegistry, type ConnectionRegistry } from './registry.js'
@@ -14,8 +15,10 @@ import { registerMessageRoutes } from './routes/messages.js'
 import { registerApprovalRoutes } from './routes/approvals.js'
 import { registerTaskRoutes } from './routes/tasks.js'
 import { registerOrgRoutes } from './routes/org.js'
+import { registerFileRoutes } from './routes/files.js'
 import { registerMemoryRoutes } from './routes/memories.js'
 import { registerWs } from './ws.js'
+import { createStorage } from './storage.js'
 import pg from 'pg'
 
 export interface BuiltApp {
@@ -41,12 +44,14 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
       : merged
   const app = Fastify({ logger: false, ajv: { customOptions: { coerceTypes: false } } })
   const pool = createPool(config.databaseUrl)
+  const storage = createStorage(config)
   const registry = createRegistry()
   const events = createEvents()
   app.addHook('onClose', async () => {
     await pool.end()
   })
   await app.register(websocket)
+  await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } })
   registerHealth(app)
   registerAuth(app, config, pool)
   registerMe(app, config)
@@ -69,6 +74,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     (message) => events.emit('message.updated', message),
   )
   registerOrgRoutes(app, config, pool)
+  registerFileRoutes(app, config, pool, storage, (message) => events.emit('message.created', message))
   registerWs(app, config, pool, registry, events)
 
   const provider = deps?.provider ?? createModelProvider(config)

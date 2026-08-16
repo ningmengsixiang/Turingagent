@@ -15,6 +15,10 @@ export interface MessageRow {
   client_msg_id: string
   seq: string
   created_at: Date
+  file_id?: string | null
+  file_name?: string | null
+  file_size?: string | null
+  file_mime?: string | null
 }
 
 export function mapMessage(row: MessageRow): Message {
@@ -33,6 +37,10 @@ export function mapMessage(row: MessageRow): Message {
         ? { kind: row.ref_kind as 'approval' | 'task', id: row.ref_id }
         : undefined,
     replyTo: row.reply_to ?? undefined,
+    file:
+      row.file_name && row.file_id
+        ? { id: row.file_id, name: row.file_name, size: Number(row.file_size), mime: row.file_mime ?? 'application/octet-stream' }
+        : undefined,
     content: row.content,
     seq: Number(row.seq),
     createdAt: row.created_at.toISOString(),
@@ -60,7 +68,7 @@ export async function createMessage(
     contentType: MessageContentType
     content: string
     clientMsgId: string
-    ref?: { kind: 'approval' | 'task'; id: string }
+    ref?: { kind: 'approval' | 'task' | 'file'; id: string }
     replyTo?: string
   },
 ): Promise<{ message: Message; created: boolean }> {
@@ -116,10 +124,19 @@ export async function listMessages(
   afterSeq: number,
   limit: number,
 ): Promise<Message[]> {
-  const res = await pool.query<MessageRow & { reply_preview: string | null }>(
-    `SELECT m.*, r.content AS reply_preview
+  const res = await pool.query<
+    MessageRow & {
+      reply_preview: string | null
+      file_id?: string | null
+      file_name?: string | null
+      file_size?: string | null
+      file_mime?: string | null
+    }
+  >(
+    `SELECT m.*, r.content AS reply_preview, f.id AS file_id, f.name AS file_name, f.size::text AS file_size, f.mime AS file_mime
        FROM messages m
        LEFT JOIN messages r ON r.id = m.reply_to
+       LEFT JOIN files f ON f.id::text = m.ref_id AND m.ref_kind = 'file'
       WHERE m.session_id = $1 AND m.seq > $2
       ORDER BY m.seq ASC LIMIT $3`,
     [sessionId, afterSeq, limit],
