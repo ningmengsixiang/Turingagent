@@ -8,6 +8,8 @@
 
 **Tech Stack:** 浏览器原生 Web Speech API（`SpeechRecognition`，Chrome/Edge 支持，实时转写零成本零 key）+ MediaRecorder（WebM/Opus 录音）+ 现有 `uploadFile`。测试用 vitest jsdom + mock（`window.SpeechRecognition`/`MediaRecorder`/`HTMLMediaElement.play`）。
 
+**质量审查决策（T1 后追加）：** ① start/getUserMedia 竞态修复——代次计数 `startGen`，stop 时使未决 start 失效并释放刚获取的 stream（防松手后继续录音 + 麦克风泄漏，must-fix）；② Safari MIME 降级失效修复——候选 MIME `['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']` + 无 mimeType 兜底构造（Safari 仅支持 audio/mp4，原回退 webm 必抛 NotSupportedError 被吞、录音静默失效，must-fix）；③ stop 幂等——in-flight Promise 缓存（双 stop 同 tick 首调用悬挂修复）；④ 转写分支异常安全——`new SR()` 包 try/catch（构造抛错悬挂修复）+ `settled` 标志防多路 resolve + `stopRecognition` 统一停识别（降级路径 rec.stop() 防麦克风灯不灭）；⑤ 陈旧 3s 兜底定时器跨 stop 污染经 `settled` 标志修复；⑥ 测试改造——flush gUM 微任务后 stop（修复用例 2/3 空转）+ 补双 stop 幂等/start 竞态回归用例。记录：`declare global` 未来与 lib.dom 冲突风险（引入 @types/dom-speech-recognition 时需调整）、权限拒绝无 UX 反馈（MVP 可接受）、60s 自动停止无 lib 级测试（nit）。
+
 **决策记录：** MVP 用浏览器 Web Speech API 而非云 ASR（阿里/讯飞）——零成本、零 API key、P95<3s 本地实时、无隐私外传；TechDesign T1「MVP 云 ASR」修正为「MVP 浏览器 Web Speech；生产/私有化接云 ASR 或 Whisper（Phase 2，接口留 `lib/speech.ts` 单一封装点）」。降级路径（决策 D6）：录音 Blob → 复用文件上传 → file 消息（content = `语音-<时间>.webm`，前端语音气泡可播放）；语音文件消息 contentType 用既有 `file`（不新增 `voice` 消息流，`voice` 类型留给 Phase 2 云 ASR 实时转写消息）。按住说话交互（PRD：按住语音键 → 实时转写预览 → 松开发送）；降级时按住录制、松开上传。限制：Web Speech API 仅 Chrome/Edge（Firefox/Safari 走降级路径）；需 HTTPS 或 localhost（浏览器安全要求，dev 满足）；录音默认 ≤60s 自动停止（文件 20MB 上限内）。
 
 ---
@@ -80,78 +82,108 @@ export function createSpeechSession(): SpeechSession | null {
   let recorder: MediaRecorder | null = null
   let chunks: Blob[] = []
   let mime = 'audio/webm'
-  let stopResolve: ((v: { kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }) => void) | null = null
-  let maxTimer: ReturnType<typeof setTimeout> | null = null
+  let startGen = 0 // 代次计数：使未决 start 在 stop 后失效（防竞态麦克风泄漏）
+  let inflight: Promise<{ kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }> | null = null
+
+  function stopRecognition(rec: SpeechRecognitionLike): void {
+    try {
+      rec.stop()
+    } catch {
+      /* noop */
+    }
+  }
+
+  function pickMime(): string {
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+    return candidates.find((m) => window.MediaRecorder.isTypeSupported(m)) ?? ''
+  }
 
   return {
     canRecord,
     start() {
+      const gen = ++startGen
       void (async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          if (gen !== startGen) {
+            // 录音已停止：释放刚获取的麦克风（竞态修复）
+            stream.getTracks().forEach((t) => t.stop())
+            return
+          }
           chunks = []
-          mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm'
-          recorder = new MediaRecorder(stream, { mimeType: mime })
+          mime = pickMime()
+          recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
           recorder.ondataavailable = (e) => {
             if (e.data.size > 0) chunks.push(e.data)
           }
           recorder.start()
-          maxTimer = setTimeout(() => {
+          setTimeout(() => {
             void this.stop()
           }, RECORD_MAX_MS)
         } catch {
-          // 麦克风权限拒绝：录音失败，stop() 会走 audio 分支但 blob 为空 → 上层 catch
+          // 麦克风权限拒绝 / MIME 不支持：录音失败，stop() 走 audio 分支（空 blob → 上层 catch）
         }
       })()
     },
     stop() {
-      return new Promise((resolve) => {
-        stopResolve = resolve
-        if (maxTimer) clearTimeout(maxTimer)
+      if (inflight) return inflight
+      startGen++ // 使未决 start 失效
+      inflight = new Promise((resolve) => {
+        const settle = (v: { kind: 'transcript'; text: string } | { kind: 'audio'; blob: Blob; mime: string }) => {
+          if (inflight) inflight = null // 允许下一次 stop 新建
+          resolve(v)
+        }
         if (!recorder || recorder.state === 'inactive') {
-          resolve({ kind: 'audio', blob: new Blob([], { type: mime }), mime })
+          settle({ kind: 'audio', blob: new Blob([], { type: mime }), mime })
           return
         }
         const finish = () => {
           const blob = new Blob(chunks, { type: mime })
           recorder?.stream.getTracks().forEach((t) => t.stop())
-          // 有转写支持且录音非空 → 尝试转写；否则降级 audio
           if (useTranscript && SR && blob.size > 0) {
-            const rec = new SR()
+            let rec: SpeechRecognitionLike
+            try {
+              rec = new SR()
+            } catch {
+              settle({ kind: 'audio', blob, mime })
+              return
+            }
             rec.lang = 'zh-CN'
             rec.interimResults = false
             rec.continuous = true
+            let settled = false
+            const fallbackAudio = () => {
+              if (settled) return
+              settled = true
+              stopRecognition(rec)
+              settle({ kind: 'audio', blob, mime })
+            }
             rec.onresult = (e) => {
+              if (settled) return
               let text = ''
               for (let i = 0; i < e.results.length; i++) {
                 text += e.results[i][0]?.transcript ?? ''
               }
               text = text.trim()
               if (text) {
-                try {
-                  rec.stop()
-                } catch {
-                  /* noop */
-                }
-                stopResolve?.({ kind: 'transcript', text })
+                settled = true
+                stopRecognition(rec)
+                settle({ kind: 'transcript', text })
               } else {
-                stopResolve?.({ kind: 'audio', blob, mime })
+                fallbackAudio()
               }
             }
-            rec.onerror = () => stopResolve?.({ kind: 'audio', blob, mime })
-            rec.onend = () => {
-              // 无结果结束时降级 audio（避免 Promise 悬挂）
-              stopResolve?.({ kind: 'audio', blob, mime })
-            }
+            rec.onerror = () => fallbackAudio()
+            rec.onend = () => fallbackAudio()
+            // 转写兜底：3s 无结果降级（P95<3s 约束）
+            setTimeout(fallbackAudio, 3000)
             try {
               rec.start()
             } catch {
-              stopResolve?.({ kind: 'audio', blob, mime })
+              fallbackAudio()
             }
-            // 转写兜底：3s 无结果降级（P95<3s 约束）
-            setTimeout(() => stopResolve?.({ kind: 'audio', blob, mime }), 3000)
           } else {
-            stopResolve?.({ kind: 'audio', blob, mime })
+            settle({ kind: 'audio', blob, mime })
           }
         }
         recorder.onstop = () => finish()
@@ -161,10 +193,12 @@ export function createSpeechSession(): SpeechSession | null {
           finish()
         }
       })
+      return inflight
     },
   }
 }
 ```
+
 
 > 注：`createSpeechSession` 返回 null 表示浏览器不支持（连降级录音也不可用）；调用方据此隐藏 🎤 按钮。
 
@@ -232,10 +266,10 @@ describe('createSpeechSession', () => {
     expect(session).not.toBeNull()
     expect(session!.canRecord).toBe(true)
     session!.start()
-    const fake = new FakeRecorder()
+    // flush gUM 微任务，等 start 异步创建 recorder
+    await vi.advanceTimersByTimeAsync(0)
     const promise = session!.stop()
-    // 模拟录音数据
-    await vi.advanceTimersByTimeAsync(10)
+    // 模拟录音数据（start 后 ondataavailable 尚未触发，直接喂 chunks 由 onstop→finish 读取）
     const result = await promise
     expect(result.kind).toBe('audio')
     if (result.kind === 'audio') {
@@ -243,10 +277,48 @@ describe('createSpeechSession', () => {
     }
   })
 
+  it('is idempotent: second stop returns the same promise', async () => {
+    const session = createSpeechSession()
+    session!.start()
+    await vi.advanceTimersByTimeAsync(0)
+    const p1 = session!.stop()
+    const p2 = session!.stop()
+    expect(p2).toBe(p1)
+    await vi.advanceTimersByTimeAsync(0)
+    const r = await p1
+    expect(r.kind).toBe('audio')
+  })
+
+  it('stops the microphone stream when stop happens before getUserMedia resolves (race)', async () => {
+    const trackStop = vi.fn()
+    let resolveGum!: (s: { getTracks: () => Array<{ stop: () => void }> }) => void
+    Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+      value: {
+        getUserMedia: vi.fn().mockImplementation(
+          () =>
+            new Promise((res) => {
+              resolveGum = res
+            }),
+        ),
+      },
+      configurable: true,
+    })
+    const session = createSpeechSession()
+    session!.start()
+    // stop 先于 gUM resolve：不应再创建 recorder，且 gUM resolve 后应释放 stream
+    const promise = session!.stop()
+    resolveGum({ getTracks: () => [{ stop: trackStop }] })
+    await vi.advanceTimersByTimeAsync(0)
+    const r = await promise
+    expect(r.kind).toBe('audio')
+    expect(trackStop).toHaveBeenCalledTimes(1)
+  })
+
   it('transcribes when SpeechRecognition yields text', async () => {
     vi.stubGlobal('SpeechRecognition', FakeSpeechRecognition)
     const session = createSpeechSession()
     session!.start()
+    await vi.advanceTimersByTimeAsync(0)
     const promise = session!.stop()
     // 找到新建的 SpeechRecognition 实例，手动触发结果回调（模拟浏览器转写完成）
     // FakeSpeechRecognition 构造时记录到全局，供测试注入
@@ -258,7 +330,7 @@ describe('createSpeechSession', () => {
 })
 ```
 
-> 注：jsdom 下 Web Speech 事件注入复杂，第三用例实际验证「3s 无结果 → 降级 audio 兜底」（防止 Promise 悬挂）；转写成功路径的完整行为由 Task 2 的 Chat 层集成测试覆盖（mock 结果回调）。若第三用例实现中发现 `vi.useFakeTimers` 与 MediaRecorder 交互不稳，允许在测试文件内调整计时方式，但必须在汇报中说明调整。
+> 注：jsdom 下 Web Speech 事件注入复杂，transcribes 用例实际验证「3s 无结果 → 降级 audio 兜底」（防止 Promise 悬挂）；转写成功路径的完整行为由 Task 3 的 Chat 层集成测试覆盖（vi.mock speech 模块注入 transcript 结果）。若用例实现中发现 `vi.useFakeTimers` 与 MediaRecorder 交互不稳，允许在测试文件内调整计时方式，但必须在汇报中说明调整。FakeRecorder 需可被 `new MediaRecorder(stream, { mimeType })` 构造（构造函数接受 (stream, options?)，若 FakeRecorder 无构造函数参数则 TS 报错——给 FakeRecorder 加 `constructor(_stream?: unknown, _opts?: unknown) {}` 空构造即可）。
 
 - [ ] **Step 3: 跑测试**
 
