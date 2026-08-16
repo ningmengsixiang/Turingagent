@@ -56,6 +56,16 @@ pnpm dev:gateway
 
 > 未配置 `MODEL_API_KEY` 时智能体自动禁用（`agentEnabled=false`），消息引擎其余功能不受影响。`MODEL_BASE_URL` / `MODEL_NAME`（默认 `deepseek-chat`）可覆盖。
 
+### Web 前端
+
+```bash
+pnpm dev          # 并行起网关（:3001）+ Web（:5173）
+# 浏览器打开 http://localhost:5173
+# 登录（任意用户名）→ 新建项目群 → 发 @Ta-Fullstack <需求> → 智能体回复实时到达
+```
+
+> 首次 clone 后需先 `pnpm build`（构建 @ta/contracts 的 lib/）再 `pnpm dev`。
+
 ### 网关冒烟
 
 ```bash
