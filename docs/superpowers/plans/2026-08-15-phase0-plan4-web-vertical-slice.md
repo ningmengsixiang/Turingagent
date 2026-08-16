@@ -788,10 +788,10 @@ class FakeWebSocket {
 
 function mockFetch(routes: Record<string, unknown>) {
   vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string) => {
-    for (const [path, body] of Object.entries(routes)) {
-      if (url.includes(path)) {
-        return { ok: true, status: 200, json: async () => body }
-      }
+    // 精确匹配（T3 阻塞点修正）：子串匹配会让 /api/v1/sessions 吞掉 /sessions/:id/messages
+    const body = routes[url]
+    if (body !== undefined) {
+      return { ok: true, status: 200, json: async () => body }
     }
     throw new Error(`unmocked fetch: ${url}`)
   }))
