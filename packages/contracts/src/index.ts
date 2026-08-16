@@ -113,3 +113,23 @@ export interface AuditEvent {
   detail: Record<string, unknown>
   createdAt: string
 }
+
+export interface Memory {
+  id: string
+  sessionId: string
+  title: string
+  content: string
+  currentVersion: number
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MemoryVersion {
+  id: string
+  memoryId: string
+  version: number
+  content: string
+  editedBy: string
+  createdAt: string
+}
