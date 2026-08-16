@@ -58,8 +58,38 @@ export const ApprovalStatus = {
   Pending: 'pending',
   Approved: 'approved',
   Rejected: 'rejected',
+  Returned: 'returned',
+  Cancelled: 'cancelled',
 } as const
 export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus]
+
+export const ApprovalNodeMode = {
+  Single: 'single',
+  All: 'all',
+  Any: 'any',
+} as const
+export type ApprovalNodeMode = (typeof ApprovalNodeMode)[keyof typeof ApprovalNodeMode]
+
+export const ApprovalNodeStatus = {
+  Pending: 'pending',
+  Approved: 'approved',
+  Rejected: 'rejected',
+} as const
+export type ApprovalNodeStatus = (typeof ApprovalNodeStatus)[keyof typeof ApprovalNodeStatus]
+
+export interface ApprovalNode {
+  /** 节点序号（0 起，串行顺序） */
+  index: number
+  /** 单人/会签/或签 */
+  mode: ApprovalNodeMode
+  /** 审批人（人类，不得为 agent） */
+  approverIds: string[]
+  status: ApprovalNodeStatus
+  /** 最终裁决人（节点完成后） */
+  decidedBy?: string
+  reason?: string
+  decidedAt?: string
+}
 
 export interface Approval {
   id: string
@@ -67,12 +97,24 @@ export interface Approval {
   title: string
   description?: string
   status: ApprovalStatus
+  /** 兼容字段：当前激活节点（currentNode）的第一个审批人；单级 = 原 approverId */
   approverId: string
   createdBy: string
   reason?: string
   createdAt: string
   decidedAt?: string
+  /** 顶层模式（单节点时 = 该节点 mode） */
+  mode: ApprovalNodeMode
+  /** 当前激活节点序号 */
+  currentNodeIndex: number
+  /** 重提版本（resubmit 后 +1） */
+  version: number
+  /** 流程节点列表（按 index 升序） */
+  nodes: ApprovalNode[]
 }
+
+export const isApprovalNodeMode = (v: unknown): v is ApprovalNodeMode =>
+  typeof v === 'string' && (Object.values(ApprovalNodeMode) as string[]).includes(v)
 
 export const TaskStatus = {
   Todo: 'todo',
