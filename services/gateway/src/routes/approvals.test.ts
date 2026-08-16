@@ -174,4 +174,143 @@ describe('approval routes', () => {
     expect(card.content).toContain('❌ 已驳回')
     expect(card.content).toContain('缺少测试报告')
   })
+
+  it('creates a multi-node approval and advances via decide', async () => {
+    const alice = await loginAs('alice')
+    const sessionRes = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob', 'u-carol'] },
+    })
+    const sessionId = sessionRes.json().session.id as string
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: {
+        title: '两级审批',
+        nodes: [
+          { mode: 'single', approverIds: ['u-bob'] },
+          { mode: 'single', approverIds: ['u-carol'] },
+        ],
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    const { approval } = res.json()
+    expect(approval.nodes).toHaveLength(2)
+    expect(approval.currentNodeIndex).toBe(0)
+
+    const bob = await loginAs('bob')
+    const first = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approval.id}/decide`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { decision: 'approved' },
+    })
+    expect(first.statusCode).toBe(200)
+    expect(first.json().approval.currentNodeIndex).toBe(1)
+
+    const carol = await loginAs('carol')
+    const second = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approval.id}/decide`,
+      headers: { authorization: `Bearer ${carol}` },
+      payload: { decision: 'approved' },
+    })
+    expect(second.statusCode).toBe(200)
+    expect(second.json().approval.status).toBe('approved')
+  })
+
+  it('rejects agent approvers with 400', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: {
+        title: 'agent 审批',
+        nodes: [{ mode: 'single', approverIds: ['agent-ta-pm'] }],
+      },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('transfers the approval to another approver', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '转办', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/transfer`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { newApproverId: 'u-carol' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().approval.nodes[0].approverIds).toEqual(['u-carol'])
+  })
+
+  it('returns for revision and resubmits', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '驳回修改', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    const returned = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/return`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { reason: '请补充预算' },
+    })
+    expect(returned.statusCode).toBe(200)
+    expect(returned.json().approval.status).toBe('returned')
+
+    const resubmitted = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/resubmit`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(resubmitted.statusCode).toBe(200)
+    expect(resubmitted.json().approval.version).toBe(2)
+    expect(resubmitted.json().approval.status).toBe('pending')
+  })
+
+  it('cancels only by the creator', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '撤销', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    const denied = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/cancel`,
+      headers: { authorization: `Bearer ${bob}` },
+    })
+    expect(denied.statusCode).toBe(409)
+    const cancelled = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/cancel`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(cancelled.statusCode).toBe(200)
+    expect(cancelled.json().approval.status).toBe('cancelled')
+  })
 })
