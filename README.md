@@ -135,6 +135,10 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/approvals \
 
 看板卡片支持拖拽换状态（HTML5 DnD，保留按钮换状态兜底）；统计瓦片含完成率、阻塞、已到期；📅 日报 / 📆 周报按钮把当前会话任务按状态聚合为文本消息发送到会话（人类+智能体混合任务统一展示）。
 
+### CI/CD 集成（M2.3 / FR-INT-01）
+
+GitHub Actions CI 管道（push/PR 触发）作为合并门禁：pnpm install --frozen-lockfile → 数据库迁移 → typecheck → 全量测试 → **静默评测集门禁**（1,000 组 ≥95%）→ build → **安全审计**（pnpm audit，high/critical 失败即红）。本地可复跑安全门禁：`pnpm audit:security`。部署联动：`.github/workflows/deploy.yml` 两级审批 environment 骨架（staging/production 人工审批后执行，实际部署命令随 M2.5 私有化安装器落地）。
+
 ### 任务看板
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
