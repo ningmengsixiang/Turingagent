@@ -41,6 +41,21 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
 curl -s "localhost:3001/api/v1/sessions/<sessionId>/messages?after_seq=0" -H "authorization: Bearer $TOKEN"
 ```
 
+### 审批与确认卡片
+
+```bash
+# 发起审批（approverId 必须是会话成员）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/approvals \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"title":"上线审批","description":"报销系统上线","approverId":"u-bob"}'
+
+# 审批人决策（通过/驳回；仅 approver 可决策）
+curl -s -X POST localhost:3001/api/v1/approvals/<approvalId>/decide \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"decision":"approved"}'
+# → 确认卡片消息实时更新状态（message.updated 经 WS 广播）
+```
+
 ### 智能体（Ta-Fullstack）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 `@Ta-Fullstack <需求>` 即触发智能体，回复以 agent 身份实时推回会话。
