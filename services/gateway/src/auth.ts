@@ -4,6 +4,7 @@ import type { Config } from './config.js'
 export interface JwtUser {
   id: string
   name: string
+  role?: 'admin' | 'member'
 }
 
 export async function signToken(user: JwtUser, config: Config): Promise<string> {

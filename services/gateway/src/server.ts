@@ -12,6 +12,7 @@ import { registerMe } from './routes/me.js'
 import { registerSessionRoutes } from './routes/sessions.js'
 import { registerMessageRoutes } from './routes/messages.js'
 import { registerApprovalRoutes } from './routes/approvals.js'
+import { registerOrgRoutes } from './routes/org.js'
 import { registerWs } from './ws.js'
 import pg from 'pg'
 
@@ -45,7 +46,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   })
   await app.register(websocket)
   registerHealth(app)
-  registerAuth(app, config)
+  registerAuth(app, config, pool)
   registerMe(app, config)
   registerSessionRoutes(app, config, pool)
   registerMessageRoutes(app, config, pool, (message) => {
@@ -58,6 +59,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     (message) => events.emit('message.created', message),
     (message) => events.emit('message.updated', message),
   )
+  registerOrgRoutes(app, config, pool)
   registerWs(app, config, pool, registry, events)
 
   const provider = deps?.provider ?? createModelProvider(config)

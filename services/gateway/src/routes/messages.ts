@@ -14,7 +14,7 @@ export function registerMessageRoutes(
   pool: pg.Pool,
   onMessageCreated: (message: Message) => void,
 ): void {
-  const auth = requireAuth(config)
+  const auth = requireAuth(config, pool)
 
   app.get<{ Params: { id: string }; Querystring: { after_seq?: string; limit?: string } }>(
     '/api/v1/sessions/:id/messages',

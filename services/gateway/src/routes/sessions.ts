@@ -5,7 +5,7 @@ import type { Config } from '../config.js'
 import pg from 'pg'
 
 export function registerSessionRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
-  const auth = requireAuth(config)
+  const auth = requireAuth(config, pool)
 
   app.post<{ Body: { kind?: string; title?: string; memberIds?: string[] } }>(
     '/api/v1/sessions',

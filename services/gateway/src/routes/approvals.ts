@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
 import { createMessage, updateMessageContent } from '../repos/messages.js'
 import { createApproval, decideApproval, ApprovalStateError } from '../repos/approvals.js'
+import { recordAudit } from '../repos/audit.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -16,7 +17,7 @@ export function registerApprovalRoutes(
   emitMessageCreated: (message: Message) => void,
   emitMessageUpdated: (message: Message) => void,
 ): void {
-  const auth = requireAuth(config)
+  const auth = requireAuth(config, pool)
 
   app.post<{ Params: { id: string }; Body: { title?: string; description?: string; approverId?: string } }>(
     '/api/v1/sessions/:id/approvals',
@@ -103,6 +104,12 @@ export function registerApprovalRoutes(
           )
           if (updated) emitMessageUpdated(updated)
         }
+        void recordAudit(pool, {
+          actorId: userId,
+          action: 'approval.decided',
+          target: approval.id,
+          detail: { decision: approval.status, title: approval.title },
+        }).catch((err) => console.error('[audit] decision record failed:', err))
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
