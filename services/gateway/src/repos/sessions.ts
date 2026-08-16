@@ -1,5 +1,6 @@
 import pg from 'pg'
-import type { Session } from '@ta/contracts'
+import type { Session, SessionMember } from '@ta/contracts'
+import { AGENTS } from '../agent/registry.js'
 
 export interface SessionWithUnread extends Session {
   unreadCount: number
@@ -90,6 +91,32 @@ export async function getSessionById(pool: pg.Pool, sessionId: string): Promise<
 export async function listSessionIdsForUser(pool: pg.Pool, userId: string): Promise<string[]> {
   const res = await pool.query('SELECT session_id FROM session_members WHERE user_id = $1', [userId])
   return res.rows.map((r) => r.session_id as string)
+}
+
+export interface SessionMemberRow {
+  user_id: string
+  name: string | null
+}
+
+export async function listSessionMembers(pool: pg.Pool, sessionId: string): Promise<SessionMember[]> {
+  const res = await pool.query<SessionMemberRow>(
+    `SELECT sm.user_id, u.name
+       FROM session_members sm
+       LEFT JOIN users u ON u.user_id = sm.user_id
+      WHERE sm.session_id = $1
+      ORDER BY sm.joined_at ASC`,
+    [sessionId],
+  )
+  const members: SessionMember[] = res.rows.map((r) => ({
+    userId: r.user_id,
+    name: r.name ?? r.user_id, // 未注册用户直接展示 id
+    kind: 'human',
+  }))
+  // 固定附加四智能体成员
+  for (const agent of AGENTS) {
+    members.push({ userId: agent.id, name: agent.displayName, kind: 'agent' })
+  }
+  return members
 }
 
 export async function markRead(

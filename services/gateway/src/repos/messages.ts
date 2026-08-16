@@ -10,6 +10,7 @@ export interface MessageRow {
   content_type: string
   ref_kind: string | null
   ref_id: string | null
+  reply_to: string | null
   content: string
   client_msg_id: string
   seq: string
@@ -31,6 +32,7 @@ export function mapMessage(row: MessageRow): Message {
       row.ref_kind && row.ref_id
         ? { kind: row.ref_kind as 'approval' | 'task', id: row.ref_id }
         : undefined,
+    replyTo: row.reply_to ?? undefined,
     content: row.content,
     seq: Number(row.seq),
     createdAt: row.created_at.toISOString(),
@@ -52,6 +54,7 @@ export async function createMessage(
     content: string
     clientMsgId: string
     ref?: { kind: 'approval' | 'task'; id: string }
+    replyTo?: string
   },
 ): Promise<{ message: Message; created: boolean }> {
   const existing = await pool.query<MessageRow>(
@@ -70,9 +73,9 @@ export async function createMessage(
     if (!seqRes.rows[0]) throw new Error(`session not found: ${input.sessionId}`)
     const seq = Number(seqRes.rows[0].last_seq)
     const ins = await client.query<MessageRow>(
-      `INSERT INTO messages (session_id, sender_id, sender_kind, content_type, content, client_msg_id, seq, ref_kind, ref_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [input.sessionId, input.senderId, input.senderKind, input.contentType, input.content, input.clientMsgId, seq, input.ref?.kind ?? null, input.ref?.id ?? null],
+      `INSERT INTO messages (session_id, sender_id, sender_kind, content_type, content, client_msg_id, seq, ref_kind, ref_id, reply_to)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [input.sessionId, input.senderId, input.senderKind, input.contentType, input.content, input.clientMsgId, seq, input.ref?.kind ?? null, input.ref?.id ?? null, input.replyTo ?? null],
     )
     await client.query('COMMIT')
     return { message: mapMessage(ins.rows[0]!), created: true }
@@ -99,11 +102,21 @@ export async function listMessages(
   afterSeq: number,
   limit: number,
 ): Promise<Message[]> {
-  const res = await pool.query<MessageRow>(
-    `SELECT * FROM messages WHERE session_id = $1 AND seq > $2 ORDER BY seq ASC LIMIT $3`,
+  const res = await pool.query<MessageRow & { reply_preview: string | null }>(
+    `SELECT m.*, r.content AS reply_preview
+       FROM messages m
+       LEFT JOIN messages r ON r.id = m.reply_to
+      WHERE m.session_id = $1 AND m.seq > $2
+      ORDER BY m.seq ASC LIMIT $3`,
     [sessionId, afterSeq, limit],
   )
-  return res.rows.map(mapMessage)
+  return res.rows.map((row) => {
+    const message = mapMessage(row)
+    if (row.reply_preview) {
+      message.replyPreview = row.reply_preview.length > 80 ? row.reply_preview.slice(0, 80) + '…' : row.reply_preview
+    }
+    return message
+  })
 }
 
 export async function updateMessageContent(

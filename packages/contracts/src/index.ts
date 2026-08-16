@@ -43,6 +43,10 @@ export interface Message {
   content: string
   /** 卡片等消息引用的业务对象（如审批） */
   ref?: { kind: 'approval' | 'task'; id: string }
+  /** 引用回复：被引消息 id */
+  replyTo?: string
+  /** 被引消息摘要（服务端生成，前端渲染引用行） */
+  replyPreview?: string
   seq: number
   createdAt: string
   updatedAt?: string
@@ -132,4 +136,10 @@ export interface MemoryVersion {
   content: string
   editedBy: string
   createdAt: string
+}
+
+export interface SessionMember {
+  userId: string
+  name: string
+  kind: 'human' | 'agent'
 }
