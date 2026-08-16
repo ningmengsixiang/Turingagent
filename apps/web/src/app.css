@@ -33,6 +33,9 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .bubble-row.human .bubble { background: #0071e3; color: #fff; border-bottom-right-radius: 4px; }
 .bubble-row.agent .bubble { background: #f5f5f7; border-bottom-left-radius: 4px; }
 .file-bubble { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #e5e5ea; border-radius: 14px; background: #f5f5f7; font-size: 14px; }
+.recording { background: #ffecec !important; border-color: #ff5b5b !important; }
+.voice-bubble { cursor: default; }
+.voice-btn { touch-action: none; user-select: none; }
 .chat-error { color: #ff3b30; font-size: 13px; padding: 0 20px; margin: 0; }
 .input-area { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid #e5e5ea; }
 .input-area input { flex: 1; padding: 10px 12px; border: 1px solid #d2d2d7; border-radius: 20px; font-size: 14px; }

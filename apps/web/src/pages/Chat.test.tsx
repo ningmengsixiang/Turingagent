@@ -1,7 +1,33 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Chat } from './Chat.js'
+
+// 语音：mock speech 模块注入可控 session（canRecord: true → 🎤 按钮渲染）。
+// stop 的返回值在用例内用 mockResolvedValueOnce 覆盖；默认返回空 audio，
+// 因为组件卸载 cleanup 也会调 stop()（speechRef.current?.stop().catch），
+// 若无默认实现会得到 undefined.catch 报错（globals:true 下 RTL 自动卸载）。
+const { mockStop, mockSpeechSession } = vi.hoisted(() => {
+  const mockStop = vi.fn()
+  return {
+    mockStop,
+    mockSpeechSession: {
+      canRecord: true,
+      start: vi.fn(),
+      stop: mockStop.mockImplementation(async () => ({ kind: 'audio', blob: new Blob([]), mime: 'audio/webm' })),
+    },
+  }
+})
+
+vi.mock('../lib/speech.js', () => ({
+  createSpeechSession: () => mockSpeechSession,
+}))
+
+// jsdom 未实现 Element.setPointerCapture（Chat onPointerDown 会调用）→ 测试环境补 no-op
+if (typeof Element !== 'undefined' && !Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {}
+  Element.prototype.releasePointerCapture = () => {}
+}
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = []
@@ -38,6 +64,13 @@ function mockFetch(routes: Record<string, unknown>) {
       createdMessages.push(message)
       return { ok: true, status: 200, json: async () => ({ message }) }
     }
+    if (method === 'POST' && /\/files$/.test(url)) {
+      // 语音降级走文件上传（与 /messages POST 同款）：把返回的 message 推入 createdMessages，
+      // 否则上传后重拉列表永远为空（静态路由无法表达"上传后"的状态）
+      const body = (routes[url] ?? {}) as { message?: Record<string, unknown> }
+      if (body.message) createdMessages.push(body.message)
+      return { ok: true, status: 201, json: async () => body }
+    }
     if (method === 'GET' && url.includes('?after_seq=')) {
       const seeded = (routes[url] as { messages?: unknown[] } | undefined)?.messages ?? []
       return { ok: true, status: 200, json: async () => ({ messages: [...seeded, ...createdMessages] }) }
@@ -48,6 +81,32 @@ function mockFetch(routes: Record<string, unknown>) {
     }
     throw new Error(`unmocked fetch: ${url}`)
   }))
+}
+
+class FakeSpeechRecognition {
+  lang = ''
+  interimResults = false
+  continuous = false
+  onresult: ((e: unknown) => void) | null = null
+  onerror: (() => void) | null = null
+  onend: (() => void) | null = null
+  start() {}
+  stop() {}
+}
+
+class FakeRecorder {
+  static isTypeSupported = () => true
+  state = 'inactive'
+  stream = { getTracks: () => [{ stop: vi.fn() }] }
+  ondataavailable: ((e: { data: { size: number } }) => void) | null = null
+  onstop: (() => void) | null = null
+  start() {
+    this.state = 'recording'
+  }
+  stop() {
+    this.state = 'inactive'
+    this.onstop?.()
+  }
 }
 
 describe('Chat', () => {
@@ -265,5 +324,45 @@ describe('Chat', () => {
     render(<Chat onLogout={vi.fn()} />)
     expect(await screen.findByText('✅ 已通过：上线审批')).toBeTruthy()
     expect(screen.queryByRole('button', { name: /通过/ })).toBeNull()
+  })
+
+  it('sends a transcript text after speech stop', async () => {
+    mockStop.mockResolvedValueOnce({ kind: 'transcript', text: '语音转写结果' })
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+      // POST /messages 分支会按发送体自建 message 并推入 createdMessages，此 key 仅作占位（与 mockFetch 实现一致）
+      '/api/v1/sessions/s1/messages': { message: { id: 'm9', clientMsgId: 'c9', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'text', content: '语音转写结果', seq: 9, createdAt: '', ref: null } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    const mic = await screen.findByRole('button', { name: /🎤/ })
+    fireEvent.pointerDown(mic)
+    fireEvent.pointerUp(mic)
+    expect(await screen.findByText(/语音转写结果/)).toBeTruthy()
+  })
+
+  it('uploads audio blob when speech degrades', async () => {
+    mockStop.mockResolvedValueOnce({ kind: 'audio', blob: new Blob(['x'], { type: 'audio/webm' }), mime: 'audio/webm' })
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+      // files-POST 分支会取此 body 的 message 推入 createdMessages，供重拉列表渲染语音气泡
+      '/api/v1/sessions/s1/files': { file: { id: 'f1', sessionId: 's1', name: '语音-1.webm', size: 1, mime: 'audio/webm', uploadedBy: 'u-alice', createdAt: '' }, message: { id: 'm10', clientMsgId: 'c10', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'file', content: '语音-1.webm', seq: 10, createdAt: '', ref: { kind: 'file', id: 'f1' }, file: { id: 'f1', name: '语音-1.webm', size: 1, mime: 'audio/webm' } } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    const mic = await screen.findByRole('button', { name: /🎤/ })
+    fireEvent.pointerDown(mic)
+    fireEvent.pointerUp(mic)
+    // 语音气泡渲染「🎤 语音消息」（不显示文件名）→ 断言该文本与播放按钮
+    expect(await screen.findByText(/🎤 语音消息/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /播放/ })).toBeTruthy()
   })
 })

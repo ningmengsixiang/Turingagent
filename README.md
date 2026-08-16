@@ -159,6 +159,10 @@ pnpm --filter @ta/gateway eval:silence
 pnpm --filter @ta/gateway gen:silence-cases
 ```
 
+### 语音输入（FR-DESK-07 / FR-CHAT-01）
+
+输入区 🎤 按住说话：实时转写（Web Speech API，Chrome/Edge）→ 松开以文字发送；转写失败或浏览器不支持 → 降级为语音文件消息（可播放，决策 D6）。需要 HTTPS 或 localhost（浏览器麦克风安全要求）。
+
 ### Web 前端
 
 ```bash
