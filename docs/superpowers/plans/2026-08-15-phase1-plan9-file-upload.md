@@ -10,6 +10,11 @@
 
 **决策记录：** 存储 key = `files/<uuid>`（内容寻址，防重名冲突）；下载 = 预签名 URL（15 分钟过期，前端点击时获取，避免网关代理大文件）；上传权限 = 会话成员；文件大小上限 20MB（@fastify/multipart limits）；文件消息 content = 文件名，`Message.file` 携带结构化元数据；MinIO 凭据 dev 默认 `taadmin/ta12345678`（compose 同步，生产环境变量覆盖）。
 
+**评审决策（T3 质量审查后追加）：**
+- 预签名下载 URL 必须带 `response-content-disposition: attachment; filename*=UTF-8''...`（minio 第 4 参 respHeaders）：MinIO :9000 与 Web :5173 跨域，`<a download>` 被忽略，无 Content-Disposition 时浏览器会导航到 MinIO 页/内联预览并丢文件名；中文文件名用 RFC 5987 `filename*`。
+- `uploadFile` 裸 fetch 需与 `request()` 一致的 401 处理（clearToken + `ta:unauthorized` 事件），否则 token 过期上传时应用不登出、token 残留。
+- 已知取舍（记入后续任务）：上传无前端大小预检（413 提示不友好）、无会话时上传静默丢弃（应与 send 一样 ensureSession）、上传/下载交互路径测试缺口、路由内 MAX_FILE_SIZE 检查为死代码（multipart 插件先行拦截）、`.file-bubble` 缺 word-break、多选文件只取第一个。
+
 ---
 
 ## 文件结构
@@ -501,7 +506,7 @@ git commit -m "feat(file): 文件路由（multipart 上传/预签名下载/列�
 - Modify: `apps/web/src/pages/Chat.test.tsx`
 - Modify: `apps/web/src/app.css`
 
-- [ ] **Step 1: client.ts 增文件 API**
+- [x] **Step 1: client.ts 增文件 API**
 
 ```ts
 import type { Approval, FileInfo, Memory, ... } from '@ta/contracts'
@@ -530,7 +535,7 @@ export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file:
   request(`/api/v1/files/${fileId}`)
 ```
 
-- [ ] **Step 2: Chat.tsx 文件按钮/拖拽/文件消息**
+- [x] **Step 2: Chat.tsx 文件按钮/拖拽/文件消息**
 
 1. 状态增 `const fileInputRef = useRef<HTMLInputElement | null>(null)`。
 
@@ -605,13 +610,13 @@ export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file:
   }
 ```
 
-- [ ] **Step 3: app.css 增文件样式**
+- [x] **Step 3: app.css 增文件样式**
 
 ```css
 .file-bubble { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #e5e5ea; border-radius: 14px; background: #f5f5f7; font-size: 14px; }
 ```
 
-- [ ] **Step 4: Chat.test.tsx 补文件用例**
+- [x] **Step 4: Chat.test.tsx 补文件用例**
 
 ```tsx
   it('renders a file message', async () => {
@@ -633,7 +638,7 @@ export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file:
   })
 ```
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -644,7 +649,7 @@ pnpm --filter @ta/web build
 
 Expected: typecheck exit 0；web 测试 19 用例全 PASS；build 产出 dist/。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add apps/web
