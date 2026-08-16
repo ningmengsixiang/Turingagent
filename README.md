@@ -196,6 +196,8 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 
 租户是企业数据隔离单元（users/sessions 绑定 tenant_id，应用层强制）：跨租户会话互不可见（canAccessSession 租户匹配前置）；停用租户（`POST /api/v1/org/tenants/:id/suspend`，管理员，理由入审计）后其成员登录被拒、数据保留。租户管理：管理员 `POST /api/v1/org/tenants` 创建、`GET /api/v1/org/tenants` 列表。RLS 数据库级双保险记后续。
 
+多租户管理补全：管理员 `POST /api/v1/org/users/:id/tenant` 转移用户租户（null 移出，登录回 default，审计留痕）；创建会话时跨租户成员加入被拒（400）；存量 NULL 租户会话由迁移 015 回填为 default 租户（sessions 无 created_by 列）。RLS 数据库级双保险记后续。
+
 ### 文件上传
 
 ```bash

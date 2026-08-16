@@ -143,4 +143,50 @@ describe('tenant isolation', () => {
     })
     expect(members.statusCode).toBe(403)
   })
+
+  it('transfers a user to another tenant (admin)', async () => {
+    const admin = await loginAs('alice')
+    const t2 = await built.app.inject({ method: 'POST', url: '/api/v1/org/tenants', headers: { authorization: `Bearer ${admin}` }, payload: { name: `租户T-${Date.now()}` } })
+    const tenantT = t2.json().tenant.id as string
+    const bob = await loginAs('bob')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/org/users/u-bob/tenant',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { tenantId: tenantT },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().tenantId).toBe(tenantT)
+    const row = await pool.query<{ tenant_id: string | null }>('SELECT tenant_id FROM users WHERE user_id = $1', ['u-bob'])
+    expect(row.rows[0]!.tenant_id).toBe(tenantT)
+  })
+
+  it('rejects cross-tenant member on session create', async () => {
+    const admin = await loginAs('alice')
+    const t2 = await built.app.inject({ method: 'POST', url: '/api/v1/org/tenants', headers: { authorization: `Bearer ${admin}` }, payload: { name: `租户X-${Date.now()}` } })
+    const tenantX = t2.json().tenant.id as string
+    const bob = await loginAs('bob')
+    await pool.query(`UPDATE users SET tenant_id = $1 WHERE user_id = 'u-bob'`, [tenantX])
+    const session = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { kind: 'project', title: '跨租户成员测试', memberIds: ['u-bob'] },
+    })
+    expect(session.statusCode).toBe(400)
+    expect(session.json().error).toContain('different tenant')
+  })
+
+  it('backfills null-tenant sessions on migration', async () => {
+    // 模拟存量 NULL 租户会话 → 手动跑回填 SQL → 非 NULL
+    const admin = await loginAs('alice')
+    // 先注册 bob（API 校验 memberIds 非空：计划原文 memberIds: [] 会被 400 拒，改用 u-bob）
+    await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } })
+    const session = await built.app.inject({ method: 'POST', url: '/api/v1/sessions', headers: { authorization: `Bearer ${admin}` }, payload: { kind: 'project', title: '回填测试', memberIds: ['u-bob'] } })
+    const sessionId = session.json().session.id as string
+    await pool.query(`UPDATE sessions SET tenant_id = NULL WHERE id = $1`, [sessionId])
+    await pool.query(`UPDATE sessions SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL`)
+    const row = await pool.query<{ tenant_id: string | null }>('SELECT tenant_id FROM sessions WHERE id = $1', [sessionId])
+    expect(row.rows[0]!.tenant_id).not.toBeNull()
+  })
 })
