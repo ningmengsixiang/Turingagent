@@ -166,12 +166,19 @@ export async function decideApproval(
   if (current.approverId !== input.approverId) {
     throw new ApprovalStateError('only the approver can decide')
   }
+  // 条件更新（T1 质量审查：并发双裁决竞态修复）——WHERE 带 status='pending'，
+  // 先读后写的窗口期被行锁 + 条件覆盖，胜者恰一次，败者抛 AlreadyDecided
   const res = await pool.query<ApprovalRow>(
     `UPDATE approvals
         SET status = $2, reason = $3, decided_at = now()
-      WHERE id = $1 RETURNING *`,
+      WHERE id = $1 AND status = 'pending' RETURNING *`,
     [input.id, input.decision, input.reason ?? null],
   )
+  if (res.rowCount !== 1) {
+    const now = await getApproval(pool, input.id)
+    if (!now) throw new ApprovalStateError('approval not found')
+    throw new ApprovalStateError(`approval already ${now.status}`)
+  }
   return mapApproval(res.rows[0]!)
 }
 
@@ -324,6 +331,28 @@ describe('approval repository', () => {
     await expect(
       decideApproval(pool, { id: '00000000-0000-0000-0000-000000000000', approverId: 'u-bob', decision: 'approved' }),
     ).rejects.toThrow(ApprovalStateError)
+  })
+
+  it('decides exactly once under concurrent decisions (T1 质量审查：并发回归)', async () => {
+    const approval = await createApproval(pool, {
+      sessionId,
+      title: '上线审批',
+      approverId: 'u-bob',
+      createdBy: 'u-alice',
+    })
+    const results = await Promise.allSettled([
+      decideApproval(pool, { id: approval.id, approverId: 'u-bob', decision: 'approved' }),
+      decideApproval(pool, { id: approval.id, approverId: 'u-bob', decision: 'rejected' }),
+    ])
+    const fulfilled = results.filter((r) => r.status === 'fulfilled')
+    const rejected = results.filter((r) => r.status === 'rejected')
+    expect(fulfilled).toHaveLength(1) // 恰一次决策成功
+    expect(rejected).toHaveLength(1) // 另一路被拒（AlreadyDecided）
+    for (const r of rejected) {
+      expect((r as PromiseRejectedResult).reason).toBeInstanceOf(ApprovalStateError)
+    }
+    const final = await getApproval(pool, approval.id)
+    expect(final?.status).not.toBe('pending') // 终态：approved 或 rejected
   })
 })
 ```
