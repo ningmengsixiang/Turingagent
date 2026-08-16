@@ -13,6 +13,17 @@ describe('classifySilence', () => {
     expect(classifySilence('这个需求需要审批').decision).toBe('respond')
     expect(classifySilence('上线时间你怎么看').decision).toBe('respond')
     expect(classifySilence('这个 bug 怎么办').decision).toBe('respond')
+    expect(classifySilence('@Ta-QA 测试下').decision).toBe('respond')
+  })
+
+  it('does not fire on emails, code fragments or approval-ack phrases', () => {
+    expect(classifySilence('联系 admin@example.com 谢谢').decision).toBe('silent')
+    expect(classifySilence('docker pull nginx@sha256:abc123').decision).toBe('silent')
+    expect(classifySilence('git checkout feature@dev').decision).toBe('silent')
+    expect(classifySilence('我同意').decision).toBe('silent')
+    expect(classifySilence('我通过了考试').decision).toBe('silent')
+    expect(classifySilence('打卡通过了').decision).toBe('silent')
+    expect(classifySilence('@所有人 记得提交日报').decision).toBe('silent')
   })
 
   it('responds to project keyword signals (score >= 3)', () => {

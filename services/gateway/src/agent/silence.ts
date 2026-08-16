@@ -2,8 +2,10 @@
 
 export type SilenceDecision = { decision: 'respond' | 'silent'; reason: string }
 
-/** @ 提及（必响应，纯规则降级模式的核心兜底；PRD「分类器不可用时降级为仅 @ 必响应」） */
-const MENTION_RE = /@[\w-]+/i
+/** @ 提及（必响应，纯规则降级模式的核心兜底；PRD「分类器不可用时降级为仅 @ 必响应」）
+ *  白名单与 registry.ts 的 agent mentionPattern 一致（Ta-PM / Ta-Architect / Ta-Fullstack / Ta-QA）；
+ *  收窄以消除 a@b.com、nginx@sha256:…、feature@dev 等误报（T1 质量审查 M1）。 */
+const MENTION_RE = /@\s*Ta[-_]?(?:PM|Architect|Fullstack|QA)(?![\w-])/i
 
 /** 决策点正则（命中即 respond；刻意收紧避免闲聊误报） */
 const DECISION_RE: RegExp[] = [
@@ -13,7 +15,7 @@ const DECISION_RE: RegExp[] = [
   /(?:哪个|哪一种)[^，。]{0,6}(?:好|更好|合适)/i,
   /(?:方案|版本|设计|做法)[一二三四1-4]?(?:与|和|vs|VS)[^，。]{0,8}(?:方案|版本|设计|做法)/i,
   /(?:对比|比较)一下/i,
-  /(?:审批|批准|请确认|确认后|确认一下|确认无误|同意|通过|驳回)/i,
+  /(?:审批|批准|请确认|确认后|确认一下|确认无误|驳回)/i,
   /(?:怎么办|怎么处理|如何处理|如何解决|给个建议|给个意见|你怎么看|大家怎么看)/i,
 ]
 
