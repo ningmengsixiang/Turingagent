@@ -6,6 +6,7 @@ import { createMessage } from '../repos/messages.js'
 import { checkQuota, recordUsage } from '../repos/quota.js'
 import { classifySilence } from './silence.js'
 import { AGENTS, findAgentByMention, type AgentDefinition } from './registry.js'
+import { agentRunsTotal, agentTokensTotal } from '../metrics.js'
 import type pg from 'pg'
 
 export interface AgentBridgeOptions {
@@ -61,6 +62,7 @@ export class AgentBridge {
     // 配额熔断（FR-ORG-07）：熔断只影响智能体执行，IM 主链路不受影响
     const trip = await checkQuota(this.options.pool)
     if (trip) {
+      agentRunsTotal.inc({ agent: agent.id, outcome: 'quota' })
       try {
         const { message: reply } = await createMessage(this.options.pool, {
           sessionId: message.sessionId,
@@ -83,6 +85,8 @@ export class AgentBridge {
       console.log(
         `[agent] ${agent.displayName} run: prompt=${completion.promptTokens} completion=${completion.completionTokens} tokens`,
       )
+      agentRunsTotal.inc({ agent: agent.id, outcome: 'success' })
+      agentTokensTotal.inc(completion.promptTokens + completion.completionTokens)
       // 用量累计（agent 维度）
       void recordUsage(this.options.pool, agent.id, completion.promptTokens + completion.completionTokens).catch((err) =>
         console.error('[quota] record usage failed:', err),
@@ -98,6 +102,7 @@ export class AgentBridge {
       this.options.emitMessageCreated(reply)
       return { triggered: true, agentId: agent.id, reply }
     } catch (err) {
+      agentRunsTotal.inc({ agent: agent.id, outcome: 'error' })
       console.error('[agent] run failed:', err)
       try {
         const { message: reply } = await createMessage(this.options.pool, {
