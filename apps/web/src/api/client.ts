@@ -1,4 +1,4 @@
-import type { Approval, Memory, MemoryVersion, Message, Session, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, Memory, MemoryVersion, Message, Session, SessionMember, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -73,7 +73,7 @@ export const listMessages = (sessionId: string, afterSeq = 0): Promise<{ message
 
 export const sendMessage = (
   sessionId: string,
-  input: { clientMsgId: string; contentType: string; content: string },
+  input: { clientMsgId: string; contentType: string; content: string; replyTo?: string },
 ): Promise<{ message: Message }> =>
   request(`/api/v1/sessions/${sessionId}/messages`, { method: 'POST', body: JSON.stringify(input) })
 
@@ -117,3 +117,6 @@ export const updateMemory = (
 
 export const listMemoryVersions = (memoryId: string): Promise<{ versions: MemoryVersion[] }> =>
   request(`/api/v1/memories/${memoryId}/versions`)
+
+export const listSessionMembers = (sessionId: string): Promise<{ members: SessionMember[] }> =>
+  request(`/api/v1/sessions/${sessionId}/members`)

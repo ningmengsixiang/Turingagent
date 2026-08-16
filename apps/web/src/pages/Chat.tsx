@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Memory, Message, TaskStatus } from '@ta/contracts'
-import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
+import type { Memory, Message, SessionMember, TaskStatus } from '@ta/contracts'
+import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -28,6 +28,10 @@ export function Chat({ onLogout }: ChatProps) {
   const [editing, setEditing] = useState<Memory | 'new' | null>(null)
   const [memTitle, setMemTitle] = useState('')
   const [memContent, setMemContent] = useState('')
+  const [members, setMembers] = useState<SessionMember[]>([])
+  const [showMembers, setShowMembers] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
+  const [showMention, setShowMention] = useState(false)
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const creatingRef = useRef(false)
@@ -63,6 +67,15 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }, [])
 
+  const loadMembers = useCallback(async (sessionId: string) => {
+    try {
+      const res = await listSessionMembers(sessionId)
+      setMembers(res.members)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载成员失败')
+    }
+  }, [])
+
   useEffect(() => {
     void refreshSessions()
     const ws = new WsClient(
@@ -93,8 +106,9 @@ export function Chat({ onLogout }: ChatProps) {
     if (activeId) {
       void loadMessages(activeId)
       void loadMemories(activeId)
+      void loadMembers(activeId)
     }
-  }, [activeId, loadMessages, loadMemories])
+  }, [activeId, loadMessages, loadMemories, loadMembers])
 
   async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
@@ -121,8 +135,9 @@ export function Chat({ onLogout }: ChatProps) {
       const sessionId = await ensureSession()
       if (!sessionId) return
       const clientMsgId = crypto.randomUUID()
-      await sendMessage(sessionId, { clientMsgId, contentType: 'text', content })
+      await sendMessage(sessionId, { clientMsgId, contentType: 'text', content, replyTo: replyingTo?.id })
       setInput('')
+      setReplyingTo(null)
       await loadMessages(sessionId)
       void refreshSessions()
     } catch (err) {
@@ -199,7 +214,7 @@ export function Chat({ onLogout }: ChatProps) {
   }
 
   return (
-    <div className="chat-layout">
+    <div className="chat-layout mention-host">
       <aside className="session-sidebar">
         <div className="sidebar-head">
           <strong>Turing Agent</strong>
@@ -235,6 +250,7 @@ export function Chat({ onLogout }: ChatProps) {
       <main className="chat-main">
         <header className="chat-head">
           <strong>{sessions.find((s) => s.id === activeId)?.title ?? '未选择会话'}</strong>
+          <button className="ghost" onClick={() => setShowMembers(true)}>{members.length} 成员</button>
           <button className="ghost" onClick={mentionAgent}>@ 智能体</button>
         </header>
         <div className="message-list">
@@ -249,7 +265,11 @@ export function Chat({ onLogout }: ChatProps) {
                   <span className="bubble-name">
                     {m.senderKind === 'agent' ? (AGENT_NAMES[m.senderId] ?? 'AI 智能体') : m.senderId}
                   </span>
+                  {m.senderKind === 'human' ? (
+                    <button className="ghost small" onClick={() => setReplyingTo(m)}>引用</button>
+                  ) : null}
                 </div>
+                {m.replyPreview ? <div className="reply-preview">↪ {m.replyPreview}</div> : null}
                 {isCard ? (
                   <div className="approval-card">
                     <strong>{m.content}</strong>
@@ -285,7 +305,14 @@ export function Chat({ onLogout }: ChatProps) {
           })}
         </div>
         {error && <p className="chat-error">{error}</p>}
+        {replyingTo && (
+          <div className="replying-bar">
+            <span>↪ 回复：{replyingTo.content.slice(0, 60)}</span>
+            <button className="ghost" onClick={() => setReplyingTo(null)}>取消</button>
+          </div>
+        )}
         <footer className="input-area">
+          <button className="ghost" onClick={() => setShowMention((v) => !v)}>@</button>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -311,6 +338,27 @@ export function Chat({ onLogout }: ChatProps) {
               <button onClick={() => void saveMemory()}>保存</button>
             </div>
           </div>
+        </div>
+      )}
+      {showMembers && (
+        <div className="memory-modal" onClick={() => setShowMembers(false)}>
+          <div className="memory-modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3>成员</h3>
+            {members.map((mem) => (
+              <div key={mem.userId} className="member-row">
+                {mem.kind === 'agent' ? <span className="ai-badge">AI</span> : null} {mem.name}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {showMention && (
+        <div className="mention-picker">
+          {members.map((mem) => (
+            <button key={mem.userId} className="mention-option" onClick={() => { setInput((prev) => prev + (mem.kind === 'agent' ? `@${mem.name} ` : `@${mem.userId} `)); setShowMention(false) }}>
+              {mem.kind === 'agent' ? `🤖 ${mem.name}` : mem.name}
+            </button>
+          ))}
         </div>
       )}
     </div>

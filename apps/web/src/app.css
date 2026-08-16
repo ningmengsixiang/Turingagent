@@ -56,3 +56,11 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .memory-modal-box { background: #fff; border-radius: 14px; padding: 20px; width: 480px; display: flex; flex-direction: column; gap: 10px; }
 .memory-modal-box input, .memory-modal-box textarea { padding: 8px 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px; font-family: inherit; }
 .memory-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.reply-preview { font-size: 12px; color: #6e6e73; background: #f0f0f5; padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; }
+.ghost.small { font-size: 11px; padding: 0 4px; }
+.replying-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 20px; background: #f5f5f7; font-size: 12px; color: #6e6e73; }
+.mention-host { position: relative; }
+.mention-picker { position: absolute; bottom: 64px; left: 20px; background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.1); padding: 6px; display: flex; flex-direction: column; max-height: 240px; overflow-y: auto; z-index: 5; }
+.mention-option { border: none; background: none; text-align: left; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.mention-option:hover { background: #f0f0f5; }
+.member-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 14px; }

@@ -61,6 +61,8 @@ describe('Chat', () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
       '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
@@ -77,6 +79,8 @@ describe('Chat', () => {
       '/api/v1/sessions/s1/messages?after_seq=0': {
         messages: [{ id: 'm2', clientMsgId: 'a1', sessionId: 's1', senderId: 'agent-ta-fullstack', senderKind: 'agent', contentType: 'text', content: '收到需求', seq: 1, createdAt: '' }],
       },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
@@ -93,6 +97,8 @@ describe('Chat', () => {
           { id: 'm2', clientMsgId: 'c2', sessionId: 's1', senderId: 'agent-ta-qa', senderKind: 'agent', contentType: 'text', content: '测试通过', seq: 2, createdAt: '' },
         ],
       },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
@@ -112,6 +118,8 @@ describe('Chat', () => {
         }],
       },
       '/api/v1/tasks/t1/status': { task: { id: 't1', sessionId: 's1', title: '支付网关对接', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'in_progress' } },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
@@ -125,11 +133,34 @@ describe('Chat', () => {
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
       '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
       '/api/v1/sessions/s1/memories': { memories: [{ id: 'mem1', sessionId: 's1', title: '需求基线', content: '基线内容', currentVersion: 1, createdBy: 'u-alice', createdAt: '', updatedAt: '' }] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
     expect(await screen.findByText('需求基线')).toBeTruthy()
     expect(screen.getByText('记忆')).toBeTruthy()
+  })
+
+  it('renders members and a reply preview', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [
+          { id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'text', content: '原始消息', seq: 1, createdAt: '' },
+          { id: 'm2', clientMsgId: 'c2', sessionId: 's1', senderId: 'u-bob', senderKind: 'human', contentType: 'text', content: '引用回复', seq: 2, createdAt: '', replyTo: 'm1', replyPreview: '原始消息' },
+        ],
+      },
+      '/api/v1/sessions/s1/members': {
+        members: [
+          { userId: 'u-alice', name: 'alice', kind: 'human' },
+          { userId: 'agent-ta-fullstack', name: 'Ta-Fullstack', kind: 'agent' },
+        ],
+      },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('原始消息')).toBeTruthy()
+    expect(screen.getByText(/引用回复/)).toBeTruthy()
   })
 
   it('renders a pending confirmation card with decide buttons', async () => {
@@ -143,6 +174,8 @@ describe('Chat', () => {
         }],
       },
       '/api/v1/approvals/a1/decide': { approval: { id: 'a1', status: 'approved' } },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
@@ -161,6 +194,8 @@ describe('Chat', () => {
           ref: { kind: 'approval', id: 'a2' },
         }],
       },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
     })
     vi.stubGlobal('WebSocket', FakeWebSocket)
     render(<Chat onLogout={vi.fn()} />)
