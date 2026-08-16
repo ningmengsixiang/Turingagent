@@ -1,0 +1,6 @@
+{
+  "id": "qa-review",
+  "name": "质量审查",
+  "description": "第三方技能包：代码质量与测试审查（社区贡献）",
+  "toolAllowlist": ["read", "grep", "glob", "bash"]
+}

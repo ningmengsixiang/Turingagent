@@ -19,6 +19,7 @@ import { registerSkillRoutes } from './routes/skills.js'
 import { registerKbRoutes } from './routes/kb.js'
 import { registerApiKeyRoutes } from './routes/api-keys.js'
 import { registerTemplateRoutes } from './routes/templates.js'
+import { registerMarketplaceRoutes } from './routes/marketplace.js'
 import { registerExternalRoutes } from './routes/external.js'
 import { registerFileRoutes } from './routes/files.js'
 import { registerMemoryRoutes } from './routes/memories.js'
@@ -83,6 +84,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   registerKbRoutes(app, config, pool)
   registerApiKeyRoutes(app, config, pool)
   registerTemplateRoutes(app, config, pool)
+  registerMarketplaceRoutes(app, config, pool)
   registerExternalRoutes(app, config, pool)
   registerFileRoutes(app, config, pool, storage, (message) => events.emit('message.created', message))
   registerWs(app, config, pool, registry, events)

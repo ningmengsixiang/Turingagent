@@ -283,3 +283,13 @@ export interface ProjectTemplate {
   /** 预留：角色权限模板（Phase 3 后续消费） */
   roles?: unknown
 }
+
+export interface MarketplaceSkill {
+  id: string
+  name: string
+  description: string
+  /** 工具白名单（声明式；沙箱强制记 Phase 3 后续） */
+  toolAllowlist: string[]
+  /** 是否已安装到本地 */
+  installed: boolean
+}
