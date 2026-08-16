@@ -97,6 +97,11 @@ curl -s -X PUT localhost:3001/api/v1/memories/<memoryId> \
 
 curl -s localhost:3001/api/v1/memories/<memoryId>/versions -H "authorization: Bearer $TOKEN"
 # → 版本历史 [v1, v2, …]，append-only 留痕
+
+# 一键沉淀：LLM 摘要会话讨论为结构化记忆（需求/决策/待办/未决）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/memories/summarize \
+  -H "authorization: Bearer $TOKEN"
+# → 生成/更新「会话记忆 <日期>」，版本留痕；需配置 MODEL_API_KEY
 ```
 
 ### 群聊协作
