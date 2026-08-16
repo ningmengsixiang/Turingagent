@@ -99,6 +99,18 @@ curl -s localhost:3001/api/v1/memories/<memoryId>/versions -H "authorization: Be
 # → 版本历史 [v1, v2, …]，append-only 留痕
 ```
 
+### 群聊协作
+
+```bash
+# 会话成员列表（人类 + 四智能体）
+curl -s localhost:3001/api/v1/sessions/<sessionId>/members -H "authorization: Bearer $TOKEN"
+
+# 引用回复（replyTo = 被引消息 id；列表返回 replyPreview 摘要）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"clientMsgId":"m2","contentType":"text","content":"引用回复","replyTo":"<被引消息id>"}'
+```
+
 ### 智能体团队（四角色）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 @ 对应智能体即触发，回复以该智能体身份实时推回：
