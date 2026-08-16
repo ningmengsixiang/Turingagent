@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。React DnD 原生事件 + 既有 updateTaskStatus/listTasks/sendMessage。
 
+**质量审查决策（T1-T3 后追加）：** ① 日报/周报范围改为「非 done 必入报 + done 按 dueAt 窗口过滤」——原按 dueAt 过滤会漏掉过期未完成任务（最该曝光的积压项）且无 dueAt 的已完成任务永久入报；② sendTaskReport 加 `if (busy) return` 守卫 + 按钮 disabled（防双击并发重复消息）；③ 报告行显示名用 AGENT_NAMES（与看板卡片一致）；④ 报告头日期本地拼装（原 UTC 在 UTC+8 早晨差一天）。**记录后续**：按钮误拖防护（onDragStart 判 closest('button')）、同列 drop 跳过 PATCH（幂等无害但冗余请求）、时区边界（UTC 时间戳 vs 本地 Date.now）、文件拖到看板列被吞（drop 判 dataTransfer.types 含 Files）、长报告截断（>10000 字符 400，当前负载低风险）、单布尔 busy 重构（计数/分域，与语音同问题）、拖拽中卡片卸载的 dragend 兜底。
+
 **决策记录：** 拖拽用 HTML5 DnD（零依赖、与既有按钮并存）而非 dnd-kit（拖拽库记 Phase 2 后续，若需要动画/触摸增强再引入）；日报周报为「前端聚合 → 文本消息」轻量实现（真实报表/导出 PDF 记后续；智能体自动生成日报记后续任务）；统计瓦片增强不改后端（tasks 无 dueAt 聚合由前端算）；拖拽仅「状态变更」不重排（排序/优先级记后续）。权限：看板操作沿用既有（会话成员即可，服务端校验）。
 
 ---
