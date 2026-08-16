@@ -36,9 +36,9 @@
 
 ## 7. 安全基线
 - 必须：强 JWT_SECRET / 修改默认密码 / HTTPS（TLS 终止于反代或 ingress）/ 端口绑 127.0.0.1 或防火墙
-- 开放 API：X-API-Key 仅 HTTPS 传输；默认限流 60 次/分钟/key（`EXTERNAL_RATE_LIMIT` 可调）
+- 开放 API：X-API-Key 仅 HTTPS 传输；限流默认 60 次/分钟/key（`EXTERNAL_RATE_LIMIT` 可调）；多副本共享限流：`RATE_LIMIT_BACKEND=redis` + `REDIS_URL`（默认 memory 单副本；Redis 不可用自动降级内存）
 - 审计：`audit_events` 表 append-only（审批/配额/租户/API Key 等操作留痕）
-- 生产加固后续：RLS 双保险 / 多副本限流（Redis）/ 密钥管理（KMS）
+- 生产加固后续：RLS 双保险 / 密钥管理（KMS）
 
 ## 8. 监控
 - 指标端点：`GET /metrics`（Prometheus 格式，无鉴权——生产在 LB/内网暴露）：`http_requests_total`（按 route/status）、`messages_created_total`、`agent_runs_total`（按 agent/outcome）、`agent_tokens_total`、`quota_used`/`quota_budget`、`ws_connections`、`escalation_runs_total`

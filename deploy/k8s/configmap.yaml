@@ -10,5 +10,7 @@ data:
   MODEL_NAME: "deepseek-chat"
   MINIO_ENDPOINT: "minio:9000"
   MINIO_BUCKET: "ta-files"
+  RATE_LIMIT_BACKEND: "redis"
+  REDIS_URL: "redis://redis:6379"
   POSTGRES_DB: "ta_prod"
   POSTGRES_USER: "ta"

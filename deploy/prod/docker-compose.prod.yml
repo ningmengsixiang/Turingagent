@@ -29,6 +29,14 @@ services:
     volumes:
       - ta-prod-minio-data:/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: ta-prod-redis
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ta-prod-redis-data:/data
+
   gateway:
     build:
       context: ../..
@@ -51,6 +59,8 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-taadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET:-ta-files}
+      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-memory}
+      REDIS_URL: redis://redis:6379
     ports:
       - "127.0.0.1:${GATEWAY_PORT:-3001}:3001"
     command: sh -c "node lib/migrate.js && node lib/index.js"
@@ -74,3 +84,4 @@ services:
 volumes:
   ta-prod-pgdata:
   ta-prod-minio-data:
+  ta-prod-redis-data:
