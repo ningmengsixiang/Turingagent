@@ -8,6 +8,8 @@
 
 **Tech Stack:** Node 信号处理 + 内存令牌桶 + Markdown 手册。无新依赖。
 
+**质量审查决策（T1-T3 后追加）：** ① DEPLOYMENT §2.3 验证 curl 补 content-type（无头 415 实测）；② pool.end 双保险（server.ts onClose 已 end——显式 end 吞预期重复错误，其他错误仍 exit 1）；③ WS 由 @fastify/websocket preClose 钩子关闭（app.close 覆盖 ✓）；④ buildApp overrides 原生支持 externalRateLimit（无需改 server.ts）；⑤ 限流桶不清理但 key 数=用户数有界（可接受）。**记录后续**：多副本限流（Redis 计数）、监控（Prometheus 指标）、优雅关闭自动化测试（当前真实验收覆盖）。
+
 **决策记录：** 优雅关闭用进程信号处理（K8s/Compose 均发 SIGTERM；`app.close()` 等存量连接关闭 + 超时兜底）；限流用内存令牌桶（单实例；多副本限流记后续 Redis 计数）；限流默认 60 次/分钟/API key（config 可调；开放 API 外部端点专用——内部端点不限）；DEPLOYMENT.md 为运维真源（README 链接引用，不重复）；生产验证已实测（gateway/web 镜像构建成功、compose 全链路含真实 LLM 通过）。
 
 ---
@@ -30,7 +32,7 @@
 **Files:**
 - Modify: `services/gateway/src/index.ts`
 
-- [ ] **Step 1: 信号处理**
+- [x] **Step 1: 信号处理**
 
 读 `services/gateway/src/index.ts`，把现有 try/catch 改造成含优雅关闭：
 
@@ -80,7 +82,7 @@ try {
 
 > 注：`app.close()` 会等存量连接（Fastify 支持 close 等待 in-flight）；WS 连接由 @fastify/websocket 注册的 close 钩子关闭（核对——若 app.close 不关 WS，记录并接受（进程退出即断））。`timer.unref()` 防阻塞进程。
 
-- [ ] **Step 2: 验证**
+- [x] **Step 2: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -89,7 +91,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add services/gateway/src/index.ts
@@ -105,7 +107,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 - Modify: `services/gateway/src/routes/external.ts`
 - Modify: `services/gateway/src/routes/external.test.ts`
 
-- [ ] **Step 1: config 增 externalRateLimit**
+- [x] **Step 1: config 增 externalRateLimit**
 
 读 `services/gateway/src/config.ts`，Config 接口增 `externalRateLimit: number`，loadConfig 增：
 
@@ -115,7 +117,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 
 （Number 解析——非法值回退默认：`const externalRateLimit = Number(env.EXTERNAL_RATE_LIMIT ?? 60); ... externalRateLimit: Number.isFinite(externalRateLimit) && externalRateLimit > 0 ? externalRateLimit : 60`，与现有配置校验风格一致。）
 
-- [ ] **Step 2: external.ts 限流中间件**
+- [x] **Step 2: external.ts 限流中间件**
 
 读 `services/gateway/src/routes/external.ts`（apiKeyAuth 现状），新增内存令牌桶中间件（apiKeyAuth 之后应用）：
 
@@ -141,7 +143,7 @@ function createRateLimiter(limit: number, windowMs = 60_000) {
 
 在 `registerExternalRoutes` 内（auth 之后）创建 `const rateLimit = createRateLimiter(config.externalRateLimit)`，两个 external 端点 preHandler 链或内部调用：`apiKeyAuth` 挂 `request.apiKeyUser` 后，调 `rateLimit(apiKeyUser)`——超限 `reply.code(429).header('Retry-After', retryAfterSec).send({ error: 'rate limit exceeded' })`。**实现**：把限流检查放进 apiKeyAuth 内部（认证通过后检查）——两个端点共享。
 
-- [ ] **Step 3: 测试**
+- [x] **Step 3: 测试**
 
 读 `services/gateway/src/routes/external.test.ts`（api-keys.test.ts？核对文件名——external 测试在 api-keys.test.ts 的用例 3；**新增限流专用测试文件** `services/gateway/src/routes/external.test.ts` 或复用），追加限流用例：
 
@@ -159,7 +161,7 @@ function createRateLimiter(limit: number, windowMs = 60_000) {
 
 > 注：需 buildApp 支持 externalRateLimit 覆盖（读 server.ts 的 buildApp overrides——config 覆盖机制：`buildApp(overrides)` 合并 config？读现状确认；若不支持，用 config 默认 60 但测试打 61 次（循环快，可行）或用 env EXTERNAL_RATE_LIMIT 覆盖——**推荐**：buildApp overrides 已支持 config 字段覆盖（读 server.ts buildApp 的 merge 逻辑），测试传 `{ externalRateLimit: 3 }`）。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -171,7 +173,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；限流用例 PASS；全量 204 用例（203+1）全 PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/config.ts services/gateway/src/routes/external.ts services/gateway/src/routes/external.test.ts
@@ -186,7 +188,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 - Create: `DEPLOYMENT.md`
 - Modify: `README.md`
 
-- [ ] **Step 1: 写 DEPLOYMENT.md**
+- [x] **Step 1: 写 DEPLOYMENT.md**
 
 创建 `DEPLOYMENT.md`，内容覆盖：
 
@@ -236,7 +238,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 - Prometheus 指标端点 / 日志采集 / 告警（gateway 健康、配额 80%、审批超时升级）
 ```
 
-- [ ] **Step 2: README 链接**
+- [x] **Step 2: README 链接**
 
 读 README，在「### 私有化部署（M2.5）」节末尾追加链接：
 
@@ -244,7 +246,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 完整部署与运维手册见 [`DEPLOYMENT.md`](DEPLOYMENT.md)（架构/部署/健康检查/备份恢复/升级/故障排查/安全基线）。
 ```
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -253,7 +255,7 @@ git diff --check
 
 Expected: 无空白错误。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add DEPLOYMENT.md README.md
@@ -264,7 +266,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "docs: 部署�
 
 ## Task 4: 全仓验收 + 推送
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -277,7 +279,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 204 + web 34 ≈ 240）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 2: 优雅关闭真实验收**
+- [x] **Step 2: 优雅关闭真实验收**
 
 ```bash
 cd /tmp
@@ -286,7 +288,7 @@ cd /tmp
 # 3) SIGINT 同理
 ```
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add docs/superpowers/plans/2026-08-15-phase3-plan9-launch-ready.md
