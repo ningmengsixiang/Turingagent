@@ -67,6 +67,22 @@ curl -s "localhost:3001/api/v1/org/audit?limit=20" -H "authorization: Bearer $TO
 # → 登录/角色变更/审批决策全部留痕（append-only 审计）；最后一名 admin 不可被降级
 ```
 
+### 任务卡（轻量看板）
+
+```bash
+# 创建任务（assignee 可为人类或智能体）→ 生成任务卡片消息
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/tasks \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"title":"支付网关对接","assigneeId":"agent-ta-fullstack","assigneeKind":"agent"}'
+
+# 流转状态（todo / in_progress / blocked / done）→ 卡片实时更新
+curl -s -X PATCH localhost:3001/api/v1/tasks/<taskId>/status \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' -d '{"status":"in_progress"}'
+
+# 看板列表
+curl -s localhost:3001/api/v1/sessions/<sessionId>/tasks -H "authorization: Bearer $TOKEN"
+```
+
 ### 智能体团队（四角色）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 @ 对应智能体即触发，回复以该智能体身份实时推回：
