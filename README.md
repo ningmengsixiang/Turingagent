@@ -67,20 +67,24 @@ curl -s "localhost:3001/api/v1/org/audit?limit=20" -H "authorization: Bearer $TO
 # → 登录/角色变更/审批决策全部留痕（append-only 审计）；最后一名 admin 不可被降级
 ```
 
-### 智能体（Ta-Fullstack）
+### 智能体团队（四角色）
 
-网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 `@Ta-Fullstack <需求>` 即触发智能体，回复以 agent 身份实时推回会话。
+网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 @ 对应智能体即触发，回复以该智能体身份实时推回：
+
+| 智能体 | 触发 | 职责 |
+|---|---|---|
+| Ta-PM | `@Ta-PM <需求>` | 需求澄清与基线 |
+| Ta-Architect | `@Ta-Architect <变更>` | 技术评审与影响评估 |
+| Ta-Fullstack | `@Ta-Fullstack <需求>` | 软件生成与交付 |
+| Ta-QA | `@Ta-QA <功能>` | 测试与验收 |
 
 ```bash
-# 模型凭证（来自 Harness 凭据文件 ~/.dsh/.credentials.yaml 的 DEEPSEEK_API_KEY）
 export MODEL_API_KEY=<你的 DeepSeek key>
 pnpm dev:gateway
-
-# 会话内发：@Ta-Fullstack 帮我做报销系统
-# → Ta-Fullstack 的回复经 WS 实时出现在会话里（senderKind=agent）
+# 会话内发：@Ta-PM 帮我澄清报销需求 → Ta-PM 的回复实时出现在会话里
 ```
 
-> 未配置 `MODEL_API_KEY` 时智能体自动禁用（`agentEnabled=false`），消息引擎其余功能不受影响。`MODEL_BASE_URL` / `MODEL_NAME`（默认 `deepseek-chat`）可覆盖。
+> 未配置 `MODEL_API_KEY` 时智能体自动禁用。`MODEL_BASE_URL` / `MODEL_NAME`（默认 `deepseek-chat`）可覆盖。
 
 ### Web 前端
 
