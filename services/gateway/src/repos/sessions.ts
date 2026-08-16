@@ -1,6 +1,7 @@
 import pg from 'pg'
 import type { Session, SessionMember } from '@ta/contracts'
 import { AGENTS } from '../agent/registry.js'
+import { listVisibleSessionIds } from './access.js'
 
 export interface SessionWithUnread extends Session {
   unreadCount: number
@@ -64,6 +65,36 @@ export async function listSessionsForUser(pool: pg.Pool, userId: string): Promis
       WHERE sm.user_id = $1
       ORDER BY s.created_at DESC`,
     [userId],
+  )
+  return res.rows.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    title: r.title,
+    memberIds: [],
+    unreadCount: Number(r.unread),
+  }))
+}
+
+/** ABAC 可见性过滤版列表：listVisibleSessionIds（admin 全部 + 成员 + 同部门项目）+ unread 计数 */
+export async function listSessionsVisible(pool: pg.Pool, userId: string): Promise<SessionWithUnread[]> {
+  const visible = await listVisibleSessionIds(pool, userId)
+  if (visible.length === 0) return []
+  const res = await pool.query<{
+    id: string
+    kind: 'direct' | 'project' | 'group'
+    title: string
+    unread: string
+  }>(
+    `SELECT s.id, s.kind, s.title,
+            (SELECT count(*) FROM messages m
+              WHERE m.session_id = s.id
+                AND m.seq > COALESCE((SELECT last_read_seq FROM session_members
+                                       WHERE session_id = s.id AND user_id = $1), 0)
+                AND m.sender_id <> $1)::text AS unread
+       FROM sessions s
+      WHERE s.id = ANY($2::uuid[])
+      ORDER BY s.created_at DESC`,
+    [userId, visible],
   )
   return res.rows.map((r) => ({
     id: r.id,
