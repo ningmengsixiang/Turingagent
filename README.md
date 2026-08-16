@@ -192,6 +192,10 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
   -H "x-api-key: ta_xxx" -H 'content-type: application/json' -d '{"content":"工单 #123 已创建"}'
 ```
 
+### 多租户隔离（M3.3 / FR-ORG-01 / FR-SEC-02）
+
+租户是企业数据隔离单元（users/sessions 绑定 tenant_id，应用层强制）：跨租户会话互不可见（canAccessSession 租户匹配前置）；停用租户（`POST /api/v1/org/tenants/:id/suspend`，管理员，理由入审计）后其成员登录被拒、数据保留。租户管理：管理员 `POST /api/v1/org/tenants` 创建、`GET /api/v1/org/tenants` 列表。RLS 数据库级双保险记后续。
+
 ### 文件上传
 
 ```bash
