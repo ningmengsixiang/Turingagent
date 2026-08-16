@@ -41,6 +41,21 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
 curl -s "localhost:3001/api/v1/sessions/<sessionId>/messages?after_seq=0" -H "authorization: Bearer $TOKEN"
 ```
 
+### 智能体（Ta-Fullstack）
+
+网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 `@Ta-Fullstack <需求>` 即触发智能体，回复以 agent 身份实时推回会话。
+
+```bash
+# 模型凭证（来自 Harness 凭据文件 ~/.dsh/.credentials.yaml 的 DEEPSEEK_API_KEY）
+export MODEL_API_KEY=<你的 DeepSeek key>
+pnpm dev:gateway
+
+# 会话内发：@Ta-Fullstack 帮我做报销系统
+# → Ta-Fullstack 的回复经 WS 实时出现在会话里（senderKind=agent）
+```
+
+> 未配置 `MODEL_API_KEY` 时智能体自动禁用（`agentEnabled=false`），消息引擎其余功能不受影响。`MODEL_BASE_URL` / `MODEL_NAME`（默认 `deepseek-chat`）可覆盖。
+
 ### 网关冒烟
 
 ```bash
