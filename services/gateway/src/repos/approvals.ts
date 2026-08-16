@@ -15,6 +15,8 @@ export interface ApprovalRow {
   mode: string
   current_node_index: number
   version: number
+  last_node_activated_at: Date
+  escalated_count: number
 }
 
 export interface ApprovalNodeRow {
@@ -57,6 +59,7 @@ export function mapApproval(row: ApprovalRow, nodes: ApprovalNode[]): Approval {
     mode: row.mode as ApprovalNodeMode,
     currentNodeIndex: row.current_node_index,
     version: row.version,
+    escalatedCount: row.escalated_count,
     nodes,
   }
 }
@@ -268,7 +271,10 @@ export async function decideApproval(
           [input.id],
         )
       } else {
-        await client.query(`UPDATE approvals SET current_node_index = $2 WHERE id = $1`, [input.id, nodeIndex + 1])
+        await client.query(`UPDATE approvals SET current_node_index = $2, last_node_activated_at = now() WHERE id = $1`, [
+          input.id,
+          nodeIndex + 1,
+        ])
       }
     }
     await client.query('COMMIT')
@@ -369,7 +375,7 @@ export async function resubmitApproval(pool: pg.Pool, input: { id: string; opera
       throw new ApprovalStateError('NOT_OWNER', 'only the creator can resubmit')
     }
     await client.query(
-      `UPDATE approvals SET status = 'pending', current_node_index = 0, version = version + 1, reason = NULL, decided_at = NULL WHERE id = $1`,
+      `UPDATE approvals SET status = 'pending', current_node_index = 0, version = version + 1, reason = NULL, decided_at = NULL, last_node_activated_at = now(), escalated_count = 0 WHERE id = $1`,
       [input.id],
     )
     await client.query(
@@ -417,4 +423,47 @@ export async function cancelApproval(pool: pg.Pool, input: { id: string; operato
     client.release()
   }
   return (await getApproval(pool, input.id))!
+}
+
+/** 超时升级（FR-APP-06）：扫描超时 pending 审批，升级当前节点审批人为 admin，escalated_count+1 */
+export async function escalateOverdueApprovals(pool: pg.Pool, now: Date = new Date()): Promise<Approval[]> {
+  const cfg = await pool.query<{ timeout_hours: string }>('SELECT timeout_hours FROM approval_timeout WHERE id = 1')
+  const timeoutHours = Number(cfg.rows[0]?.timeout_hours ?? 24)
+  const threshold = new Date(now.getTime() - timeoutHours * 60 * 60 * 1000)
+
+  const overdue = await pool.query<ApprovalRow>(
+    `SELECT * FROM approvals
+      WHERE status = 'pending' AND last_node_activated_at < $1
+      ORDER BY last_node_activated_at ASC
+      LIMIT 50`,
+    [threshold],
+  )
+
+  const escalated: Approval[] = []
+  const admins = await pool.query<{ user_id: string }>(
+    "SELECT user_id FROM users WHERE role = 'admin' ORDER BY user_id ASC",
+  )
+  if (admins.rows.length === 0) return escalated
+
+  for (const row of overdue.rows) {
+    const nodes = await loadNodes(pool, row.id)
+    const node = nodes[row.current_node_index]
+    if (!node || node.status !== 'pending') continue
+
+    const next = admins.rows[row.escalated_count % admins.rows.length]!.user_id
+    await pool.query(
+      `UPDATE approval_nodes
+          SET approver_ids = $3, votes = '{}'
+        WHERE approval_id = $1 AND node_index = $2`,
+      [row.id, node.index, [next]],
+    )
+    await pool.query(
+      `UPDATE approvals
+          SET escalated_count = escalated_count + 1, last_node_activated_at = now()
+        WHERE id = $1`,
+      [row.id],
+    )
+    escalated.push((await getApproval(pool, row.id))!)
+  }
+  return escalated
 }

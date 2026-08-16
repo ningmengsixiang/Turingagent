@@ -9,6 +9,7 @@ import {
   returnApproval,
   resubmitApproval,
   cancelApproval,
+  escalateOverdueApprovals,
   ApprovalStateError,
   getApproval,
 } from './approvals.js'
@@ -381,5 +382,63 @@ describe('approval repository', () => {
     expect(created.nodes[0]!.approverIds).toEqual(['u-bob']) // 去重后单席位
     const decided = await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
     expect(decided.status).toBe('approved') // 一人一票即齐票推进
+  })
+
+  it('escalates an overdue approval to an admin', async () => {
+    // users 表被 truncateAll 清空：先插入 admin（升级目标审批人）
+    await pool.query(`INSERT INTO users (user_id, name, role) VALUES ('u-probe', 'Probe', 'admin')`)
+    // 把超时配置调为 0（立即超时）
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 0 WHERE id = 1`)
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '超时升级',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    const escalated = await escalateOverdueApprovals(pool, new Date(Date.now() + 1000))
+    const mine = escalated.find((a) => a.id === created.id)
+    expect(mine).toBeTruthy()
+    expect(mine!.escalatedCount).toBe(1)
+    // 原审批人失效：u-bob 不再是 approver
+    expect(mine!.nodes[0]!.approverIds).not.toContain('u-bob')
+    // 升级后审批人是 admin（u-probe）
+    expect(mine!.nodes[0]!.approverIds.length).toBe(1)
+    // 恢复配置
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 24 WHERE id = 1`)
+  })
+
+  it('does not escalate a fresh pending approval', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '未超时',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    const escalated = await escalateOverdueApprovals(pool, new Date())
+    expect(escalated.find((a) => a.id === created.id)).toBeUndefined()
+  })
+
+  it('advancing a node resets the activation time', async () => {
+    // users 表被 truncateAll 清空：插入 admin（否则 escalate 因无 admin 提前返回，无法验证重置）
+    await pool.query(`INSERT INTO users (user_id, name, role) VALUES ('u-probe', 'Probe', 'admin')`)
+    // 超时阈值调为 1h，并把激活时间回拨 2h → 推进前已超时
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 1 WHERE id = 1`)
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '推进重置',
+      createdBy: 'u-alice',
+      nodes: [
+        { mode: 'single', approverIds: ['u-bob'] },
+        { mode: 'single', approverIds: ['u-bob'] },
+      ],
+    })
+    await pool.query(`UPDATE approvals SET last_node_activated_at = now() - interval '2 hours' WHERE id = $1`, [
+      created.id,
+    ])
+    await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    // 推进后激活时间重置为 now：超时扫描（now）不应判其超时
+    const escalated = await escalateOverdueApprovals(pool, new Date())
+    expect(escalated.find((a) => a.id === created.id)).toBeUndefined()
+    await pool.query(`UPDATE approval_timeout SET timeout_hours = 24 WHERE id = 1`)
   })
 })
