@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { createTestPool, truncateAll } from './test-helpers.js'
 import { createSession } from './sessions.js'
-import { createApproval, decideApproval, ApprovalStateError } from './approvals.js'
+import { createApproval, decideApproval, ApprovalStateError, getApproval } from './approvals.js'
 
 describe('approval repository', () => {
   let pool: pg.Pool
@@ -86,5 +86,27 @@ describe('approval repository', () => {
     await expect(
       decideApproval(pool, { id: '00000000-0000-0000-0000-000000000000', approverId: 'u-bob', decision: 'approved' }),
     ).rejects.toThrow(ApprovalStateError)
+  })
+
+  it('decides exactly once under concurrent decisions (并发回归)', async () => {
+    const approval = await createApproval(pool, {
+      sessionId,
+      title: '上线审批',
+      approverId: 'u-bob',
+      createdBy: 'u-alice',
+    })
+    const results = await Promise.allSettled([
+      decideApproval(pool, { id: approval.id, approverId: 'u-bob', decision: 'approved' }),
+      decideApproval(pool, { id: approval.id, approverId: 'u-bob', decision: 'rejected' }),
+    ])
+    const fulfilled = results.filter((r) => r.status === 'fulfilled')
+    const rejected = results.filter((r) => r.status === 'rejected')
+    expect(fulfilled).toHaveLength(1) // 恰一次决策成功
+    expect(rejected).toHaveLength(1) // 另一路被拒（AlreadyDecided）
+    for (const r of rejected) {
+      expect((r as PromiseRejectedResult).reason).toBeInstanceOf(ApprovalStateError)
+    }
+    const final = await getApproval(pool, approval.id)
+    expect(final?.status).not.toBe('pending') // 终态：approved 或 rejected
   })
 })

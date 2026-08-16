@@ -63,11 +63,18 @@ export async function decideApproval(
   if (current.approverId !== input.approverId) {
     throw new ApprovalStateError('only the approver can decide')
   }
+  // 条件更新（并发双裁决竞态修复）：WHERE 带 status='pending'，
+  // 先读后写的窗口期被行锁 + 条件覆盖，胜者恰一次，败者抛 AlreadyDecided
   const res = await pool.query<ApprovalRow>(
     `UPDATE approvals
         SET status = $2, reason = $3, decided_at = now()
-      WHERE id = $1 RETURNING *`,
+      WHERE id = $1 AND status = 'pending' RETURNING *`,
     [input.id, input.decision, input.reason ?? null],
   )
+  if (res.rowCount !== 1) {
+    const now = await getApproval(pool, input.id)
+    if (!now) throw new ApprovalStateError('approval not found')
+    throw new ApprovalStateError(`approval already ${now.status}`)
+  }
   return mapApproval(res.rows[0]!)
 }
