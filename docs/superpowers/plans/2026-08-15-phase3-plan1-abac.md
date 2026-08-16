@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG 迁移 + 仓储 + Fastify 路由替换。
 
+**质量审查决策（T1-T4 后追加）：** ① departmentId UUID 格式校验（org 分配与会话创建两处——非 UUID 触发 PG 22P02 500，补 UUID_PATTERN → 400）；② Session 契约无 unreadCount 字段（适配：加在 memberIds 后）；③ session_reads 表不存在（适配：listSessionsVisible 用 session_members.last_read_seq）；④ test-helpers truncate 增 departments（UNIQUE 冲突隔离）。**记录后续**：同部门非成员写操作 403/admin 全可见/列表过滤无自动化用例（smoke 覆盖）；同部门非成员列表可见但 unread 无法 markRead（isMember 语义，MVP 可接受）；会话创建 departmentId 两步非事务；admin 列表查询无分页。
+
 **决策记录：** ABAC MVP 用「部门属性 + 两级校验」最小模型（完整 ABAC 属性引擎/规则 DSL 记 Phase 3 后续）；`canAccessSession` 替换**读端点**的 isMember（写端点保留 isMember——写操作需成员身份，读操作放宽到同部门，符合「仅本部门成员可查看本部门项目」）；部门归属：会话创建时可带 departmentId（前端下拉记后续，MVP 用 API 参数），用户部门由管理员分配（`POST /api/v1/org/users/:id/department`，adminOnly）；管理员（role=admin）全可见（治理兜底）；会话列表可见性 = 成员 + 同部门项目 + admin 全部；无部门会话维持 isMember 语义。部门删除/重命名记后续。
 
 ---
@@ -39,7 +41,7 @@
 - Modify: `packages/contracts/src/index.ts`
 - Create: `services/gateway/migrations/012_abac.sql`
 
-- [ ] **Step 1: 契约**
+- [x] **Step 1: 契约**
 
 读 `packages/contracts/src/index.ts`，`Session` 接口增（`unreadCount` 之后）：
 
@@ -58,7 +60,7 @@ export interface Department {
 }
 ```
 
-- [ ] **Step 2: 迁移 012**
+- [x] **Step 2: 迁移 012**
 
 创建 `services/gateway/migrations/012_abac.sql`：
 
@@ -80,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_users_department ON users (department_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_department ON sessions (department_id);
 ```
 
-- [ ] **Step 3: 构建 + 迁移**
+- [x] **Step 3: 构建 + 迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -90,7 +92,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 012 应用（幂等）；departments 表 + 两列 + 索引存在。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/012_abac.sql
@@ -105,7 +107,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(abac): �
 - Create: `services/gateway/src/repos/access.ts`
 - Modify: `services/gateway/src/repos/sessions.ts`
 
-- [ ] **Step 1: 写 repos/access.ts**
+- [x] **Step 1: 写 repos/access.ts**
 
 创建 `services/gateway/src/repos/access.ts`：
 
@@ -173,7 +175,7 @@ export async function listVisibleSessionIds(pool: pg.Pool, userId: string): Prom
 }
 ```
 
-- [ ] **Step 2: sessions.ts 列表改可见性过滤**
+- [x] **Step 2: sessions.ts 列表改可见性过滤**
 
 读 `services/gateway/src/repos/sessions.ts`（先读 listSessions 现状），把 `listSessions` 改为接收 userId 并调用 `listVisibleSessionIds` 过滤：
 
@@ -193,7 +195,7 @@ export async function listSessionsVisible(pool: pg.Pool, userId: string): Promis
 
 （若现有 `listSessions` 被路由直接调用，改路由调 `listSessionsVisible`；原 listSessions 保留或替换——以路由现状为准，保持向后兼容。）
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -203,7 +205,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0（若 routes/sessions.ts 调 listSessions 报错——Task 3 处理路由替换，Task 2 允许中间态或同步最小改动）。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/repos/access.ts services/gateway/src/repos/sessions.ts
@@ -224,7 +226,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(abac): a
 - Modify: `services/gateway/src/routes/approvals.ts`
 - Modify: `services/gateway/src/routes/org.ts`
 
-- [ ] **Step 1: 逐个路由替换 isMember → canAccessSession（读端点）**
+- [x] **Step 1: 逐个路由替换 isMember → canAccessSession（读端点）**
 
 对每个文件，**读端点**的 `isMember(pool, sessionId, userId)` 校验替换为 `canAccessSession(pool, sessionId, userId)`（403 语义不变）；**写端点保留 isMember**。逐个：
 
@@ -238,7 +240,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(abac): a
 
 **注意**：每个文件的 isMember import 保留（写端点仍用）；新增 canAccessSession import。逐个文件改完跑 typecheck。
 
-- [ ] **Step 2: org.ts 部门分配端点**
+- [x] **Step 2: org.ts 部门分配端点**
 
 读 `services/gateway/src/routes/org.ts`（确认 adminOnly 用法），追加：
 
@@ -266,7 +268,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(abac): a
 
 （若 org.ts 无 adminOnly，用 `requireRoleFor(config, pool, 'admin')`——读现状。）
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -277,7 +279,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；全量 gateway 测试全 PASS（既有用例用 isMember 语义的写操作不受影响；读操作 403 用例若涉及部门场景需核对——既有测试多数用无部门会话，canAccessSession 对无部门会话 = isMember 语义（成员才可见），行为不变）。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/routes
@@ -292,7 +294,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(abac): �
 - Create: `services/gateway/src/routes/access.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: access.test.ts**
+- [x] **Step 1: access.test.ts**
 
 创建 `services/gateway/src/routes/access.test.ts`（复用既有路由测试风格）：
 
@@ -378,7 +380,7 @@ describe('abac access', () => {
 
 > 注：`POST /api/v1/org/departments` 端点本计划未定义——**需在 org.ts 补**（adminOnly 创建部门：`{ name }` → INSERT departments → `{ department }`，Task 3 一并加）。会话创建带 departmentId：routes/sessions.ts 的 POST 创建需接受 `departmentId` 并校验存在。这些是本测试的前置端点，实现时在 Task 3 补齐。
 
-- [ ] **Step 2: README 追加「ABAC 权限」节**
+- [x] **Step 2: README 追加「ABAC 权限」节**
 
 在 README「### 私有化部署（M2.5）」节之后追加：
 
@@ -388,7 +390,7 @@ describe('abac access', () => {
 部门属性 + 数据行级可见性：项目会话可归属部门（`departmentId`），访问规则 = 管理员全可见 / 会话成员可见 / 同部门成员可见（读端点），写操作仍需会话成员身份。部门管理：管理员 `POST /api/v1/org/departments` 创建、`POST /api/v1/org/users/:id/department` 分配用户部门。会话列表按可见性过滤。完整属性规则引擎记后续。
 ```
 
-- [ ] **Step 3: 全仓验收**
+- [x] **Step 3: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -401,7 +403,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 177+2≈179 + web 34 ≈ 215）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 4: 真实验收（部门可见性）**
+- [x] **Step 4: 真实验收（部门可见性）**
 
 ```bash
 cd /tmp
@@ -410,7 +412,7 @@ cd /tmp
 # 3) 会话列表：carol 看不到部门项目、bob 看得到
 ```
 
-- [ ] **Step 5: 提交 + 推送**
+- [x] **Step 5: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase3-plan1-abac.md
