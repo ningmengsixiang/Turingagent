@@ -10,5 +10,7 @@ export async function createTestPool(): Promise<pg.Pool> {
 }
 
 export async function truncateAll(pool: pg.Pool): Promise<void> {
-  await pool.query('TRUNCATE messages, session_members, sessions, users, audit_events, memories, memory_versions, tasks RESTART IDENTITY CASCADE')
+  // 注意：quota_config 不 truncate——迁移 009 插入的默认预算行（1000000）须保留，
+  // 熔断用例依赖它存在（调额端点 UPDATE 命中该行）；agent_usage 每次清空（用量从零计量）
+  await pool.query('TRUNCATE messages, session_members, sessions, users, audit_events, memories, memory_versions, tasks, agent_usage RESTART IDENTITY CASCADE')
 }

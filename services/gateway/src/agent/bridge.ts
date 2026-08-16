@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { Config } from '../config.js'
 import type { ModelProvider } from '../model/provider.js'
 import { createMessage } from '../repos/messages.js'
+import { checkQuota, recordUsage } from '../repos/quota.js'
 import { classifySilence } from './silence.js'
 import { AGENTS, findAgentByMention, type AgentDefinition } from './registry.js'
 import type pg from 'pg'
@@ -18,8 +19,8 @@ export interface MentionResult {
   triggered: boolean
   agentId?: string
   reply?: Message
-  /** 未触发原因：silent = 无 @ 提及且静默策略判闲聊（FR-CHAT-05，零 LLM 成本跳过）；not-a-mention = 非文本消息 */
-  skippedReason?: 'not-a-mention' | 'agent-message' | 'disabled' | 'too-long' | 'error' | 'silent'
+  /** 未触发原因：silent = 无 @ 提及且静默策略判闲聊（FR-CHAT-05，零 LLM 成本跳过）；not-a-mention = 非文本消息；quota = 配额已熔断（FR-ORG-07，未调 provider） */
+  skippedReason?: 'not-a-mention' | 'agent-message' | 'disabled' | 'too-long' | 'error' | 'silent' | 'quota'
 }
 
 export class AgentBridge {
@@ -57,11 +58,34 @@ export class AgentBridge {
     agent: AgentDefinition,
     requirement: string,
   ): Promise<MentionResult> {
+    // 配额熔断（FR-ORG-07）：熔断只影响智能体执行，IM 主链路不受影响
+    const trip = await checkQuota(this.options.pool)
+    if (trip) {
+      try {
+        const { message: reply } = await createMessage(this.options.pool, {
+          sessionId: message.sessionId,
+          senderId: agent.id,
+          senderKind: 'agent',
+          contentType: 'text',
+          content: trip,
+          clientMsgId: `agent-${randomUUID()}`,
+        })
+        this.options.emitMessageCreated(reply)
+        return { triggered: true, agentId: agent.id, reply, skippedReason: 'quota' }
+      } catch (err) {
+        console.error('[agent] failed to persist quota reply:', err)
+        return { triggered: false, skippedReason: 'quota' }
+      }
+    }
     const systemPrompt = agent.persona.replaceAll('{{cwd}}', process.cwd())
     try {
       const completion = await this.options.provider.complete(systemPrompt, requirement)
       console.log(
         `[agent] ${agent.displayName} run: prompt=${completion.promptTokens} completion=${completion.completionTokens} tokens`,
+      )
+      // 用量累计（agent 维度）
+      void recordUsage(this.options.pool, agent.id, completion.promptTokens + completion.completionTokens).catch((err) =>
+        console.error('[quota] record usage failed:', err),
       )
       const { message: reply } = await createMessage(this.options.pool, {
         sessionId: message.sessionId,

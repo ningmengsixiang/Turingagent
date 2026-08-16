@@ -1,12 +1,15 @@
 import type { FastifyInstance } from 'fastify'
-import { requireRoleFor } from '../middleware.js'
+import { requireAuth, requireRoleFor } from '../middleware.js'
 import { AdminLockoutError, listMembers, setRole, type UserRole } from '../repos/users.js'
 import { listAudit, recordAudit } from '../repos/audit.js'
+import { getQuota, setQuotaBudget } from '../repos/quota.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
 export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
   const adminOnly = requireRoleFor(config, pool)
+  // 配额查询供所有登录用户（前端配额条）；调额仍走 adminOnly
+  const auth = requireAuth(config, pool)
 
   app.get('/api/v1/org/members', { preHandler: adminOnly }, async () => {
     const members = await listMembers(pool)
@@ -49,6 +52,35 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
       const limit = Math.floor(Number(request.query.limit ?? 50)) || 50
       const events = await listAudit(pool, limit)
       return { events }
+    },
+  )
+
+  // 配额查询（登录用户可见；前端配额条）
+  app.get('/api/v1/org/quota', { preHandler: auth }, async () => {
+    return { quota: await getQuota(pool) }
+  })
+
+  // 调额（管理员；审计留痕）
+  app.post<{ Body: { budget?: number } }>(
+    '/api/v1/org/quota',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const budget = request.body?.budget
+      if (typeof budget !== 'number' || !Number.isFinite(budget) || budget < 0) {
+        return reply.code(400).send({ error: 'budget must be a non-negative number' })
+      }
+      try {
+        const quota = await setQuotaBudget(pool, budget)
+        void recordAudit(pool, {
+          actorId: request.user!.id,
+          action: 'quota.updated',
+          target: 'enterprise',
+          detail: { budget },
+        }).catch((err) => console.error('[audit] quota update failed:', err))
+        return { quota }
+      } catch (err) {
+        return reply.code(400).send({ error: err instanceof Error ? err.message : 'invalid budget' })
+      }
     },
   )
 }

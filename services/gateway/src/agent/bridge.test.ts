@@ -225,4 +225,48 @@ describe('agent bridge', () => {
     expect(res.triggered).toBe(true)
     expect(res.agentId).toBe('agent-ta-pm')
   })
+
+  it('trips quota and replies with a quota message instead of calling the provider', async () => {
+    // 先把预算调为 0 → 熔断
+    const { setQuotaBudget } = await import('../repos/quota.js')
+    await setQuotaBudget(pool, 0)
+    const { bridge, provider } = makeBridge()
+    const res = await bridge.handle({
+      id: 'm-q1',
+      clientMsgId: 'c-q1',
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: '这个方案你定吧',
+      seq: 5,
+      createdAt: new Date().toISOString(),
+    } as Message)
+    expect(res.triggered).toBe(true)
+    expect(res.skippedReason).toBe('quota')
+    expect(res.reply?.content).toContain('配额已熔断')
+    expect(provider.calls).toHaveLength(0)
+    // 恢复预算，避免污染其他用例
+    await setQuotaBudget(pool, 1000000)
+  })
+
+  it('records usage after a successful run', async () => {
+    const { getQuota } = await import('../repos/quota.js')
+    const before = await getQuota(pool)
+    const { bridge } = makeBridge()
+    const res = await bridge.handle({
+      id: 'm-u1',
+      clientMsgId: 'c-u1',
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: '这个方案你定吧',
+      seq: 6,
+      createdAt: new Date().toISOString(),
+    } as Message)
+    expect(res.triggered).toBe(true)
+    const after = await getQuota(pool)
+    expect(after.used).toBeGreaterThan(before.used)
+  })
 })
