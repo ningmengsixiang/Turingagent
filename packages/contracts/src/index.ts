@@ -59,8 +59,10 @@ export interface Approval {
   id: string
   sessionId: string
   title: string
+  description?: string
   status: ApprovalStatus
   approverId: string
+  createdBy: string
   reason?: string
   createdAt: string
   decidedAt?: string
@@ -89,4 +91,9 @@ export interface WsMessageNew {
   message: Message
 }
 
-export type WsEvent = WsMessageNew
+export interface WsMessageUpdated {
+  type: 'message.updated'
+  message: Message
+}
+
+export type WsEvent = WsMessageNew | WsMessageUpdated

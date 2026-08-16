@@ -8,6 +8,8 @@ export interface MessageRow {
   sender_id: string
   sender_kind: string
   content_type: string
+  ref_kind: string | null
+  ref_id: string | null
   content: string
   client_msg_id: string
   seq: string
@@ -25,6 +27,10 @@ export function mapMessage(row: MessageRow): Message {
     senderId: row.sender_id,
     senderKind: row.sender_kind as ActorKind,
     contentType,
+    ref:
+      row.ref_kind && row.ref_id
+        ? { kind: row.ref_kind as 'approval' | 'task', id: row.ref_id }
+        : undefined,
     content: row.content,
     seq: Number(row.seq),
     createdAt: row.created_at.toISOString(),
@@ -45,6 +51,7 @@ export async function createMessage(
     contentType: MessageContentType
     content: string
     clientMsgId: string
+    ref?: { kind: 'approval' | 'task'; id: string }
   },
 ): Promise<{ message: Message; created: boolean }> {
   const existing = await pool.query<MessageRow>(
@@ -63,9 +70,9 @@ export async function createMessage(
     if (!seqRes.rows[0]) throw new Error(`session not found: ${input.sessionId}`)
     const seq = Number(seqRes.rows[0].last_seq)
     const ins = await client.query<MessageRow>(
-      `INSERT INTO messages (session_id, sender_id, sender_kind, content_type, content, client_msg_id, seq)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [input.sessionId, input.senderId, input.senderKind, input.contentType, input.content, input.clientMsgId, seq],
+      `INSERT INTO messages (session_id, sender_id, sender_kind, content_type, content, client_msg_id, seq, ref_kind, ref_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [input.sessionId, input.senderId, input.senderKind, input.contentType, input.content, input.clientMsgId, seq, input.ref?.kind ?? null, input.ref?.id ?? null],
     )
     await client.query('COMMIT')
     return { message: mapMessage(ins.rows[0]!), created: true }
@@ -97,4 +104,16 @@ export async function listMessages(
     [sessionId, afterSeq, limit],
   )
   return res.rows.map(mapMessage)
+}
+
+export async function updateMessageContent(
+  pool: pg.Pool,
+  messageId: string,
+  content: string,
+): Promise<Message | null> {
+  const res = await pool.query<MessageRow>(
+    'UPDATE messages SET content = $2 WHERE id = $1 RETURNING *',
+    [messageId, content],
+  )
+  return res.rows[0] ? mapMessage(res.rows[0]) : null
 }
