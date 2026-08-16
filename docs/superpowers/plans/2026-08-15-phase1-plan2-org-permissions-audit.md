@@ -568,3 +568,7 @@ Expected: 推送成功。
 - **占位符扫描**：无 TBD；middleware 的 requireRole 注明实现调整（JwtUser 增 role、requireAuth 注入 pool）。
 - **类型一致性**：`OrgMember`/`AuditEvent` 在 contracts/repo/map/路由/测试一致；`UserRole` 在 users.ts/org.ts 一致；登录响应新增 `role` 字段在 auth.ts/org.test 一致。
 - **已知取舍**：两级角色（admin/member），PRD 五级权限矩阵后续计划；部门/租户/ABAC 延后；前端组织 UI 延后（后端 API 先行）；审计 detail 用 JSONB（明文，无加密——PRD 加密审计属 FR-SEC 范畴延后）。
+
+## 决策记录（T1 阻塞点）
+
+1. **test-helpers.ts 的 truncateAll 必须扩展**：`TRUNCATE messages, session_members, sessions, users, audit_events RESTART IDENTITY CASCADE`——新增 users/audit_events 表后，既有清库语句漏掉它们导致用例间串扰（已实证）。
