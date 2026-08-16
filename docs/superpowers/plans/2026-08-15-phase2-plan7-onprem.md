@@ -8,6 +8,8 @@
 
 **Tech Stack:** Docker Compose + nginx:alpine + node:22-alpine + bash install.sh。零代码改动（复用现有 gateway/web 构建产物）。
 
+**质量审查决策（T1-T3 后追加）：** ① Dockerfile.gateway 运行阶段补 node_modules——原计划只拷 lib/migrations/skills，`node lib/index.js` 缺 fastify/pg 运行时依赖；改为整拷 workspace（package.json/pnpm-workspace/pnpm-lock/node_modules/packages/gateway），可靠性优先（镜像较大可接受，精简镜像记后续）；② compose `command: sh -c "node lib/migrate.js && node lib/index.js"` 经本地验证成立（lib/migrate.js 无 tsx 依赖、DATABASE_URL 读 env 带默认）；③ `.env.example` 被根 .gitignore 的 `.env*` 忽略——需 `git add -f` 纳入。
+
 **决策记录：** 生产镜像用多阶段构建（web: node 构建 dist → nginx 托管；gateway: node 构建 lib → 精简运行镜像）——需在 `deploy/prod/` 放 `Dockerfile.web`/`Dockerfile.gateway`；安装器先做「Compose 起步」（TechDesign onprem/ 明确 Compose 起步 → K8s 后续）；环境变量（JWT_SECRET/MODEL_API_KEY/MINIO_*/端口）从 .env 注入，JWT_SECRET 必须强密钥（gateway config 已校验 ≥32 字符）；healthcheck 对齐 CI 经验（minio 无 curl，用 bash /dev/tcp；postgres pg_isready）；数据卷命名与 dev 隔离（ta-prod-*）；安装器不包含模型 key 默认值（必填，防误配）；Tauri 桌面壳（M2.5 另一半）与 K8s 安装器记 Phase 2 后续。
 
 ---
@@ -106,14 +108,13 @@ RUN pnpm --filter @ta/contracts build && pnpm --filter @ta/gateway build
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/packages/contracts/package.json /app/packages/contracts/package.json
-COPY --from=build /app/packages/contracts/lib /app/packages/contracts/lib
-COPY --from=build /app/services/gateway/package.json /app/services/gateway/package.json
-COPY --from=build /app/services/gateway/lib /app/services/gateway/lib
-COPY --from=build /app/services/gateway/migrations /app/services/gateway/migrations
-COPY --from=build /app/services/gateway/skills /app/services/gateway/skills
-# 迁移 001-011 在启动时由 entrypoint 执行（避免容器内 tsx；用编译产物直接跑 SQL）
-COPY --from=build /app/services/gateway/lib/migrate.js /app/services/gateway/lib/migrate.js
+# 拷贝全部 workspace（node_modules 符号链接结构一并带入，运行阶段无需再装依赖——可靠性优先，镜像较大可接受）
+COPY --from=build /app/package.json /app/package.json
+COPY --from=build /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+COPY --from=build /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/packages /app/packages
+COPY --from=build /app/services/gateway /app/services/gateway
 WORKDIR /app/services/gateway
 EXPOSE 3001
 CMD ["node", "lib/index.js"]
