@@ -97,3 +97,19 @@ export interface WsMessageUpdated {
 }
 
 export type WsEvent = WsMessageNew | WsMessageUpdated
+
+export interface OrgMember {
+  userId: string
+  name: string
+  role: 'admin' | 'member'
+  createdAt: string
+}
+
+export interface AuditEvent {
+  id: string
+  actorId: string
+  action: string
+  target?: string
+  detail: Record<string, unknown>
+  createdAt: string
+}
