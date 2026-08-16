@@ -8,6 +8,8 @@
 
 **Tech Stack:** `ioredis` + Redis（compose 服务）。
 
+**质量审查决策（T1-T2 后追加）：** ① **must-fix**：Redis 降级内存失效（闭包捕获）——经可变容器 holder.current 转发生效（a89181c）；② ioredis v6 named import（default/named 双导出实测）；③ install.sh 补 redis.yaml（371c287）；④ fail-open 记录（宕机时放行不阻断 API——修复后降级内存仍限流）；⑤ Redis 测试用唯一 key（固定 key rt+60s TTL 同窗口重跑会先拒，可先 DEL）。
+
 **决策记录：** 固定窗口计数（INCR+EXPIRE）够用（比滑动窗口简单，窗口边界突发可接受——限流目的防滥用非精确）；Redis key 含 apiKeyUser（每 key 独立桶）；Redis 不可用时降级内存（fail-open 还是 fail-closed？——**决策**：降级内存 + 警告日志，限流仍生效（单副本内存兜底），不阻断 API）；ioredis 连接懒加载（首次请求时才 connect，启动不阻塞）；CI 不加 Redis 服务（Redis 用例 skipIf 跳过，本地 REDIS_TEST=1 实测）；compose/K8s redis 用默认端口 6379、无密码（内网 127.0.0.1/集群内），生产加固（密码/TLS）记后续；`RATE_LIMIT_BACKEND` 默认 memory（单副本零依赖）。
 
 ---
@@ -37,7 +39,7 @@
 - Modify: `services/gateway/src/routes/external.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 增 ioredis 依赖**
+- [x] **Step 1: 增 ioredis 依赖**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -47,7 +49,7 @@ pnpm --filter @ta/gateway add -D @types/ioredis-mock 2>/dev/null || true
 
 （ioredis 自带类型；mock 可选。）
 
-- [ ] **Step 2: config 增限流后端配置**
+- [x] **Step 2: config 增限流后端配置**
 
 读 `services/gateway/src/config.ts`，Config 接口增：
 
@@ -63,7 +65,7 @@ loadConfig 增（校验非法值回退默认）：
   redisUrl: env.REDIS_URL ?? 'redis://localhost:6379',
 ```
 
-- [ ] **Step 3: 写 rate-limit.ts**
+- [x] **Step 3: 写 rate-limit.ts**
 
 创建 `services/gateway/src/rate-limit.ts`：
 
@@ -122,11 +124,11 @@ export function createRedisRateLimiter(redis: Redis, limit: number, windowSec = 
 > ```
 > Redis 连接失败时 incr reject——external 路由 catch 降级放行（fail-open）+ 警告日志（决策记录）。
 
-- [ ] **Step 4: external.ts 注入限流器**
+- [x] **Step 4: external.ts 注入限流器**
 
 读 `services/gateway/src/routes/external.ts`，改 `registerExternalRoutes(app, config, pool, rateLimiter: RateLimiter)`（注入），`apiKeyAuth` 认证通过后 `const rl = await rateLimiter.check(apiKeyUser); if (!rl.allowed) 429`。删除原 createRateLimiter 内存实现（移到 rate-limit.ts）。
 
-- [ ] **Step 5: server.ts 创建后端**
+- [x] **Step 5: server.ts 创建后端**
 
 读 `services/gateway/src/server.ts`，创建限流器：
 
@@ -151,7 +153,7 @@ import { createMemoryRateLimiter, createRedisRateLimiter, type RateLimiter } fro
 
 `registerExternalRoutes(app, config, pool, rateLimiter)` 传入。
 
-- [ ] **Step 6: 验证**
+- [x] **Step 6: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -160,7 +162,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0（异步 check 后 external 路由 await 适配——apiKeyAuth 已 async ✓）。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add services/gateway/package.json services/gateway/src/config.ts services/gateway/src/rate-limit.ts services/gateway/src/routes/external.ts services/gateway/src/server.ts pnpm-lock.yaml
@@ -177,7 +179,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ratelimi
 - Create: `deploy/k8s/redis.yaml`
 - Modify: `DEPLOYMENT.md`
 
-- [ ] **Step 1: rate-limit.test.ts**
+- [x] **Step 1: rate-limit.test.ts**
 
 创建 `services/gateway/src/rate-limit.test.ts`：
 
@@ -230,7 +232,7 @@ describe.skipIf(!redisTest)('rate limiter (redis)', () => {
 })
 ```
 
-- [ ] **Step 2: compose 增 redis 服务**
+- [x] **Step 2: compose 增 redis 服务**
 
 读 `deploy/prod/docker-compose.prod.yml`，增：
 
@@ -246,7 +248,7 @@ describe.skipIf(!redisTest)('rate limiter (redis)', () => {
 
 （volumes 增 `ta-prod-redis-data:`；gateway 环境变量增 `RATE_LIMIT_BACKEND`/`REDIS_URL`——`REDIS_URL: redis://redis:6379`，`RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-memory}`。）
 
-- [ ] **Step 3: K8s redis.yaml**
+- [x] **Step 3: K8s redis.yaml**
 
 创建 `deploy/k8s/redis.yaml`：
 
@@ -287,7 +289,7 @@ spec:
 
 （gateway.yaml 环境变量增 RATE_LIMIT_BACKEND/REDIS_URL——install.sh 的 gateway 清单由 configmap 或 env 注入；**实现**：configmap.yaml 增 `RATE_LIMIT_BACKEND`/`REDIS_URL`，install.sh 在 gateway.yaml 应用时已含 envFrom configmap ✓——只需 configmap 加 key。）
 
-- [ ] **Step 4: DEPLOYMENT.md 更新**
+- [x] **Step 4: DEPLOYMENT.md 更新**
 
 DEPLOYMENT §7 安全基线限流条目更新：
 
@@ -295,7 +297,7 @@ DEPLOYMENT §7 安全基线限流条目更新：
 - 开放 API：X-API-Key 仅 HTTPS 传输；限流默认 60 次/分钟/key（`EXTERNAL_RATE_LIMIT` 可调）；多副本共享限流：`RATE_LIMIT_BACKEND=redis` + `REDIS_URL`（默认 memory 单副本；Redis 不可用自动降级内存）
 ```
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -308,14 +310,14 @@ REDIS_TEST=1 pnpm --filter @ta/gateway test --reporter=verbose src/rate-limit.te
 
 Expected: typecheck exit 0；rate-limit.test.ts（默认跳过 redis）3 用例 PASS；全量 209 用例（206+3）全 PASS；`REDIS_TEST=1` 时 redis 用例真实跑（本地 redis-server 需起——`redis-server --daemonize yes` 或本机已有）。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add services/gateway/src/rate-limit.test.ts deploy/prod/docker-compose.prod.yml deploy/k8s/redis.yaml deploy/k8s/configmap.yaml DEPLOYMENT.md
 git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ratelimit): Redis 后端测试 + 部署（compose/K8s redis 服务）"
 ```
 
-- [ ] **Step 7: 真实验收（Redis 限流）**
+- [x] **Step 7: 真实验收（Redis 限流）**
 
 ```bash
 cd /tmp
@@ -328,7 +330,7 @@ cd /tmp
 
 ## Task 3: 全仓验收 + 推送
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -341,7 +343,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 209 + web 34 ≈ 245）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 2: 提交 + 推送**
+- [x] **Step 2: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase3-plan11-redis-ratelimit.md
