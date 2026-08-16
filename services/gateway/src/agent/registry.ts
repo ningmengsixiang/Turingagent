@@ -44,16 +44,19 @@ export const AGENTS: AgentDefinition[] = [
 ]
 
 export function findAgentByMention(content: string): { agent: AgentDefinition; requirement: string } | null {
-  // 按注册顺序匹配第一个提及（无 /g，无 lastIndex 泄漏）
+  // 取消息中最早出现的提及（内容序，T2 质量审查：注册序会让 @Ta-QA…@Ta-PM… 错回给 PM）；
+  // 无 /g，无 lastIndex 泄漏；空提及跳过
+  let best: { agent: AgentDefinition; requirement: string; index: number } | null = null
   for (const agent of AGENTS) {
     const match = agent.mentionPattern.exec(content)
-    if (match) {
-      const requirement = content.slice(match.index + match[0].length).trim()
-      if (requirement.length === 0) return null // 空提及视为无需求（保持旧语义）
-      return { agent, requirement }
+    if (!match) continue
+    const requirement = content.slice(match.index + match[0].length).trim()
+    if (requirement.length === 0) continue
+    if (!best || match.index < best.index) {
+      best = { agent, requirement, index: match.index }
     }
   }
-  return null
+  return best ? { agent: best.agent, requirement: best.requirement } : null
 }
 
 /** 前端显示名映射（senderId → displayName） */

@@ -47,6 +47,11 @@ describe('agent registry', () => {
     expect(findAgentByMention('@Ta-Fullstack  ')).toBeNull()
   })
 
+  it('takes the earliest mentioned agent (content order)', () => {
+    expect(findAgentByMention('@Ta-PM 澄清需求，@Ta-QA 也看看')?.agent.id).toBe('agent-ta-pm')
+    expect(findAgentByMention('@Ta-QA 验收一下，然后 @Ta-PM 也看看')?.agent.id).toBe('agent-ta-qa')
+  })
+
   it('takes the first agent when multiple are mentioned', () => {
     const hit = findAgentByMention('@Ta-PM 澄清需求，@Ta-QA 也看看')
     expect(hit?.agent.id).toBe('agent-ta-pm')
