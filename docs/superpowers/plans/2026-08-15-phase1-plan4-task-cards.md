@@ -250,6 +250,17 @@ import pg from 'pg'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'blocked', 'done']
 
+function isIsoDate(value: string): boolean {
+  // 严格 ISO-8601（T2 质量审查）：正则拦形状 + Date.UTC 校验日历合法性，避免 Date.parse 宽松解析与 PG 失配
+  const m = /^(\d{4})-(\d{2})-(\d{2})(T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(value)
+  if (!m) return false
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  const d = new Date(Date.UTC(year, month - 1, day))
+  return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day
+}
+
 export function registerTaskRoutes(
   app: FastifyInstance,
   config: Config,
@@ -283,12 +294,16 @@ export function registerTaskRoutes(
       if (assigneeKind !== 'human' && assigneeKind !== 'agent') {
         return reply.code(400).send({ error: 'assigneeKind must be human|agent' })
       }
+      const dueAt = request.body?.dueAt
+      if (dueAt !== undefined && !isIsoDate(dueAt)) {
+        return reply.code(400).send({ error: 'dueAt must be a valid ISO date' })
+      }
       const task = await createTask(pool, {
         sessionId,
         title,
         assigneeId,
         assigneeKind,
-        dueAt: request.body?.dueAt,
+        dueAt,
         createdBy: userId,
       })
       try {
@@ -324,6 +339,11 @@ export function registerTaskRoutes(
         return reply.code(400).send({ error: 'status must be todo|in_progress|blocked|done' })
       }
       try {
+        const existing = await getTask(pool, taskId)
+        if (!existing) throw new TaskStateError('task not found')
+        if (!(await isMember(pool, existing.sessionId, userId))) {
+          return reply.code(403).send({ error: 'not a member of the task session' })
+        }
         const task = await updateTaskStatus(pool, { id: taskId, status })
         const cardId = await findTaskCardId(pool, task.id)
         if (cardId) {
@@ -712,3 +732,10 @@ Expected: 推送成功。
 - **占位符扫描**：无 TBD；Task 3 的 moveTask 乐观更新注明可简化。
 - **类型一致性**：`Task`/`TaskStatus` 在 contracts/repo/map/路由/前端一致；`taskCardContent` 在 repo/路由/测试一致；`updateTaskStatus` 在 client/路由/测试一致。
 - **已知取舍**：无看板页（Phase 2 拖拽看板）；@ 分配自动解析（Phase 2）；任务无子任务/依赖；前端任务卡按钮对非负责人开放（MVP 无权限细分，Phase 2 按角色限制）。
+
+## 决策记录（T2 质量审查后）
+
+1. **PATCH 越权修复**：状态流转前 `getTask` 查 session + `isMember` 校验（非成员 403，不存在 404）。
+2. **桥接误触发修复**：`AgentBridge.handle` 开头加 `if (message.contentType !== 'text') return`（任务卡/审批卡内嵌 `@Ta-*` 显示名不再触发 LLM）。
+3. **dueAt 严格校验**：ISO-8601 正则 + Date.UTC 日历校验（`'2026'`、`'2026-02-30'` 等宽松输入 → 400，不再 PG 22P02 → 500）。
+4. **补测试**：非成员流转 403、'2026' dueAt 400、任务卡不触发桥接。
