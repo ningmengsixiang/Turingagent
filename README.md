@@ -206,6 +206,10 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 
 市场 = `services/gateway/marketplace/` 目录（第三方技能包 manifest，热加载）：`GET /api/v1/marketplace/skills` 浏览（含已安装标记）；管理员 `POST /api/v1/marketplace/skills/<id>/install` 一键安装到本地 `skills/`（重名需 `{force:true}` 覆盖；id 白名单防路径穿越；audit 留痕）。分成/沙箱白名单记后续。
 
+### K8s 部署（M2.5 扩展）
+
+`deploy/k8s/` 提供生产 K8s 清单（namespace/configmap/secret/postgres StatefulSet/minio/gateway 含 initContainer 迁移/web/ingress）与一键安装：`cd deploy/k8s && IMAGE_PREFIX=your-registry/ta- TA_HOST=ta.example.com MODEL_API_KEY=xxx ./install.sh`（生成 secret → apply → 健康检查）。镜像构建见 `deploy/prod/Dockerfile.*`（需先推送到 registry）。高可用/监控/自动扩缩记后续。
+
 ### 文件上传
 
 ```bash
