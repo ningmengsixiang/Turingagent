@@ -1,11 +1,11 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { loadConfig } from '../config.js'
 import { StubProvider } from '../model/stub.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
 import { createSession } from '../repos/sessions.js'
 import { createMessage, listMessages } from '../repos/messages.js'
-import { AgentBridge, AGENT_USER_ID } from './bridge.js'
+import { AgentBridge } from './bridge.js'
 import type { Message } from '@ta/contracts'
 
 describe('agent bridge', () => {
@@ -59,7 +59,6 @@ describe('agent bridge', () => {
   it('triggers on @Ta-Fullstack and posts an agent reply', async () => {
     const { bridge, provider } = makeBridge('收到，我来实现报销系统。')
     const userMsg = userMessage('@Ta-Fullstack 帮我做报销系统')
-    // 用户消息先落库（真实流程中由路由写入），bridge 只负责 agent 回复
     await createMessage(pool, {
       sessionId: userMsg.sessionId,
       senderId: userMsg.senderId,
@@ -70,17 +69,35 @@ describe('agent bridge', () => {
     })
     const result = await bridge.handle(userMsg)
     expect(result.triggered).toBe(true)
-    expect(result.reply?.senderId).toBe(AGENT_USER_ID)
+    expect(result.agentId).toBe('agent-ta-fullstack')
+    expect(result.reply?.senderId).toBe('agent-ta-fullstack')
     expect(result.reply?.senderKind).toBe('agent')
     expect(result.reply?.content).toBe('收到，我来实现报销系统。')
     expect(provider.calls).toHaveLength(1)
     expect(provider.calls[0]!.userInput).toBe('帮我做报销系统')
-    expect(provider.calls[0]!.systemPrompt).toContain('你是 Ta-Fullstack')
+    expect(provider.calls[0]!.systemPrompt).toContain('软件生成智能体')
     expect(emitted).toHaveLength(1)
     const messages = await listMessages(pool, sessionId, 0, 10)
-    expect(messages).toHaveLength(2) // 用户消息 + agent 回复
+    expect(messages).toHaveLength(2)
     expect(messages[1]!.senderKind).toBe('agent')
     expect(messages[1]!.seq).toBe(2)
+  })
+
+  it('routes to the mentioned agent with its persona', async () => {
+    const { bridge, provider } = makeBridge('收到')
+    const cases = [
+      { content: '@Ta-PM 帮我澄清报销需求', agentId: 'agent-ta-pm', persona: '需求经理智能体' },
+      { content: '@Ta-Architect 评估这个变更', agentId: 'agent-ta-architect', persona: '架构师智能体' },
+      { content: '@Ta-QA 验收一下', agentId: 'agent-ta-qa', persona: '测试智能体' },
+    ]
+    for (const c of cases) {
+      const result = await bridge.handle(userMessage(c.content))
+      expect(result.triggered).toBe(true)
+      expect(result.agentId).toBe(c.agentId)
+      expect(result.reply?.senderId).toBe(c.agentId)
+      const last = provider.calls[provider.calls.length - 1]!
+      expect(last.systemPrompt).toContain(c.persona)
+    }
   })
 
   it('skips non-mention messages', async () => {
@@ -93,7 +110,7 @@ describe('agent bridge', () => {
 
   it('skips agent messages (loop breaker)', async () => {
     const { bridge, provider } = makeBridge()
-    const result = await bridge.handle({ ...userMessage('@Ta-Fullstack x'), senderKind: 'agent', senderId: AGENT_USER_ID })
+    const result = await bridge.handle({ ...userMessage('@Ta-Fullstack x'), senderKind: 'agent', senderId: 'agent-ta-fullstack' })
     expect(result.skippedReason).toBe('agent-message')
     expect(provider.calls).toHaveLength(0)
   })
@@ -107,6 +124,17 @@ describe('agent bridge', () => {
     expect(provider.calls).toHaveLength(0)
   })
 
+  it('skips when the requirement exceeds the prompt char limit', async () => {
+    const provider = new StubProvider()
+    const config = loadConfig({ NODE_ENV: 'test', DEEPSEEK_API_KEY: 'sk-test', AGENT_MAX_PROMPT_CHARS: '20' })
+    const bridge = new AgentBridge({ pool, config, provider, emitMessageCreated: () => {} })
+    const result = await bridge.handle(userMessage('@Ta-Fullstack ' + '很长的需求内容'.repeat(10)))
+    expect(result.skippedReason).toBe('too-long')
+    expect(provider.calls).toHaveLength(0)
+    const messages = await listMessages(pool, sessionId, 0, 10)
+    expect(messages).toHaveLength(0)
+  })
+
   it('posts an error reply when the provider fails', async () => {
     const failing = {
       calls: [] as unknown[],
@@ -116,35 +144,24 @@ describe('agent bridge', () => {
     }
     const config = loadConfig({ NODE_ENV: 'test', DEEPSEEK_API_KEY: 'sk-test' })
     const bridge = new AgentBridge({ pool, config, provider: failing, emitMessageCreated: (m) => emitted.push(m) })
-    const result = await bridge.handle(userMessage('@Ta-Fullstack 帮我做东西'))
+    const result = await bridge.handle(userMessage('@Ta-PM 帮我做东西'))
     expect(result.triggered).toBe(true)
+    expect(result.agentId).toBe('agent-ta-pm')
     expect(result.skippedReason).toBe('error')
-    // I2：用户侧固定文案，不泄露原始错误
-    expect(result.reply?.content).toBe('⚠️ Ta-Fullstack 处理失败，请稍后重试。')
+    expect(result.reply?.content).toBe('⚠️ Ta-PM 处理失败，请稍后重试。')
     expect(emitted).toHaveLength(1)
     const messages = await listMessages(pool, sessionId, 0, 10)
     expect(messages).toHaveLength(1)
-    expect(messages[0]!.content).toBe('⚠️ Ta-Fullstack 处理失败，请稍后重试。')
+    expect(messages[0]!.content).toBe('⚠️ Ta-PM 处理失败，请稍后重试。')
   })
 
-  it('triggers on consecutive mention messages (B1 回归：无 /g lastIndex 泄漏)', async () => {
+  it('triggers on consecutive mention messages (无 lastIndex 泄漏)', async () => {
     const { bridge } = makeBridge('好的')
-    const first = await bridge.handle(userMessage('@Ta-Fullstack 第一个需求'))
-    const second = await bridge.handle(userMessage('@Ta-Fullstack 第二个需求'))
+    const first = await bridge.handle(userMessage('@Ta-PM 第一个需求'))
+    const second = await bridge.handle(userMessage('@Ta-PM 第二个需求'))
     expect(first.triggered).toBe(true)
     expect(second.triggered).toBe(true)
     const messages = await listMessages(pool, sessionId, 0, 10)
     expect(messages).toHaveLength(2)
-  })
-
-  it('skips when the requirement exceeds the prompt char limit (I3：PR-6 长度守卫)', async () => {
-    const provider = new StubProvider()
-    const config = loadConfig({ NODE_ENV: 'test', DEEPSEEK_API_KEY: 'sk-test', AGENT_MAX_PROMPT_CHARS: '20' })
-    const bridge = new AgentBridge({ pool, config, provider, emitMessageCreated: () => {} })
-    const result = await bridge.handle(userMessage('@Ta-Fullstack ' + '很长的需求内容'.repeat(10)))
-    expect(result.skippedReason).toBe('too-long')
-    expect(provider.calls).toHaveLength(0)
-    const messages = await listMessages(pool, sessionId, 0, 10)
-    expect(messages).toHaveLength(0)
   })
 })
