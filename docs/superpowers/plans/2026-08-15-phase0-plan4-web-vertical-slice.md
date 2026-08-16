@@ -232,6 +232,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
   if (res.status === 401) {
     clearToken()
+    // 401 → 通知 UI 回到登录页（T2 质量审查：token 过期后不卡在聊天页）
+    window.dispatchEvent(new Event('ta:unauthorized'))
     throw new Error('unauthorized')
   }
   if (!res.ok) {
@@ -426,7 +428,7 @@ describe('Login', () => {
 
 ```tsx
 import { useEffect, useState } from 'react'
-import { getToken } from './api/client.js'
+import { clearToken, getToken } from './api/client.js'
 import { Login } from './pages/Login.js'
 import { Chat } from './pages/Chat.js'
 
@@ -434,13 +436,16 @@ export function App() {
   const [authed, setAuthed] = useState<boolean>(() => getToken() !== null)
 
   useEffect(() => {
-    if (!getToken()) setAuthed(false)
+    // 401 时清 token 并回到登录页（T2 质量审查）
+    const onUnauthorized = () => setAuthed(false)
+    window.addEventListener('ta:unauthorized', onUnauthorized)
+    return () => window.removeEventListener('ta:unauthorized', onUnauthorized)
   }, [])
 
   if (!authed) {
     return <Login onAuthed={() => setAuthed(true)} />
   }
-  return <Chat onLogout={() => { localStorage.removeItem('ta.token'); setAuthed(false) }} />
+  return <Chat onLogout={() => { clearToken(); setAuthed(false) }} />
 }
 ```
 
