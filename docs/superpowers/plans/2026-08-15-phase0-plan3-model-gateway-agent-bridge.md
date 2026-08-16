@@ -465,7 +465,7 @@ export class AgentBridge {
 - [ ] **Step 3: 写 src/agent/bridge.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { loadConfig } from '../config.js'
 import { StubProvider } from '../model/stub.js'
@@ -715,7 +715,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
 - [ ] **Step 2: 写 src/agent/e2e.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import WebSocket from 'ws'
 import pg from 'pg'
