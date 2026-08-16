@@ -293,6 +293,22 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }
 
+  const [dragTaskId, setDragTaskId] = useState<string | null>(null)
+  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null)
+
+  function handleDragStart(taskId: string) {
+    setDragTaskId(taskId)
+  }
+  function handleDragEnd() {
+    setDragTaskId(null)
+    setDragOverStatus(null)
+  }
+  function handleDrop(status: TaskStatus) {
+    if (dragTaskId) void moveTaskFromBoard(dragTaskId, status)
+    setDragTaskId(null)
+    setDragOverStatus(null)
+  }
+
   function mentionAgent() {
     setInput((prev) => (prev.startsWith(AGENT_HINT) ? prev : AGENT_HINT + prev))
   }
@@ -624,10 +640,28 @@ export function Chat({ onLogout }: ChatProps) {
                 const label = { todo: '📋 待开始', in_progress: '🔄 进行中', blocked: '⛔ 已阻塞', done: '✅ 已完成' }[status]
                 const columnTasks = tasks.filter((t) => t.status === status)
                 return (
-                  <div key={status} className="kanban-column">
+                  <div
+                    key={status}
+                    className={`kanban-column ${dragOverStatus === status ? 'drag-over' : ''}`}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setDragOverStatus(status)
+                    }}
+                    onDragLeave={() => setDragOverStatus((prev) => (prev === status ? null : prev))}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      handleDrop(status)
+                    }}
+                  >
                     <div className="kanban-column-head">{label} <span className="count">{columnTasks.length}</span></div>
                     {columnTasks.map((t) => (
-                      <div key={t.id} className="kanban-card">
+                      <div
+                        key={t.id}
+                        className={`kanban-card ${dragTaskId === t.id ? 'dragging' : ''}`}
+                        draggable
+                        onDragStart={() => handleDragStart(t.id)}
+                        onDragEnd={handleDragEnd}
+                      >
                         <div className="kanban-card-title">{t.title}</div>
                         <div className="kanban-card-assignee">
                           {t.assigneeKind === 'agent' ? `🤖 ${AGENT_NAMES[t.assigneeId] ?? t.assigneeId}` : t.assigneeId}
