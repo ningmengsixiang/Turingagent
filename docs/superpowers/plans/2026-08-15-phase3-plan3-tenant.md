@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG 迁移 + 仓储 + 中间件 + 路由。
 
+**质量审查决策（T1-T4 后追加）：** ① **跨租户写隔离 must-fix**——isMember 改为租户感知（JOIN sessions + `(s.tenant_id IS NULL OR $3 IS NULL OR s.tenant_id = $3)`），19 处写端点 + GET 成员名单传 `request.user.tenantId`；external 传绑定用户租户（传会话租户会恒真失效，已修正）；补跨租户写 403 回归测试。② 适配：getUserRoleWithTenant（getUserRole 包装兼容既有测试）、createSession tenantId 可选、middleware NULL 租户补引导、signToken 后移（停用租户不签发）、测试先注册后 UPDATE。**记录 medium/后续**：org.test.ts 固定租户名本地重跑 409（CI 全新 DB 无碍，建议改唯一名）；存量 NULL 租户会话跨租户可见（无回填迁移）；getDefaultTenant/getTenant 死代码（计划原文）；RLS 双保险/用户租户转移端点/多租户前端 UI 记后续计划。
+
 **决策记录：** 租户模型用「用户级租户归属」（users.tenant_id）+「会话级归属」（sessions.tenant_id 继承创建者）；数据隔离应用层先行（canAccessSession/列表过滤/登录闸门），RLS 策略层记后续（PRD 双保险的第二层）；'default' 为种子租户（首个用户自动入，管理端点可建新租户）；停用 = 登录拒绝 + 数据保留（PRD 语义，数据不删）；跨租户写操作由 isMember/canAccessSession 统一拦截（会话租户绑定，非本租户成员身份无法通过成员校验）；租户间 id 不冲突（UUID 全局唯一）；审计含 tenant 上下文（detail 加 tenantId）；admin 跨租户管理用管理端点（数据仍按租户隔离，admin 权限是操作权限非数据越权——记录：admin 可建租户但不自动可见其他租户数据，治理例外记后续）。
 
 ---
@@ -37,7 +39,7 @@
 - Modify: `packages/contracts/src/index.ts`
 - Create: `services/gateway/migrations/014_tenant.sql`
 
-- [ ] **Step 1: 契约**
+- [x] **Step 1: 契约**
 
 读 `packages/contracts/src/index.ts`：
 1. `Session` 接口增 `tenantId?: string`。
@@ -59,7 +61,7 @@ export interface Tenant {
 }
 ```
 
-- [ ] **Step 2: 迁移 014**
+- [x] **Step 2: 迁移 014**
 
 创建 `services/gateway/migrations/014_tenant.sql`：
 
@@ -85,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_users_tenant ON users (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_tenant ON sessions (tenant_id);
 ```
 
-- [ ] **Step 3: 构建 + 迁移**
+- [x] **Step 3: 构建 + 迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -95,7 +97,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 014 应用；tenants 表 + 种子 default 行 + 两列 + 索引。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/014_tenant.sql
@@ -113,7 +115,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 - Modify: `services/gateway/src/repos/sessions.ts`
 - Modify: `services/gateway/src/routes/sessions.ts`
 
-- [ ] **Step 1: 写 repos/tenants.ts**
+- [x] **Step 1: 写 repos/tenants.ts**
 
 创建 `services/gateway/src/repos/tenants.ts`：
 
@@ -184,7 +186,7 @@ export async function isTenantActive(pool: pg.Pool, tenantId: string): Promise<b
 }
 ```
 
-- [ ] **Step 2: users.ts 登录返回租户**
+- [x] **Step 2: users.ts 登录返回租户**
 
 读 `services/gateway/src/repos/users.ts`，`upsertUser` 后或 auth 路由登录后调用 `ensureUserTenant`。具体：
 1. auth.ts 登录响应（读 `routes/auth.ts`）——`login` 里 upsertUser 后调 `await ensureUserTenant(pool, user.id)`，响应 `user` 增 `tenantId`；`requireAuth` 挂 `request.user.tenantId`。
@@ -195,14 +197,14 @@ export async function isTenantActive(pool: pg.Pool, tenantId: string): Promise<b
 - auth 登录路由：upsertUser 后 `ensureUserTenant`，响应带 tenantId。
 - middleware requireAuth：`request.user = { ...user, tenantId }`；`isTenantActive` 校验（停用 403）。
 
-- [ ] **Step 3: sessions 创建继承租户**
+- [x] **Step 3: sessions 创建继承租户**
 
 读 `services/gateway/src/repos/sessions.ts` 与 `routes/sessions.ts`：
 - `createSession` input 增 `tenantId`，INSERT 带 tenant_id。
 - 路由创建：`tenantId: request.user.tenantId`（来自 middleware）。
 - `mapSession` 输出 `tenantId`。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -212,7 +214,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0（若 OrgMember/Session 契约字段导致 map 报错，适配）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/repos/tenants.ts services/gateway/src/repos/users.ts services/gateway/src/middleware.ts services/gateway/src/repos/sessions.ts services/gateway/src/routes/sessions.ts services/gateway/src/routes/auth.ts
@@ -228,7 +230,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 - Modify: `services/gateway/src/routes/org.ts`
 - Modify: `services/gateway/src/repos/test-helpers.ts`
 
-- [ ] **Step 1: access.ts 加租户匹配**
+- [x] **Step 1: access.ts 加租户匹配**
 
 读 `services/gateway/src/repos/access.ts`：
 1. `canAccessSession`：开头读用户 tenant_id 与会话 tenant_id，**不匹配直接 false**（前置租户隔离）：
@@ -246,7 +248,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 
 2. `listVisibleSessionIds`：用户租户过滤——admin 分支只列本租户会话；成员/部门查询结果过滤会话租户 == 用户租户。实现：查询 `sessions WHERE tenant_id = $userTenant` 条件合并。
 
-- [ ] **Step 2: org.ts 租户管理端点**
+- [x] **Step 2: org.ts 租户管理端点**
 
 读 `services/gateway/src/routes/org.ts`（adminOnly 已存在），追加：
 
@@ -299,11 +301,11 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 
 （import 增 createTenant/listTenants/suspendTenant。）
 
-- [ ] **Step 3: test-helpers truncate 增 tenants**
+- [x] **Step 3: test-helpers truncate 增 tenants**
 
 读 `services/gateway/src/repos/test-helpers.ts`，truncate 清单增 `tenants`；**但种子 default 租户需重建**——truncate 后测试环境登录会 ensureUserTenant 指向不存在的 default 租户 id（FK SET NULL？）——**处理**：truncate tenants 后需重新 INSERT 种子行，或在 truncateAll 内保留 tenants 不 truncate（同 quota_config 先例——保留 tenants，测试共用 default 租户）。**采用保留策略**：truncateAll 不含 tenants（同 quota_config/approval_timeout 先例），种子租户常驻。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -314,7 +316,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；全量 gateway 测试全 PASS（既有用例用户/会话均在 default 租户，租户匹配恒真，行为不变）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/repos/access.ts services/gateway/src/routes/org.ts services/gateway/src/routes/org.test.ts
@@ -329,7 +331,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 - Create: `services/gateway/src/routes/tenants.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: tenants.test.ts（隔离性专项测试）**
+- [x] **Step 1: tenants.test.ts（隔离性专项测试）**
 
 创建 `services/gateway/src/routes/tenants.test.ts`（复用既有路由测试风格）：
 
@@ -437,7 +439,7 @@ describe('tenant isolation', () => {
 
 > 注：租户分配端点本计划未定义（用户租户管理）——测试用直接 UPDATE users 模拟（隔离语义验证核心）。`u-bob`/`u-carol` 用户 id 用既有风格（先 loginAs 注册再 UPDATE）。若 `requireAuth` 的停用校验在登录时拦截（middleware 校验每次请求）——carol 停用后登录响应 403 的落点：登录路由 upsertUser 后若 tenant suspended 应拒绝——**需在 auth.ts 登录路由补 tenant active 校验**（ensureUserTenant 后查 isTenantActive，suspended → 403「租户已停用」），实现时在 Task 2/3 一并处理并在汇报说明。
 
-- [ ] **Step 2: README 追加「多租户」节**
+- [x] **Step 2: README 追加「多租户」节**
 
 在 README「### 开放 API（M3.3 / FR-INT-02）」节之后追加：
 
@@ -447,7 +449,7 @@ describe('tenant isolation', () => {
 租户是企业数据隔离单元（users/sessions 绑定 tenant_id，应用层强制）：跨租户会话互不可见（canAccessSession 租户匹配前置）；停用租户（`POST /api/v1/org/tenants/:id/suspend`，管理员，理由入审计）后其成员登录被拒、数据保留。租户管理：管理员 `POST /api/v1/org/tenants` 创建、`GET /api/v1/org/tenants` 列表。RLS 数据库级双保险记后续。
 ```
 
-- [ ] **Step 3: 全仓验收**
+- [x] **Step 3: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -460,7 +462,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 181+2≈183 + web 34 ≈ 219）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 4: 真实验收（隔离性）**
+- [x] **Step 4: 真实验收（隔离性）**
 
 ```bash
 cd /tmp
@@ -469,7 +471,7 @@ cd /tmp
 # 3) 建租户 C → carol 入 C → 登录 OK → 停用 C → carol 再登录 403
 ```
 
-- [ ] **Step 5: 提交 + 推送**
+- [x] **Step 5: 提交 + 推送**
 
 ```bash
 git add README.md services/gateway/src/routes/tenants.test.ts docs/superpowers/plans/2026-08-15-phase3-plan3-tenant.md
