@@ -109,6 +109,8 @@ export interface Approval {
   currentNodeIndex: number
   /** 重提版本（resubmit 后 +1） */
   version: number
+  /** 超时升级次数（FR-APP-06） */
+  escalatedCount?: number
   /** 流程节点列表（按 index 升序） */
   nodes: ApprovalNode[]
 }
