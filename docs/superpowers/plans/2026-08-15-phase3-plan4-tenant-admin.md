@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG 迁移回填 + 仓储 + 路由。
 
+**质量审查决策（T1-T3 后追加）：** ① 既有 tenants.test「isolates tenants」用例与新跨租户成员校验冲突（先移 bob 再建含 bob 会话 → 400）——改为先建后移（语义完整保留 403+列表）；② 回填用例 memberIds 不能空（生产校验 400）→ 用 u-bob；③ README 措辞落定 default（sessions 无 created_by）。**记录后续**：转移端点不校验目标用户存在（0 行命中仍 transferred:true，建议补 404，对照 role 端点先例）；回填测试可断言等于 default UUID；转入停用租户不拒绝（getTenant 只查存在性——下次请求闸门 403 自洽）；无租户成员加入成功未测（middleware 自动回 default 属防御分支）。
+
 **决策记录：** 回填策略：sessions 无 created_by 列（核对——若有则回填创建者租户，无则 default）；转移用户租户后其存量会话**不自动迁移**（会话归属不变，用户可见性随租户匹配变化——被移出租户的用户失去旧租户会话访问，记后续「会话整体迁移」）；跨租户成员加入拒绝在创建时校验（补计划 21 记录缺口）；RLS 双保险记后续（需连接上下文重构，独立工程）；转移端点 adminOnly + 审计；无租户用户转移 = 置 NULL（登录时自动回 default）。
 
 ---
@@ -31,7 +33,7 @@
 - Create: `services/gateway/migrations/015_tenant_backfill.sql`
 - Modify: `services/gateway/src/repos/tenants.ts`
 
-- [ ] **Step 1: 迁移 015（已核对：sessions 无 created_by 列——回填 default 租户）**
+- [x] **Step 1: 迁移 015（已核对：sessions 无 created_by 列——回填 default 租户）**
 
 创建 `services/gateway/migrations/015_tenant_backfill.sql`：
 
@@ -40,7 +42,7 @@
 UPDATE sessions SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
 ```
 
-- [ ] **Step 3: repos/tenants.ts 增 transferUserTenant**
+- [x] **Step 3: repos/tenants.ts 增 transferUserTenant**
 
 读 `services/gateway/src/repos/tenants.ts`，末尾追加：
 
@@ -55,7 +57,7 @@ export async function transferUserTenant(
 }
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -65,7 +67,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 015 应用（回填幂等）；typecheck exit 0。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/migrations/015_tenant_backfill.sql services/gateway/src/repos/tenants.ts
@@ -80,7 +82,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 - Modify: `services/gateway/src/routes/org.ts`
 - Modify: `services/gateway/src/routes/sessions.ts`
 
-- [ ] **Step 1: org.ts 转移端点**
+- [x] **Step 1: org.ts 转移端点**
 
 读 `services/gateway/src/routes/org.ts`（adminOnly 已存在），追加：
 
@@ -112,7 +114,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 
 （import 增 getTenant/transferUserTenant。）
 
-- [ ] **Step 2: sessions.ts 创建时跨租户成员校验**
+- [x] **Step 2: sessions.ts 创建时跨租户成员校验**
 
 读 `services/gateway/src/routes/sessions.ts` 创建路由（memberIds 处理处），在 `createSession` 前增校验：
 
@@ -133,7 +135,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 
 （成员 id 用既有风格 u-bob；无租户成员允许加入。）
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -144,7 +146,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；全量 gateway 测试全 PASS（192 用例——既有会话创建 memberIds 均为同租户 default，不受影响）。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/routes/org.ts services/gateway/src/routes/sessions.ts
@@ -159,7 +161,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 - Modify: `services/gateway/src/routes/tenants.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: tenants.test.ts 补用例**
+- [x] **Step 1: tenants.test.ts 补用例**
 
 读 `services/gateway/src/routes/tenants.test.ts`，追加：
 
@@ -211,7 +213,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 
 （第三用例需 sessions 有 created_by——Step 1 已核对；若无 created_by，回填 SQL 用 default 版并在测试中同步。）
 
-- [ ] **Step 2: README 追加说明**
+- [x] **Step 2: README 追加说明**
 
 在 README「### 多租户隔离（M3.3 / FR-ORG-01 / FR-SEC-02）」节末尾追加：
 
@@ -219,7 +221,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
 多租户管理补全：管理员 `POST /api/v1/org/users/:id/tenant` 转移用户租户（null 移出，登录回 default，审计留痕）；创建会话时跨租户成员加入被拒（400）；存量 NULL 租户会话由迁移 015 回填（创建者租户或 default）。RLS 数据库级双保险记后续。
 ```
 
-- [ ] **Step 3: 全仓验收**
+- [x] **Step 3: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -232,7 +234,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 192+3≈195 + web 34 ≈ 231）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 4: 真实验收**
+- [x] **Step 4: 真实验收**
 
 ```bash
 cd /tmp
@@ -241,7 +243,7 @@ cd /tmp
 # 3) 手动造 NULL 租户会话 → 跑回填 SQL → tenant_id 非 NULL
 ```
 
-- [ ] **Step 5: 提交 + 推送**
+- [x] **Step 5: 提交 + 推送**
 
 ```bash
 git add README.md services/gateway/src/routes/tenants.test.ts docs/superpowers/plans/2026-08-15-phase3-plan4-tenant-admin.md
