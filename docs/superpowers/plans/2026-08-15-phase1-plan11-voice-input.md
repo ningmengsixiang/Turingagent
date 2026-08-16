@@ -8,6 +8,8 @@
 
 **Tech Stack:** 浏览器原生 Web Speech API（`SpeechRecognition`，Chrome/Edge 支持，实时转写零成本零 key）+ MediaRecorder（WebM/Opus 录音）+ 现有 `uploadFile`。测试用 vitest jsdom + mock（`window.SpeechRecognition`/`MediaRecorder`/`HTMLMediaElement.play`）。
 
+**质量审查决策（T2 后追加）：** ① 60s 自动停止上移 Chat（onPointerDown 内 `setTimeout(handleSpeechStop, 60_000)`，配合 speech.stop 幂等无双发）——原实现 60s 内部 stop 结果被丢弃（整段录音丢失 + UI 卡录音态 + 松手空 blob 不发送），must-fix；② 无会话时 handleSpeechStop 先无条件 `stop()` 释放麦克风再守卫发送（audio 分支用 ensureSession 建会话，与 send 一致），must-fix；③ pointer capture（setPointerCapture + onPointerCancel + touch-action:none）——原 onPointerLeave 滑出边界即停即发，must-fix；④ unmount cleanup 调 stop() 释放麦克风；⑤ Task 3 夹具修正：user-event v14 无 pointerDown → fireEvent.pointerDown/Up；mockFetch 为 URL-only 查表（无 POST: 前缀）；files-POST 分支须推 message 入列表；断言文本改「🎤 语音消息」+ 播放按钮（语音气泡不显示文件名）。**记录后续**：远端语音消息 WS 广播缺 file 元数据 → 远端成员显示普通文件气泡（Phase 2 enrich 或前端按 `语音-*.webm` 兜底）；3s 转写期内快速重按丢新录音（start 时清 inflight 或期间禁用 mic）；busy 单布尔并发竞态（busy 计数）；降级路径未清 replyingTo（语音回复后引用条残留）；「播放」实为下载（attachment 头，Phase 2 内联播放需非 attachment URL）。
+
 **质量审查决策（T1 后追加）：** ① start/getUserMedia 竞态修复——代次计数 `startGen`，stop 时使未决 start 失效并释放刚获取的 stream（防松手后继续录音 + 麦克风泄漏，must-fix）；② Safari MIME 降级失效修复——候选 MIME `['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']` + 无 mimeType 兜底构造（Safari 仅支持 audio/mp4，原回退 webm 必抛 NotSupportedError 被吞、录音静默失效，must-fix）；③ stop 幂等——in-flight Promise 缓存（双 stop 同 tick 首调用悬挂修复）；④ 转写分支异常安全——`new SR()` 包 try/catch（构造抛错悬挂修复）+ `settled` 标志防多路 resolve + `stopRecognition` 统一停识别（降级路径 rec.stop() 防麦克风灯不灭）；⑤ 陈旧 3s 兜底定时器跨 stop 污染经 `settled` 标志修复；⑥ 测试改造——flush gUM 微任务后 stop（修复用例 2/3 空转）+ 补双 stop 幂等/start 竞态回归用例。记录：`declare global` 未来与 lib.dom 冲突风险（引入 @types/dom-speech-recognition 时需调整）、权限拒绝无 UX 反馈（MVP 可接受）、60s 自动停止无 lib 级测试（nit）。
 
 **决策记录：** MVP 用浏览器 Web Speech API 而非云 ASR（阿里/讯飞）——零成本、零 API key、P95<3s 本地实时、无隐私外传；TechDesign T1「MVP 云 ASR」修正为「MVP 浏览器 Web Speech；生产/私有化接云 ASR 或 Whisper（Phase 2，接口留 `lib/speech.ts` 单一封装点）」。降级路径（决策 D6）：录音 Blob → 复用文件上传 → file 消息（content = `语音-<时间>.webm`，前端语音气泡可播放）；语音文件消息 contentType 用既有 `file`（不新增 `voice` 消息流，`voice` 类型留给 Phase 2 云 ASR 实时转写消息）。按住说话交互（PRD：按住语音键 → 实时转写预览 → 松开发送）；降级时按住录制、松开上传。限制：Web Speech API 仅 Chrome/Edge（Firefox/Safari 走降级路径）；需 HTTPS 或 localhost（浏览器安全要求，dev 满足）；录音默认 ≤60s 自动停止（文件 20MB 上限内）。
@@ -381,6 +383,8 @@ import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
     speechRef.current = s
     setSpeech(s)
     return () => {
+      // S5：卸载时释放麦克风
+      speechRef.current?.stop().catch(() => {})
       speechRef.current = null
     }
   }, [])
@@ -395,9 +399,16 @@ import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
     recordingRef.current = false
     setRecording(false)
     const s = speechRef.current
-    if (!s || !activeId) return
+    if (!s) return
+    // 无条件 stop() 释放麦克风（M3：无会话时松手也必须停录音）
+    let result
     try {
-      const result = await s.stop()
+      result = await s.stop()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '语音发送失败')
+      return
+    }
+    try {
       if (result.kind === 'transcript' && result.text) {
         // 转写成功 → 文字消息（直接走发送链路，避免 setInput 异步读旧值）
         setBusy(true)
@@ -416,12 +427,15 @@ import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
           setBusy(false)
         }
       } else if (result.kind === 'audio' && result.blob.size > 0) {
-        // 降级：语音文件上传（决策 D6）
+        // 降级：语音文件上传（决策 D6）；无会话时也建会话（与 send() 一致）
         const file = new File([result.blob], `语音-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`, {
           type: result.mime,
         })
-        await uploadFile(activeId, file)
-        await loadMessages(activeId)
+        const sessionId = await ensureSession()
+        if (!sessionId) return
+        await uploadFile(sessionId, file)
+        await loadMessages(sessionId)
+        void refreshSessions()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '语音发送失败')
@@ -438,16 +452,25 @@ import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
 ```tsx
           {speech?.canRecord ? (
             <button
-              className={`ghost ${recording ? 'recording' : ''}`}
+              className={`ghost voice-btn ${recording ? 'recording' : ''}`}
               title={recording ? '松开发送' : '按住说话'}
+              style={recording ? { touchAction: 'none' } : undefined}
               onPointerDown={(e) => {
                 e.preventDefault()
+                // S1：捕获指针，滑出边界不触发 pointerleave，松手仍收到 pointerup
+                e.currentTarget.setPointerCapture(e.pointerId)
                 recordingRef.current = true
                 setRecording(true)
                 speechRef.current?.start()
+                // M2：60s 上限截断即发送（stop 幂等，无双发）
+                window.setTimeout(() => {
+                  if (recordingRef.current) void handleSpeechStop()
+                }, 60_000)
               }}
-              onPointerUp={() => void handleSpeechStop()}
-              onPointerLeave={() => {
+              onPointerUp={() => {
+                if (recordingRef.current) void handleSpeechStop()
+              }}
+              onPointerCancel={() => {
                 if (recordingRef.current) void handleSpeechStop()
               }}
             >
@@ -542,7 +565,7 @@ vi.mock('../lib/speech.js', () => ({
 }))
 ```
 
-> 注：若 Chat.test.tsx 已 import 真实 speech 模块（Task 2 后 Chat.tsx import 它），vi.mock 会拦截；mockStop 的可变行为在每个用例内通过 `mockStop.mockResolvedValueOnce(...)` 设定。若该文件已有 vi.mock 声明模式，按现有风格对齐。若现有测试用 `fireEvent` 而非 `userEvent`，把下面的 `userEvent.pointerDown/pointerUp` 换成 `fireEvent.pointerDown/pointerUp`；`mockFetch` 的 key 形式（`POST:/api/v1/...`）须与现有 mockFetch 实现一致，先读该文件确认。
+> 注：若 Chat.test.tsx 已 import 真实 speech 模块（Task 2 后 Chat.tsx import 它），vi.mock 会拦截；mockStop 的可变行为在每个用例内通过 `mockStop.mockResolvedValueOnce(...)` 设定。若该文件已有 vi.mock 声明模式，按现有风格对齐。**事件 API 必须用 `fireEvent.pointerDown/pointerUp`**（本仓 user-event 为 v14，pointer API 已移除，`userEvent.pointerDown` 不存在）；`mockFetch` 为 URL-only 查表（不含 method 前缀），故 key 用纯 URL（如 `/api/v1/sessions/s1/messages`），且 messages/files 的 POST 分支会把返回 message 推入渲染列表（读现有 mockFetch 实现后按同款处理——通常现有 files-POST 分支已把 message 推入 `createdMessages`，核对后照抄）。
 
 追加用例：
 
@@ -555,12 +578,12 @@ vi.mock('../lib/speech.js', () => ({
       '/api/v1/sessions/s1/memories': { memories: [] },
       '/api/v1/sessions/s1/members': { members: [] },
       '/api/v1/sessions/s1/tasks': { tasks: [] },
-      'POST:/api/v1/sessions/s1/messages': { message: { id: 'm9', clientMsgId: 'c9', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'text', content: '语音转写结果', seq: 9, createdAt: '', ref: null } },
+      '/api/v1/sessions/s1/messages': { message: { id: 'm9', clientMsgId: 'c9', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'text', content: '语音转写结果', seq: 9, createdAt: '', ref: null } },
     })
     render(<Chat onLogout={vi.fn()} />)
     const mic = await screen.findByRole('button', { name: /🎤/ })
-    await userEvent.pointerDown(mic)
-    await userEvent.pointerUp(mic)
+    fireEvent.pointerDown(mic)
+    fireEvent.pointerUp(mic)
     expect(await screen.findByText(/语音转写结果/)).toBeTruthy()
   })
 
@@ -572,17 +595,20 @@ vi.mock('../lib/speech.js', () => ({
       '/api/v1/sessions/s1/memories': { memories: [] },
       '/api/v1/sessions/s1/members': { members: [] },
       '/api/v1/sessions/s1/tasks': { tasks: [] },
-      'POST:/api/v1/sessions/s1/files': { file: { id: 'f1', sessionId: 's1', name: '语音-1.webm', size: 1, mime: 'audio/webm', uploadedBy: 'u-alice', createdAt: '' }, message: { id: 'm10', clientMsgId: 'c10', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'file', content: '语音-1.webm', seq: 10, createdAt: '', ref: { kind: 'file', id: 'f1' }, file: { id: 'f1', name: '语音-1.webm', size: 1, mime: 'audio/webm' } } },
+      // 与既有文件上传用例相同的 POST 分支 key（URL-only，含返回 message 用于列表渲染）
+      '/api/v1/sessions/s1/files': { file: { id: 'f1', sessionId: 's1', name: '语音-1.webm', size: 1, mime: 'audio/webm', uploadedBy: 'u-alice', createdAt: '' }, message: { id: 'm10', clientMsgId: 'c10', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'file', content: '语音-1.webm', seq: 10, createdAt: '', ref: { kind: 'file', id: 'f1' }, file: { id: 'f1', name: '语音-1.webm', size: 1, mime: 'audio/webm' } } },
     })
     render(<Chat onLogout={vi.fn()} />)
     const mic = await screen.findByRole('button', { name: /🎤/ })
-    await userEvent.pointerDown(mic)
-    await userEvent.pointerUp(mic)
-    expect(await screen.findByText(/语音-1\.webm/)).toBeTruthy()
+    fireEvent.pointerDown(mic)
+    fireEvent.pointerUp(mic)
+    // 语音气泡渲染「🎤 语音消息」（不显示文件名）→ 断言该文本与播放按钮
+    expect(await screen.findByText(/🎤 语音消息/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /播放/ })).toBeTruthy()
   })
 ```
 
-> 注：speech 的 FakeRecorder/FakeSpeechRecognition 类若 Task 1 测试已有，可在本文件内复制一份（测试文件互相独立，不共享）。若用例因 mockFetch key 形式或事件 API 不符而失败，先读报错与现有测试风格，按现有约定调整调用方式，并在汇报中说明调整。
+> 注：speech 的 FakeRecorder/FakeSpeechRecognition 类若 Task 1 测试已有，可在本文件内复制一份（测试文件互相独立，不共享）。用例 2 的 mockFetch key 必须与现有实现一致（若现有 files-POST 用例已存在，直接照抄其 key 与返回结构）；`fireEvent` 需从 `@testing-library/react` 导入（现有测试若已 import，复用）。
 
 - [ ] **Step 2: app.css 增语音样式**
 
@@ -591,6 +617,7 @@ vi.mock('../lib/speech.js', () => ({
 ```css
 .recording { background: #ffecec !important; border-color: #ff5b5b !important; }
 .voice-bubble { cursor: default; }
+.voice-btn { touch-action: none; user-select: none; }
 ```
 
 - [ ] **Step 3: README 增「语音输入」节**
@@ -612,7 +639,7 @@ pnpm --filter @ta/web test --reporter=verbose
 pnpm --filter @ta/web build
 ```
 
-Expected: typecheck exit 0；web 测试全 PASS（19 + 新增语音用例）；build 产出 dist/。
+Expected: typecheck exit 0；web 测试全 PASS（11 + 2 新增语音用例）；build 产出 dist/。
 
 - [ ] **Step 5: 提交**
 
