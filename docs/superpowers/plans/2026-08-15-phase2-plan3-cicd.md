@@ -249,7 +249,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "docs: README 
 
 ## Task 4: 全仓验收 + 推送
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -263,7 +263,7 @@ git diff --exit-code
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 164 + web 32 ≈ 198）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 2: CI 真实性验证（可选）**
+- [x] **Step 2: CI 真实性验证（可选）**
 
 推送后触发 GitHub Actions，确认 workflow 语法与各 step 通过（`git push` 后访问仓库 Actions 页；若无法访问 GitHub 页面，标注「CI 首次运行待 GitHub 侧确认」，本地命令等价物已全绿）。同时检查 workflow YAML 语法：
 
@@ -272,7 +272,7 @@ cd /Users/wanzichanpinjingli/Desktop/TuringAgent
 python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml')); yaml.safe_load(open('.github/workflows/deploy.yml')); print('YAML OK')" 2>/dev/null || echo "pyyaml 不可用（跳过，GitHub 会校验语法）"
 ```
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan3-cicd.md
