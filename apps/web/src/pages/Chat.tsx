@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Approval, Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, ApprovalStatus, Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
 import { cancelApproval, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, resubmitApproval, returnApproval, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
@@ -16,6 +16,10 @@ const AGENT_NAMES: Record<string, string> = {
   'agent-ta-architect': 'Ta-Architect',
   'agent-ta-fullstack': 'Ta-Fullstack',
   'agent-ta-qa': 'Ta-QA',
+}
+
+function approvalPrefix(status: ApprovalStatus): string {
+  return status === 'approved' ? '✅ 已通过' : status === 'rejected' ? '❌ 已驳回' : status === 'returned' ? '↩️ 已退回修改' : status === 'cancelled' ? '⛔ 已撤销' : '待审批'
 }
 
 export function Chat({ onLogout }: ChatProps) {
@@ -45,7 +49,10 @@ export function Chat({ onLogout }: ChatProps) {
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const creatingRef = useRef(false)
+  const loadSeqRef = useRef(0)
+  const approvalByIdRef = useRef<Record<string, Approval>>({})
   activeIdRef.current = activeId
+  approvalByIdRef.current = approvalById
 
   const refreshSessions = useCallback(async () => {
     try {
@@ -60,24 +67,28 @@ export function Chat({ onLogout }: ChatProps) {
   }, [])
 
   const loadMessages = useCallback(async (sessionId: string) => {
+    const seq = ++loadSeqRef.current
     try {
       const res = await listMessages(sessionId)
+      // S1：竞态守卫——期间若有更新的 loadMessages 发起，丢弃本响应，防止旧快照覆盖新数据
+      if (seq !== loadSeqRef.current) return
       setMessages(res.messages)
-      // 审批卡片：并行拉取详情（节点进度/状态），失败忽略（不阻塞消息加载）
+      // 审批卡片：后台并行拉取详情（节点进度/状态），失败忽略且不阻塞消息列表渲染
       const approvalRefs = res.messages.filter((m) => m.ref?.kind === 'approval')
-      if (approvalRefs.length > 0) {
-        await Promise.all(
-          approvalRefs.map(async (m) => {
-            try {
-              const { approval } = await getApproval(m.ref!.id)
-              setApprovalById((prev) => ({ ...prev, [m.ref!.id]: approval }))
-            } catch {
-              // 详情拉取失败不影响消息列表
-            }
-          }),
-        )
+      for (const m of approvalRefs) {
+        const approvalId = m.ref!.id
+        // S2：已缓存的 id 跳过（减少重复请求）；详情后台合并，单条慢请求不拖慢列表
+        if (approvalByIdRef.current[approvalId]) continue
+        void getApproval(approvalId)
+          .then(({ approval }) => {
+            setApprovalById((prev) => ({ ...prev, [approvalId]: approval }))
+          })
+          .catch(() => {
+            // 详情拉取失败不影响消息列表
+          })
       }
     } catch (err) {
+      if (seq !== loadSeqRef.current) return
       setError(err instanceof Error ? err.message : '加载消息失败')
     }
   }, [])
@@ -125,6 +136,14 @@ export function Chat({ onLogout }: ChatProps) {
           if (ev.message.sessionId === activeIdRef.current) {
             setMessages((prev) => prev.map((m) => (m.id === ev.message!.id ? ev.message! : m)))
             if (ev.message.contentType === 'task_card') void loadTasks(ev.message.sessionId)
+            if (ev.message.ref?.kind === 'approval') {
+              // M2：WS 只同步 content 不同步 approval 详情 → 异步补拉合并（失败忽略），
+              // 使 returned 卡片在发起人端立即显示「重新提交/撤销」，节点进度跨客户端同步
+              const approvalId = ev.message.ref.id
+              void getApproval(approvalId)
+                .then(({ approval }) => setApprovalById((prev) => ({ ...prev, [approvalId]: approval })))
+                .catch(() => {})
+            }
           }
         }
       },
@@ -195,17 +214,17 @@ export function Chat({ onLogout }: ChatProps) {
 
   async function decide(message: Message, decision: 'approved' | 'rejected') {
     if (!message.ref || message.ref.kind !== 'approval') return
+    const approvalId = message.ref.id
     setError(null)
     try {
-      await decideApproval(message.ref.id, { decision })
-      // message.updated 事件会原位更新卡片；这里乐观置为已决，防 WS 延迟
-      const title = message.content.replace('待审批：', '')
+      const { approval } = await decideApproval(approvalId, { decision })
+      // M1：用服务端返回的 approval 同步详情（节点进度/状态），避免节点条永久旧
+      setApprovalById((prev) => ({ ...prev, [approvalId]: approval }))
+      // 按 approval.status 推导前缀（而非乐观置「已通过」）：中间节点通过时 status 仍 pending
+      // → 前缀保持「待审批」（与后端 updateCard 一致），避免被 WS 回写造成闪变
+      const title = message.content.replace(/^(待审批|✅ 已通过|❌ 已驳回|↩️ 已退回修改|⛔ 已撤销)：/, '')
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === message.id
-            ? { ...m, content: decision === 'approved' ? `✅ 已通过：${title}` : `❌ 已驳回：${title}` }
-            : m,
-        ),
+        prev.map((m) => (m.id === message.id ? { ...m, content: `${approvalPrefix(approval.status)}：${title}` } : m)),
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : '决策失败')
@@ -214,17 +233,21 @@ export function Chat({ onLogout }: ChatProps) {
 
   async function approvalAction(message: Message, action: 'transfer' | 'return' | 'resubmit' | 'cancel', extra?: string) {
     if (!message.ref || message.ref.kind !== 'approval') return
+    const approvalId = message.ref.id
     setError(null)
     try {
       let approval: Approval | null = null
-      if (action === 'transfer' && extra) approval = (await transferApproval(message.ref.id, extra)).approval
-      else if (action === 'return' && extra) approval = (await returnApproval(message.ref.id, extra)).approval
-      else if (action === 'resubmit') approval = (await resubmitApproval(message.ref.id)).approval
-      else if (action === 'cancel') approval = (await cancelApproval(message.ref.id)).approval
+      if (action === 'transfer' && extra) approval = (await transferApproval(approvalId, extra)).approval
+      else if (action === 'return' && extra) approval = (await returnApproval(approvalId, extra)).approval
+      else if (action === 'resubmit') approval = (await resubmitApproval(approvalId)).approval
+      else if (action === 'cancel') approval = (await cancelApproval(approvalId)).approval
       if (!approval) return
+      // M1 同款：合并服务端返回的 approval 详情（转办/退回/重提版本推进等），
+      // 配合 loadMessages 的缓存跳过，避免渲染陈旧详情
+      setApprovalById((prev) => ({ ...prev, [approvalId]: approval }))
       // 更新本地卡片内容（message.updated 事件亦会广播，这里先同步防 WS 延迟）
       const title = message.content.replace(/^(待审批|✅ 已通过|❌ 已驳回|↩️ 已退回修改|⛔ 已撤销)：/, '')
-      const prefix = approval.status === 'approved' ? '✅ 已通过' : approval.status === 'rejected' ? '❌ 已驳回' : approval.status === 'returned' ? '↩️ 已退回修改' : approval.status === 'cancelled' ? '⛔ 已撤销' : '待审批'
+      const prefix = approvalPrefix(approval.status)
       setMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, content: `${prefix}：${title}` } : m)))
       await loadMessages(activeId!)
     } catch (err) {
@@ -462,7 +485,7 @@ export function Chat({ onLogout }: ChatProps) {
                               {n.mode === 'all' ? '会签' : n.mode === 'any' ? '或签' : '单人'}·{n.approverIds.join('/')}·{n.status === 'approved' ? '✅' : n.status === 'rejected' ? '❌' : '⏳'}
                             </span>
                           ))}
-                          {approval && approval.nodes.length > 0 ? <span className="approval-version">v{approval.version}</span> : null}
+                          {approval?.nodes && approval.nodes.length > 0 ? <span className="approval-version">v{approval.version}</span> : null}
                         </div>
                         <div className="approval-actions">
                           <button className="approve" onClick={() => void decide(m, 'approved')}>通过</button>
