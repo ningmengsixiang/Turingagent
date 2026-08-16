@@ -84,6 +84,23 @@ describe('Chat', () => {
     expect(screen.getByText('收到需求')).toBeTruthy()
   })
 
+  it('renders the display name for each agent role', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [
+          { id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'agent-ta-pm', senderKind: 'agent', contentType: 'text', content: '需求已澄清', seq: 1, createdAt: '' },
+          { id: 'm2', clientMsgId: 'c2', sessionId: 's1', senderId: 'agent-ta-qa', senderKind: 'agent', contentType: 'text', content: '测试通过', seq: 2, createdAt: '' },
+        ],
+      },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('需求已澄清')).toBeTruthy()
+    expect(screen.getByText('Ta-PM')).toBeTruthy()
+    expect(screen.getByText('Ta-QA')).toBeTruthy()
+  })
+
   it('renders a pending confirmation card with decide buttons', async () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },

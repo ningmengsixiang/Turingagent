@@ -10,6 +10,13 @@ export interface ChatProps {
 
 const AGENT_HINT = '@Ta-Fullstack '
 
+const AGENT_NAMES: Record<string, string> = {
+  'agent-ta-pm': 'Ta-PM',
+  'agent-ta-architect': 'Ta-Architect',
+  'agent-ta-fullstack': 'Ta-Fullstack',
+  'agent-ta-qa': 'Ta-QA',
+}
+
 export function Chat({ onLogout }: ChatProps) {
   const [sessions, setSessions] = useState<SessionWithUnread[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -168,7 +175,9 @@ export function Chat({ onLogout }: ChatProps) {
               <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
                 <div className="bubble-meta">
                   {m.senderKind === 'agent' ? <span className="ai-badge">AI</span> : null}
-                  <span className="bubble-name">{m.senderKind === 'agent' ? 'Ta-Fullstack' : m.senderId}</span>
+                  <span className="bubble-name">
+                    {m.senderKind === 'agent' ? (AGENT_NAMES[m.senderId] ?? 'AI 智能体') : m.senderId}
+                  </span>
                 </div>
                 {isCard ? (
                   <div className="approval-card">
@@ -195,7 +204,7 @@ export function Chat({ onLogout }: ChatProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') void send()
             }}
-            placeholder="发消息… 或 @Ta-Fullstack 提需求"
+            placeholder="发消息… 或 @Ta-PM / @Ta-Fullstack / @Ta-QA 提需求"
           />
           <button onClick={() => void send()} disabled={busy || !input.trim()}>
             发送
