@@ -464,7 +464,27 @@ interface Case {
 }
 
 const casesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'silence-cases.json')
-const cases = JSON.parse(readFileSync(casesPath, 'utf8')) as Case[]
+const raw = JSON.parse(readFileSync(casesPath, 'utf8')) as unknown[]
+
+// 运行时校验：防手改/损坏的 JSON 静默抬高准确率
+if (!Array.isArray(raw) || raw.length === 0) {
+  console.error('评测集损坏：非数组或为空')
+  process.exit(1)
+}
+for (const c of raw) {
+  const ok =
+    typeof c === 'object' &&
+    c !== null &&
+    typeof (c as Case).input === 'string' &&
+    ((c as Case).expected === 'respond' || (c as Case).expected === 'silent') &&
+    typeof (c as Case).category === 'string' &&
+    typeof (c as Case).reason === 'string'
+  if (!ok) {
+    console.error('评测集损坏：字段非法（input/expected/category/reason 必需）', JSON.stringify(c))
+    process.exit(1)
+  }
+}
+const cases = raw as Case[]
 
 const byCategory = new Map<string, { total: number; correct: number }>()
 let correct = 0
@@ -537,6 +557,16 @@ const cases = JSON.parse(readFileSync(casesPath, 'utf8')) as Case[]
 describe('silence eval gate', () => {
   it('has exactly 1000 fixed cases', () => {
     expect(cases).toHaveLength(1000)
+  })
+
+  it('has valid structure (input/expected/category/reason, expected enum)', () => {
+    for (const c of cases) {
+      expect(typeof c.input).toBe('string')
+      expect(['respond', 'silent']).toContain(c.expected)
+      expect(typeof c.category).toBe('string')
+      expect(typeof c.reason).toBe('string')
+    }
+    expect(new Set(cases.map((c) => c.input)).size).toBe(1000)
   })
 
   it('classifier accuracy >= 95% on the fixed set', () => {
