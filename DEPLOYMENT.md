@@ -7,7 +7,7 @@
 ## 2. 生产部署（Docker Compose）
 1. `cd deploy/prod && cp .env.example .env`，编辑必填：JWT_SECRET（≥32 字符强随机）/ MODEL_API_KEY / POSTGRES_PASSWORD（≥8）/ MINIO_ROOT_PASSWORD（≥8）
 2. `./install.sh`（校验 → 构建镜像 → 启动 → 健康检查 → 输出访问地址）
-3. 验证：`curl localhost:8080/api/v1/auth/login -X POST -d '{"username":"admin"}'`（200）
+3. 验证：`curl localhost:8080/api/v1/auth/login -X POST -H 'content-type: application/json' -d '{"username":"admin"}'`（200）
 4. K8s：`cd deploy/k8s && IMAGE_PREFIX=your-registry/ta- TA_HOST=ta.example.com MODEL_API_KEY=xxx ./install.sh`
 5. 可选环境变量：`ESCALATION_CRON`（审批超时自动升级定时器，默认每小时 `0 * * * *`）、`EXTERNAL_RATE_LIMIT`（开放 API 限流，默认 60 次/分钟/key）、`WEB_PORT`/`GATEWAY_PORT`（默认 8080/3001，端口默认绑定 127.0.0.1 仅本机访问）
 
