@@ -89,6 +89,27 @@ export const decideApproval = (
 ): Promise<{ approval: Approval }> =>
   request(`/api/v1/approvals/${approvalId}/decide`, { method: 'POST', body: JSON.stringify(input) })
 
+export const getApproval = (approvalId: string): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}`)
+
+export const transferApproval = (approvalId: string, newApproverId: string): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}/transfer`, {
+    method: 'POST',
+    body: JSON.stringify({ newApproverId }),
+  })
+
+export const returnApproval = (approvalId: string, reason: string): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}/return`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  })
+
+export const resubmitApproval = (approvalId: string): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}/resubmit`, { method: 'POST' })
+
+export const cancelApproval = (approvalId: string): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}/cancel`, { method: 'POST' })
+
 export const createTask = (
   sessionId: string,
   input: { title: string; assigneeId: string; assigneeKind: 'human' | 'agent'; dueAt?: string },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
-import { createMemory, createSession, decideApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, summarizeMemory, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
+import type { Approval, Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
+import { cancelApproval, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, resubmitApproval, returnApproval, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
@@ -25,6 +25,7 @@ export function Chat({ onLogout }: ChatProps) {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [approvalById, setApprovalById] = useState<Record<string, Approval>>({})
   const [memories, setMemories] = useState<Memory[]>([])
   const [editing, setEditing] = useState<Memory | 'new' | null>(null)
   const [memTitle, setMemTitle] = useState('')
@@ -62,6 +63,20 @@ export function Chat({ onLogout }: ChatProps) {
     try {
       const res = await listMessages(sessionId)
       setMessages(res.messages)
+      // 审批卡片：并行拉取详情（节点进度/状态），失败忽略（不阻塞消息加载）
+      const approvalRefs = res.messages.filter((m) => m.ref?.kind === 'approval')
+      if (approvalRefs.length > 0) {
+        await Promise.all(
+          approvalRefs.map(async (m) => {
+            try {
+              const { approval } = await getApproval(m.ref!.id)
+              setApprovalById((prev) => ({ ...prev, [m.ref!.id]: approval }))
+            } catch {
+              // 详情拉取失败不影响消息列表
+            }
+          }),
+        )
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载消息失败')
     }
@@ -195,6 +210,36 @@ export function Chat({ onLogout }: ChatProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : '决策失败')
     }
+  }
+
+  async function approvalAction(message: Message, action: 'transfer' | 'return' | 'resubmit' | 'cancel', extra?: string) {
+    if (!message.ref || message.ref.kind !== 'approval') return
+    setError(null)
+    try {
+      let approval: Approval | null = null
+      if (action === 'transfer' && extra) approval = (await transferApproval(message.ref.id, extra)).approval
+      else if (action === 'return' && extra) approval = (await returnApproval(message.ref.id, extra)).approval
+      else if (action === 'resubmit') approval = (await resubmitApproval(message.ref.id)).approval
+      else if (action === 'cancel') approval = (await cancelApproval(message.ref.id)).approval
+      if (!approval) return
+      // 更新本地卡片内容（message.updated 事件亦会广播，这里先同步防 WS 延迟）
+      const title = message.content.replace(/^(待审批|✅ 已通过|❌ 已驳回|↩️ 已退回修改|⛔ 已撤销)：/, '')
+      const prefix = approval.status === 'approved' ? '✅ 已通过' : approval.status === 'rejected' ? '❌ 已驳回' : approval.status === 'returned' ? '↩️ 已退回修改' : approval.status === 'cancelled' ? '⛔ 已撤销' : '待审批'
+      setMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, content: `${prefix}：${title}` } : m)))
+      await loadMessages(activeId!)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '操作失败')
+    }
+  }
+
+  function handleTransfer(message: Message) {
+    const target = window.prompt('转办给（用户 id）')
+    if (target?.trim()) void approvalAction(message, 'transfer', target.trim())
+  }
+
+  function handleReturn(message: Message) {
+    const reason = window.prompt('修改意见')
+    if (reason?.trim()) void approvalAction(message, 'return', reason.trim())
   }
 
   async function moveTask(message: Message, status: TaskStatus) {
@@ -393,6 +438,7 @@ export function Chat({ onLogout }: ChatProps) {
             const isFile = m.contentType === 'file'
             const isVoice = m.contentType === 'voice' || (isFile && /audio\//.test(m.file?.mime ?? ''))
             const isPending = isCard && m.content.startsWith('待审批')
+            const approval = m.ref?.kind === 'approval' ? approvalById[m.ref.id] : undefined
             return (
               <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
                 <div className="bubble-meta">
@@ -407,11 +453,34 @@ export function Chat({ onLogout }: ChatProps) {
                 {m.replyPreview ? <div className="reply-preview">↪ {m.replyPreview}</div> : null}
                 {isCard ? (
                   <div className="approval-card">
-                    <strong>{m.content}</strong>
+                    <div className="approval-title">{m.content}</div>
                     {m.ref?.kind === 'approval' && isPending ? (
+                      <>
+                        <div className="approval-nodes">
+                          {approval?.nodes?.map((n) => (
+                            <span key={n.index} className={`approval-node ${n.index === approval?.currentNodeIndex ? 'active' : ''} ${n.status !== 'pending' ? n.status : ''}`}>
+                              {n.mode === 'all' ? '会签' : n.mode === 'any' ? '或签' : '单人'}·{n.approverIds.join('/')}·{n.status === 'approved' ? '✅' : n.status === 'rejected' ? '❌' : '⏳'}
+                            </span>
+                          ))}
+                          {approval && approval.nodes.length > 0 ? <span className="approval-version">v{approval.version}</span> : null}
+                        </div>
+                        <div className="approval-actions">
+                          <button className="approve" onClick={() => void decide(m, 'approved')}>通过</button>
+                          <button className="reject" onClick={() => void decide(m, 'rejected')}>驳回</button>
+                          <button className="ghost small" onClick={() => void handleTransfer(m)}>转办</button>
+                          <button className="ghost small" onClick={() => void handleReturn(m)}>修改意见</button>
+                        </div>
+                      </>
+                    ) : null}
+                    {m.ref?.kind === 'approval' && approval?.status === 'returned' ? (
                       <div className="approval-actions">
-                        <button className="approve" onClick={() => void decide(m, 'approved')}>通过</button>
-                        <button className="reject" onClick={() => void decide(m, 'rejected')}>驳回</button>
+                        <button className="approve" onClick={() => void approvalAction(m, 'resubmit')}>重新提交</button>
+                        <button className="ghost small" onClick={() => void approvalAction(m, 'cancel')}>撤销</button>
+                      </div>
+                    ) : null}
+                    {m.ref?.kind === 'approval' && isPending && approval?.status === 'pending' ? (
+                      <div className="approval-actions">
+                        <button className="ghost small" onClick={() => void approvalAction(m, 'cancel')}>撤销</button>
                       </div>
                     ) : null}
                   </div>

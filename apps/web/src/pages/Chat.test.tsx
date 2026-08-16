@@ -384,4 +384,24 @@ describe('Chat', () => {
     expect(screen.queryByRole('button', { name: /🎤/ })).toBeNull()
     mockSpeechSession.canRecord = true
   })
+
+  it('renders approval node progress and can transfer', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('u-carol')
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [
+          { id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'confirmation_card', content: '待审批：两级审批', seq: 1, createdAt: '', ref: { kind: 'approval', id: 'a1' } },
+        ],
+      },
+      '/api/v1/approvals/a1': { approval: { id: 'a1', sessionId: 's1', title: '两级审批', status: 'pending', approverId: 'u-bob', createdBy: 'u-alice', createdAt: '', mode: 'single', currentNodeIndex: 0, version: 1, nodes: [{ index: 0, mode: 'single', approverIds: ['u-bob'], status: 'pending' }] } },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-bob', name: 'bob', kind: 'human' }] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/单人·u-bob·⏳/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /转办/ })).toBeTruthy()
+  })
 })

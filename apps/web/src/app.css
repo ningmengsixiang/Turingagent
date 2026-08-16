@@ -83,3 +83,10 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .kanban-card-assignee { font-size: 11px; color: #6e6e73; }
 .kanban-card-actions { display: flex; flex-wrap: wrap; gap: 4px; }
 .kanban-empty { font-size: 12px; color: #c7c7cc; text-align: center; padding: 6px 0; }
+.approval-title { font-weight: 600; }
+.approval-nodes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.approval-node { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 12px; color: #6e6e73; background: #f5f5f7; }
+.approval-node.active { border-color: #0071e3; color: #0071e3; background: #eaf3ff; font-weight: 600; }
+.approval-node.approved { border-color: #34c759; color: #228a3c; background: #eaf9ee; }
+.approval-node.rejected { border-color: #ff3b30; color: #d70015; background: #ffecec; }
+.approval-version { font-size: 11px; color: #6e6e73; border: 1px dashed #d2d2d7; border-radius: 8px; padding: 2px 6px; }
