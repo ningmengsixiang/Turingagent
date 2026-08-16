@@ -156,6 +156,17 @@ curl -s -X POST localhost:3001/api/v1/org/quota -H "authorization: Bearer $TOKEN
 
 审批节点超时（默认 24h，`approval_timeout` 表可配置）可手动升级：`POST /api/v1/approvals/<id>/escalate` 把当前节点审批人替换为管理员并计数（escalated_count，审计留痕）；推进节点/重新提交会重置激活时间。自动定时器（cron 调用该端点）记 Phase 2 后续。
 
+### 企业知识库（FR-MEM-03）
+
+会话级知识库文档（标题+正文，≤10000 字），支持关键词全文检索（ILIKE，MVP；pgvector 语义检索记 Phase 2 后续）：`POST /sessions/:id/kb` 创建、`GET /sessions/:id/kb?q=` 检索。数据仅存 PG（不出域）。智能体上下文注入记后续。
+
+```bash
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/kb \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"title":"登录方案","content":"JWT + 刷新令牌，2 小时有效期"}'
+curl -s "localhost:3001/api/v1/sessions/<sessionId>/kb?q=JWT" -H "authorization: Bearer $TOKEN"
+```
+
 ### 任务看板
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
