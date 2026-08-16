@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import type { WebSocket } from 'ws'
-import type { Message, WsMessageNew } from '@ta/contracts'
+import type { Message, WsMessageNew, WsMessageUpdated } from '@ta/contracts'
 import { verifyToken } from './auth.js'
 import type { Config } from './config.js'
 import type { ConnectionRegistry } from './registry.js'
@@ -53,6 +53,13 @@ export function registerWs(
     const msg = message as Message
     if (typeof msg.sessionId !== 'string') return // 运行时守卫
     const payload: WsMessageNew = { type: 'message.new', message: msg }
+    registry.broadcast(msg.sessionId, payload)
+  })
+
+  events.on('message.updated', (message) => {
+    const msg = message as Message
+    if (typeof msg.sessionId !== 'string') return
+    const payload: WsMessageUpdated = { type: 'message.updated', message: msg }
     registry.broadcast(msg.sessionId, payload)
   })
 }

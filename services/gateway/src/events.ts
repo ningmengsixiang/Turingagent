@@ -3,6 +3,7 @@ import type { Message } from '@ta/contracts'
 
 export type AppEvents = {
   'message.created': (message: Message) => void
+  'message.updated': (message: Message) => void
 }
 
 export interface AppEventBus {
