@@ -120,6 +120,15 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/messages \
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
 
+### 文件上传
+
+```bash
+# 需要 MinIO（docker compose 已含；MINIO_* 环境变量可覆盖）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/files \
+  -H "authorization: Bearer $TOKEN" -F "file=@<本地文件>"
+# → 生成文件消息（contentType=file）；下载：GET /api/v1/files/<fileId> 返回 15 分钟预签名 URL
+```
+
 ### 智能体团队（四角色）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 @ 对应智能体即触发，回复以该智能体身份实时推回：
