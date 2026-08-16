@@ -1024,7 +1024,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ui): 全
 
 ## Task 4: 浏览器 QA + 视觉验收 + 收尾
 
-- [ ] **Step 1: 浏览器视觉 QA（headless）**
+- [x] **Step 1: 浏览器视觉 QA（headless）**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -1044,7 +1044,7 @@ $B js "getComputedStyle(document.querySelector('.session-sidebar')).backgroundCo
 
 Expected: 截图可见新视觉（tokens 色/圆角/阴影）；控制台无错误；`--ta-color-*` 变量在 computed style 生效。
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -1056,7 +1056,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 212 + web 31 ≈ 245）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 3: README 更新**
+- [x] **Step 3: README 更新**
 
 在 README「### 语音输入（FR-DESK-07 / FR-CHAT-01）」节后追加：
 
@@ -1066,7 +1066,7 @@ Expected: build 全过；test 全绿（contracts 2 + gateway 212 + web 31 ≈ 24
 设计规范见 [`docs/design/DESIGN.md`](docs/design/DESIGN.md)（色板/字体/间距/圆角/阴影/组件规范）。Design Tokens 定义于 `apps/web/src/design/tokens.css`（CSS 变量，Light 主题，暗色预留）；UI Kit 组件库在 `apps/web/src/ui/`（Button/Input/Badge/Modal/Toast/Spinner/Avatar/Chip/EmptyState/ProgressBar/Skeleton）。全界面按规范落地（登录页/三栏工作台/消息气泡/卡片/看板/面板）。
 ```
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase3-plan13-ui-kit.md
