@@ -1,0 +1,33 @@
+name: Deploy (两级审批)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '目标环境'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      commit:
+        description: '部署版本（commit sha）'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit }}
+
+      - name: 构建产物（验证可部署性）
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: 部署占位（实际命令记 Phase 2 后续——私有化安装器 M2.5 联动）
+        run: echo "部署步骤骨架：ssh/docker compose up 命令待 M2.5 落地"
