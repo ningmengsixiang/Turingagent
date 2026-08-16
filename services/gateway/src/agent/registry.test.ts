@@ -27,6 +27,31 @@ describe('agent registry', () => {
     expect(findAgentByMention('今天天气不错')).toBeNull()
   })
 
+  it('rejects prefix collisions like @Ta-PMO or @Ta-QAT', () => {
+    expect(findAgentByMention('@Ta-PMO 下周排期')).toBeNull()
+    expect(findAgentByMention('@Ta-Architecture 评审')).toBeNull()
+    expect(findAgentByMention('@Ta-Fullstacker')).toBeNull()
+    expect(findAgentByMention('@Ta-QAT 报告')).toBeNull()
+    expect(findAgentByMention('@Ta-PM-01')).toBeNull()
+  })
+
+  it('matches mention variants', () => {
+    expect(findAgentByMention('@ta-pm 澄清')?.agent.id).toBe('agent-ta-pm')
+    expect(findAgentByMention('@Ta_PM 澄清')?.agent.id).toBe('agent-ta-pm')
+    expect(findAgentByMention('@TaFullstack 实现')?.agent.id).toBe('agent-ta-fullstack')
+    expect(findAgentByMention('请 @Ta-QA 验收')?.agent.id).toBe('agent-ta-qa')
+  })
+
+  it('returns null for an empty requirement after the mention', () => {
+    expect(findAgentByMention('@Ta-PM')).toBeNull()
+    expect(findAgentByMention('@Ta-Fullstack  ')).toBeNull()
+  })
+
+  it('takes the first agent when multiple are mentioned', () => {
+    const hit = findAgentByMention('@Ta-PM 澄清需求，@Ta-QA 也看看')
+    expect(hit?.agent.id).toBe('agent-ta-pm')
+  })
+
   it('maps agent ids to display names', () => {
     expect(AGENT_DISPLAY_NAMES['agent-ta-fullstack']).toBe('Ta-Fullstack')
     expect(AGENT_DISPLAY_NAMES['agent-ta-pm']).toBe('Ta-PM')
