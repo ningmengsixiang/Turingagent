@@ -4,6 +4,7 @@ import { cancelApproval, createKbDocument, createMemory, createSession, decideAp
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
+import { EmptyState } from '../ui/EmptyState.js'
 
 export interface ChatProps {
   onLogout: () => void
@@ -811,7 +812,7 @@ export function Chat({ onLogout }: ChatProps) {
                         </div>
                       </div>
                     ))}
-                    {columnTasks.length === 0 && <div className="kanban-empty">空</div>}
+                    {columnTasks.length === 0 && <EmptyState className="kanban-empty">空</EmptyState>}
                   </div>
                 )
               })}

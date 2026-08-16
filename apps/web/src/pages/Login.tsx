@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../api/client.js'
+import { Spinner } from '../ui/Spinner.js'
 
 export interface LoginProps {
   onAuthed: (name: string) => void
@@ -38,7 +39,7 @@ export function Login({ onAuthed }: LoginProps) {
         />
         {error && <p className="login-error">{error}</p>}
         <button type="submit" disabled={busy || !username.trim()}>
-          {busy ? '登录中…' : '登录'}
+          {busy ? <Spinner size="sm" /> : '登录'}
         </button>
       </form>
     </div>
