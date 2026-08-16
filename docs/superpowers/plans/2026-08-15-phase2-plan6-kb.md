@@ -521,7 +521,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(kb): 前
 
 ## Task 4: README + 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: README 追加「企业知识库」节**
+- [x] **Step 1: README 追加「企业知识库」节**
 
 在 README「### 审批超时升级（FR-APP-06）」节之后追加：
 
@@ -538,7 +538,7 @@ curl -s "localhost:3001/api/v1/sessions/<sessionId>/kb?q=JWT" -H "authorization:
 ```
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -551,7 +551,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 174+3≈177 + web 33+1≈34 ≈ 213）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 3: 真实验收（知识库创建/检索）**
+- [x] **Step 3: 真实验收（知识库创建/检索）**
 
 ```bash
 cd /tmp
@@ -563,7 +563,7 @@ cd /tmp
 
 Expected: 创建/检索/列表正确；非成员 403；数据不出域（仅 PG）。
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan6-kb.md
