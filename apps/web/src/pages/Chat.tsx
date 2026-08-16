@@ -632,8 +632,15 @@ export function Chat({ onLogout }: ChatProps) {
             <div className="kanban-stats">
               <span className="stat">{tasks.length} 总</span>
               <span className="stat">{tasks.filter((t) => t.status === 'in_progress').length} 进行中</span>
+              <span className="stat">{tasks.filter((t) => t.status === 'blocked').length} 阻塞</span>
               <span className="stat">{tasks.filter((t) => t.status === 'done').length} 完成</span>
+              <span className="stat">
+                {tasks.length > 0 ? `${Math.round((tasks.filter((t) => t.status === 'done').length / tasks.length) * 100)}% 完成率` : '0% 完成率'}
+              </span>
               <span className="stat">{tasks.filter((t) => t.assigneeKind === 'agent').length} 智能体</span>
+              <span className="stat">
+                {tasks.filter((t) => t.dueAt && new Date(t.dueAt).getTime() < Date.now() && t.status !== 'done').length} 已到期
+              </span>
             </div>
             <div className="kanban-columns">
               {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((status) => {
