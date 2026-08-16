@@ -1,822 +1,18 @@
 [
   {
-    "input": "@Ta-PM 帮我整理下需求",
+    "input": "请@Ta-QA 写个接口",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-PM 评审下这个方案",
+    "input": "帮我@Ta-Architect 整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-PM 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_pm 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Architect 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-Fullstack 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@ta_fullstack 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-QA  补个压测方案",
+    "input": "麻烦@ta_fullstack 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -828,175 +24,31 @@
     "reason": "mention"
   },
   {
-    "input": "@Ta-QA  列一下验收清单",
+    "input": "请@Ta-PM  看下这个 bug",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-QA  整理下会议纪要",
+    "input": "请@Ta-PM  测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-PM  帮我整理下需求",
+    "input": "麻烦@Ta-PM 看看架构有没有问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-PM  评审下这个方案",
+    "input": "麻烦@Ta-QA  写个测试用例",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "@Ta-PM  写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  设计下数据库表",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  写个接口",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "@Ta-PM  整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 设计下数据库表",
+    "input": "麻烦@Ta-Fullstack 更新下文档",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1008,115 +60,7 @@
     "reason": "mention"
   },
   {
-    "input": "请@Ta-PM 做个原型",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 检查下代码",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 梳理下任务进度",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 排个交付计划",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 分析下性能问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 写个测试用例",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 评估下这个设计",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 改一下接口文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 补个压测方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 看看架构有没有问题",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 列一下验收清单",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@Ta-PM 整理下会议纪要",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 帮我整理下需求",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 评审下这个方案",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 写个登录页面",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 测试下这个功能",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 看下这个 bug",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 更新下文档",
-    "expected": "respond",
-    "category": "mention",
-    "reason": "mention"
-  },
-  {
-    "input": "请@ta_pm 设计下数据库表",
+    "input": "帮我@Ta-Fullstack 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1128,205 +72,229 @@
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 做个原型",
+    "input": "麻烦@Ta-Fullstack 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 检查下代码",
+    "input": "@Ta-PM 写个测试用例",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 梳理下任务进度",
+    "input": "请@Ta-QA 测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 排个交付计划",
+    "input": "请@Ta-QA 帮我整理下需求",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 分析下性能问题",
+    "input": "麻烦@ta_fullstack 改一下接口文档",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 写个测试用例",
+    "input": "请@Ta-QA  评审下这个方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 评估下这个设计",
+    "input": "帮我@Ta-QA 整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 改一下接口文档",
+    "input": "@Ta-PM 列一下验收清单",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 补个压测方案",
+    "input": "麻烦@Ta-Fullstack 看看架构有没有问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 看看架构有没有问题",
+    "input": "麻烦@Ta-PM  评审下这个方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 列一下验收清单",
+    "input": "麻烦@ta_pm 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_pm 整理下会议纪要",
+    "input": "请@Ta-QA 评估下这个设计",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 帮我整理下需求",
+    "input": "麻烦@Ta-Fullstack 评审下这个方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 评审下这个方案",
+    "input": "麻烦@Ta-Architect 排个交付计划",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 写个登录页面",
+    "input": "麻烦@ta_fullstack 整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 测试下这个功能",
+    "input": "@ta_pm 分析下性能问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 看下这个 bug",
+    "input": "请@ta_fullstack 补个压测方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 更新下文档",
+    "input": "麻烦@Ta-PM  测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 设计下数据库表",
+    "input": "麻烦@ta_pm 测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 写个接口",
+    "input": "@Ta-Architect 补个压测方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 做个原型",
+    "input": "帮我@Ta-Architect 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 检查下代码",
+    "input": "麻烦@Ta-Architect 梳理下任务进度",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 梳理下任务进度",
+    "input": "帮我@Ta-QA  分析下性能问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 排个交付计划",
+    "input": "麻烦@ta_pm 看下这个 bug",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 分析下性能问题",
+    "input": "帮我@ta_fullstack 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 写个测试用例",
+    "input": "帮我@Ta-QA  测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 评估下这个设计",
+    "input": "帮我@Ta-QA  梳理下任务进度",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 改一下接口文档",
+    "input": "请@Ta-PM 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 补个压测方案",
+    "input": "请@Ta-QA 排个交付计划",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 看看架构有没有问题",
+    "input": "帮我@ta_fullstack 帮我整理下需求",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 列一下验收清单",
+    "input": "@Ta-PM  写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Architect 整理下会议纪要",
+    "input": "麻烦@Ta-PM  排个交付计划",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 帮我整理下需求",
+    "input": "请@Ta-QA  排个交付计划",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 评审下这个方案",
+    "input": "请@Ta-PM  写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM  检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA  梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  整理下会议纪要",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1338,73 +306,85 @@
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 测试下这个功能",
+    "input": "请@Ta-PM  评估下这个设计",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 看下这个 bug",
+    "input": "@Ta-QA  看下这个 bug",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 更新下文档",
+    "input": "@ta_fullstack 检查下代码",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 设计下数据库表",
+    "input": "@ta_fullstack 整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 写个接口",
+    "input": "请@Ta-Architect 看看架构有没有问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 做个原型",
+    "input": "请@ta_fullstack 列一下验收清单",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 检查下代码",
+    "input": "帮我@Ta-QA 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 梳理下任务进度",
+    "input": "麻烦@Ta-Fullstack 梳理下任务进度",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 排个交付计划",
+    "input": "@Ta-Architect 评估下这个设计",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 分析下性能问题",
+    "input": "麻烦@ta_pm 评审下这个方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 写个测试用例",
+    "input": "@Ta-PM 测试下这个功能",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 评估下这个设计",
+    "input": "请@Ta-PM 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_fullstack 做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1416,13 +396,361 @@
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 补个压测方案",
+    "input": "麻烦@Ta-QA 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 看看架构有没有问题",
+    "input": "帮我@Ta-QA  帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA 写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA  写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM  整理下会议纪要",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Architect 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Architect 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_fullstack 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM  排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Architect 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Architect 帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_fullstack 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@ta_pm 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM  补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA  做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@ta_fullstack 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Architect 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA  检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_fullstack 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Architect 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_pm 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Architect 检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_fullstack 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM 整理下会议纪要",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA  帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Architect 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA  整理下会议纪要",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Architect 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_fullstack 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 改一下接口文档",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1434,31 +762,427 @@
     "reason": "mention"
   },
   {
-    "input": "请@Ta-Fullstack 整理下会议纪要",
+    "input": "请@ta_fullstack 做个原型",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 帮我整理下需求",
+    "input": "@Ta-QA  列一下验收清单",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 评审下这个方案",
+    "input": "请@Ta-Architect 列一下验收清单",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 写个登录页面",
+    "input": "@ta_fullstack 写个接口",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 测试下这个功能",
+    "input": "@Ta-QA 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@ta_pm 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Architect 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Architect 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Fullstack 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM  帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM  设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Fullstack 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_fullstack 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@ta_fullstack 分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA  写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM  做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM  改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_pm 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA 设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_pm 整理下会议纪要",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Fullstack 设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 做个原型",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@ta_pm 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA  列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Fullstack 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA 帮我整理下需求",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -1470,31 +1194,307 @@
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 更新下文档",
+    "input": "@Ta-QA 评审下这个方案",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 设计下数据库表",
+    "input": "麻烦@Ta-QA  评估下这个设计",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 写个接口",
+    "input": "@Ta-Architect 写个登录页面",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 做个原型",
+    "input": "麻烦@Ta-QA 整理下会议纪要",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
   },
   {
-    "input": "请@ta_fullstack 检查下代码",
+    "input": "请@Ta-QA 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Fullstack 评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  评估下这个设计",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_pm 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_fullstack 列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM  写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-QA 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 帮我整理下需求",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Architect 梳理下任务进度",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-PM 排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Fullstack 测试下这个功能",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  列一下验收清单",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@ta_pm 设计下数据库表",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-QA 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  排个交付计划",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-PM  补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM 写个登录页面",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA  检查下代码",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Architect 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-Architect 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "请@Ta-Fullstack 更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_fullstack 改一下接口文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@ta_fullstack 看看架构有没有问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@Ta-QA 看下这个 bug",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-PM  分析下性能问题",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_pm 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-PM  更新下文档",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-Architect 写个接口",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 评审下这个方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "@ta_fullstack 写个测试用例",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "麻烦@Ta-QA  补个压测方案",
+    "expected": "respond",
+    "category": "mention",
+    "reason": "mention"
+  },
+  {
+    "input": "帮我@Ta-Fullstack 分析下性能问题",
     "expected": "respond",
     "category": "mention",
     "reason": "mention"
@@ -3000,103 +3000,25 @@
     "reason": "decision-point"
   },
   {
-    "input": "任务清单别忘记交付",
+    "input": "前端页面还没做，先重构吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "项目进度和部署都要在今天搞定",
+    "input": "bug 清单别忘记压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "prd别忘记重构",
+    "input": "技术方案别忘记压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "性能优化别忘记部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本完成，开始验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档调整完就能排期了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档别忘记交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口更新了，准备重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd完成，开始上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划更新了，准备重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能已经写好，下一步联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档和上线都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑调整完就能部署了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案还没做，先验收吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案有问题，需要重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd更新了，准备验收",
+    "input": "项目进度这块需要验收一下",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
@@ -3108,925 +3030,55 @@
     "reason": "keyword-score"
   },
   {
-    "input": "bug 清单这块需要上线一下",
+    "input": "项目进度通过了，安排部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面完成，开始压测",
+    "input": "接口文档这块需要压测一下",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "测试用例通过了，安排上线",
+    "input": "技术方案和重构都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "性能优化别忘记重构",
+    "input": "数据库表完成，开始联调",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "后端接口这块需要排期一下",
+    "input": "交付里程碑有问题，需要交付",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "prd完成，开始排期",
+    "input": "里程碑还没做，先上线吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "接口文档完成，开始联调",
+    "input": "代码审查别忘记交付",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "里程碑这块需要重构一下",
+    "input": "版本计划完成，开始压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面通过了，安排重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑还没做，先验收吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd别忘记交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度别忘记压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面有问题，需要重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划更新了，准备压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化完成，开始联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑还没做，先部署吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度已经写好，下一步部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案别忘记排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查通过了，安排联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例通过了，安排联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档调整完就能排期了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案有问题，需要压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单完成，开始交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档还没做，先排期吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd通过了，安排验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档这块需要部署一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑完成，开始压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能有问题，需要重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表已经写好，下一步交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度通过了，安排交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单和重构都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案有问题，需要验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查有问题，需要排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例更新了，准备验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑已经写好，下一步部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表这块需要排期一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审完成，开始交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案别忘记重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案完成，开始交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单有问题，需要联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化别忘记联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本更新了，准备上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能调整完就能重构了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划别忘记压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单别忘记联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审通过了，安排部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档调整完就能上线了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本别忘记压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化完成，开始排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd更新了，准备部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本还没做，先联调吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面已经写好，下一步交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面通过了，安排验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例有问题，需要重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档调整完就能重构了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面更新了，准备部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例更新了，准备压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口更新了，准备联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表还没做，先部署吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑这块需要上线一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划还没做，先排期吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档和联调都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能更新了，准备上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口调整完就能验收了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档通过了，安排交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd和联调都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案这块需要压测一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd别忘记重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划调整完就能重构了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑通过了，安排联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单别忘记排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表通过了，安排压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案通过了，安排交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档调整完就能联调了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案完成，开始排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd已经写好，下一步压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd还没做，先排期吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本完成，开始排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审和压测都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化已经写好，下一步上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案已经写好，下一步排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面还没做，先重构吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档完成，开始上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口通过了，安排上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审调整完就能联调了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口有问题，需要上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本别忘记验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单别忘记压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查调整完就能上线了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案有问题，需要交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化完成，开始重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划这块需要排期一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例更新了，准备上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查有问题，需要部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑别忘记重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查更新了，准备排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本通过了，安排联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案和联调都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例还没做，先上线吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面还没做，先联调吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化完成，开始压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例调整完就能重构了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案有问题，需要联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例调整完就能排期了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑这块需要部署一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档更新了，准备排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑有问题，需要重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档还没做，先验收吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划别忘记验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化调整完就能部署了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档别忘记部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口这块需要部署一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单调整完就能交付了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能别忘记压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查和部署都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划已经写好，下一步交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd更新了，准备交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd更新了，准备重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度这块需要上线一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划别忘记排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口和重构都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化已经写好，下一步重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化更新了，准备重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本调整完就能上线了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能还没做，先验收吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单调整完就能验收了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单更新了，准备交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑已经写好，下一步交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化完成，开始联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审更新了，准备交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单和上线都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单调整完就能联调了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑这块需要压测一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审别忘记压测",
+    "input": "技术方案调整完就能部署了",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
@@ -4038,259 +3090,25 @@
     "reason": "keyword-score"
   },
   {
-    "input": "需求文档别忘记交付",
+    "input": "里程碑别忘记压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "项目进度通过了，安排联调",
+    "input": "任务清单完成，开始重构",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "需求评审这块需要交付一下",
+    "input": "需求评审通过了，安排验收",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "项目进度完成，开始验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表更新了，准备排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试用例调整完就能部署了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "数据库表这块需要排期一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面还没做，先联调吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档别忘记排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd别忘记重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "性能优化别忘记交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "任务清单已经写好，下一步验收",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档完成，开始压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑调整完就能上线了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求评审和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能完成，开始压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "项目进度和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档别忘记排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "版本计划更新了，准备上线",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "后端接口更新了，准备压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档更新了，准备重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本更新了，准备排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面通过了，安排联调",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能调整完就能排期了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档和排期都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案已经写好，下一步重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "交付里程碑和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "这个功能还没做，先部署吧",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "测试脚本这块需要验收一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单和交付都要在今天搞定",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查这块需要排期一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "技术方案通过了，安排排期",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "bug 清单这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案通过了，安排部署",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑这块需要重构一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "需求文档调整完就能排期了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "里程碑这块需要验收一下",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "架构方案通过了，安排压测",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "接口文档有问题，需要交付",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "prd调整完就能压测了",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "代码审查通过了，安排重构",
-    "expected": "respond",
-    "category": "keyword",
-    "reason": "keyword-score"
-  },
-  {
-    "input": "前端页面和部署都要在今天搞定",
+    "input": "里程碑和压测都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
@@ -4302,553 +3120,1387 @@
     "reason": "keyword-score"
   },
   {
-    "input": "技术方案别忘记重构",
+    "input": "prd别忘记部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面已经写好，下一步排期",
+    "input": "需求文档有问题，需要验收",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "交付里程碑调整完就能排期了",
+    "input": "交付里程碑更新了，准备联调",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面更新了，准备部署",
+    "input": "bug 清单有问题，需要部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "测试脚本通过了，安排交付",
+    "input": "bug 清单别忘记交付",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "需求文档调整完就能部署了",
+    "input": "接口文档通过了，安排部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "prd已经写好，下一步上线",
+    "input": "需求评审还没做，先排期吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "项目进度还没做，先部署吧",
+    "input": "任务清单有问题，需要验收",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "架构方案调整完就能验收了",
+    "input": "版本计划和验收都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "代码审查调整完就能验收了",
+    "input": "这个功能有问题，需要部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "性能优化更新了，准备联调",
+    "input": "技术方案还没做，先重构吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "这个功能别忘记验收",
+    "input": "任务清单别忘记交付",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "技术方案已经写好，下一步压测",
+    "input": "prd有问题，需要重构",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "这个功能调整完就能排期了",
+    "input": "接口文档完成，开始联调",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "版本计划已经写好，下一步压测",
+    "input": "这个功能通过了，安排上线",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "数据库表这块需要部署一下",
+    "input": "prd和压测都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "交付里程碑更新了，准备部署",
+    "input": "性能优化和上线都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "技术方案和上线都要在今天搞定",
+    "input": "后端接口还没做，先交付吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "接口文档这块需要重构一下",
+    "input": "bug 清单别忘记部署",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "接口文档和排期都要在今天搞定",
+    "input": "这个功能完成，开始上线",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "bug 清单更新了，准备压测",
+    "input": "需求评审和重构都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "架构方案通过了，安排压测",
+    "input": "bug 清单调整完就能重构了",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "测试脚本已经写好，下一步重构",
+    "input": "任务清单和联调都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "代码审查通过了，安排验收",
+    "input": "测试用例这块需要排期一下",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "任务清单别忘记联调",
+    "input": "技术方案完成，开始压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "架构方案已经写好，下一步重构",
+    "input": "架构方案完成，开始排期",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "接口文档和排期都要在今天搞定",
+    "input": "bug 清单还没做，先部署吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面有问题，需要压测",
+    "input": "数据库表和上线都要在今天搞定",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面完成，开始上线",
+    "input": "需求文档别忘记重构",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "需求文档通过了，安排上线",
+    "input": "前端页面别忘记压测",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "版本计划已经写好，下一步重构",
+    "input": "数据库表这块需要交付一下",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "数据库表还没做，先压测吧",
+    "input": "需求文档还没做，先排期吧",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "前端页面还没做，先验收吧",
+    "input": "数据库表调整完就能验收了",
     "expected": "respond",
     "category": "keyword",
     "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "版本计划还没做，先上线吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "接口文档别忘记排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "prd有问题，需要交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求评审完成，开始压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "prd这块需要上线一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "接口文档有问题，需要压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "晚上一起吃饭？～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本这块需要交付一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本还没做，先重构吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "这个功能已经写好，下一步压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本还没做，先压测吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求文档更新了，准备交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "prd和重构都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "bug 清单通过了，安排重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "哈哈哈哈～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "任务清单更新了，准备联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "代码审查已经写好，下一步重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "代码审查已经写好，下一步交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "后端接口还没做，先上线吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "技术方案和联调都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求评审有问题，需要交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本这块需要上线一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "在吗～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本通过了，安排部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试用例更新了，准备压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试用例有问题，需要部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "这个功能别忘记压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试脚本已经写好，下一步排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "数据库表通过了，安排验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "任务清单别忘记排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "嗯嗯，好的～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "接口文档通过了，安排上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试用例调整完就能重构了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求评审别忘记压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "bug 清单别忘记排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "架构方案通过了，安排排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "任务清单通过了，安排上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "架构方案更新了，准备排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "确认收到～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "里程碑完成，开始压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "这个功能调整完就能重构了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "性能优化完成，开始上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "数据库表调整完就能上线了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "任务清单和验收都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "接口文档这块需要排期一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "交付里程碑和重构都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "我通过了考试～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "后端接口有问题，需要联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "架构方案别忘记部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求文档已经写好，下一步重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "数据库表调整完就能压测了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "接口文档更新了，准备交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "版本计划通过了，安排交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "后端接口调整完就能压测了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "联系 admin@example.com 谢谢～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "里程碑调整完就能重构了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "后端接口和上线都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "交付里程碑还没做，先上线吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "需求评审有问题，需要上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "prd和上线都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "项目进度完成，开始部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "交付里程碑完成，开始上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "@所有人 记得提交日报～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "后端接口别忘记交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "docker pull nginx@sha256:abc123",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "这个功能已经写好，下一步排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "docker pull nginx@sha256:abc123，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
+    "input": "测试用例完成，开始联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
   },
   {
-    "input": "docker pull nginx@sha256:abc123～",
+    "input": "数据库表还没做，先联调吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "数据库表调整完就能交付了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口通过了，安排验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档和联调都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口和重构都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本还没做，先交付吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划这块需要部署一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑更新了，准备验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "bug 清单已经写好，下一步排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案已经写好，下一步上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档调整完就能验收了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本和交付都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能还没做，先压测吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档通过了，安排排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档别忘记压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化还没做，先联调吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd完成，开始联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd更新了，准备验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案有问题，需要压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案这块需要交付一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案有问题，需要部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本和压测都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑和排期都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划这块需要压测一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划已经写好，下一步部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "代码审查和联调都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案更新了，准备压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划别忘记联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档调整完就能重构了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化还没做，先重构吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能通过了，安排压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档有问题，需要重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑这块需要交付一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档通过了，安排验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑更新了，准备部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面已经写好，下一步联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能调整完就能联调了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面还没做，先部署吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "数据库表已经写好，下一步交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划和交付都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面通过了，安排部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "代码审查调整完就能交付了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划还没做，先排期吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案有问题，需要验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试用例别忘记交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试用例这块需要联调一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求评审已经写好，下一步交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求评审调整完就能排期了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试用例有问题，需要压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档和重构都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑这块需要联调一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档通过了，安排部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本已经写好，下一步上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑已经写好，下一步排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度和联调都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求评审调整完就能联调了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口有问题，需要交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "任务清单还没做，先部署吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "bug 清单这块需要上线一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划别忘记验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑和排期都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "代码审查更新了，准备联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档已经写好，下一步部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度这块需要联调一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本通过了，安排重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口还没做，先重构吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度调整完就能交付了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口和交付都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能完成，开始联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑已经写好，下一步上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本调整完就能排期了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化有问题，需要验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本完成，开始重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化调整完就能交付了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化通过了，安排重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑更新了，准备上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd通过了，安排压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口调整完就能重构了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能已经写好，下一步上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面别忘记交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口有问题，需要重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案有问题，需要压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "bug 清单调整完就能联调了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "后端接口完成，开始验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划有问题，需要部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面有问题，需要部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能调整完就能压测了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本别忘记联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求评审这块需要排期一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度有问题，需要排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本这块需要重构一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面通过了，安排排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "数据库表调整完就能排期了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案调整完就能联调了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化更新了，准备重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "任务清单还没做，先排期吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本和排期都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能已经写好，下一步联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "版本计划有问题，需要验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "任务清单这块需要上线一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化还没做，先排期吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案还没做，先交付吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd这块需要排期一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化别忘记上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试用例完成，开始排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档别忘记联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd调整完就能部署了",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑已经写好，下一步压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能完成，开始部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试用例还没做，先部署吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档这块需要重构一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd别忘记排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "需求文档别忘记排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案还没做，先压测吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "数据库表通过了，安排重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本更新了，准备验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "任务清单和重构都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本通过了，安排上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "测试脚本别忘记验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度还没做，先上线吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "前端页面通过了，安排重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案更新了，准备重构",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化这块需要部署一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑已经写好，下一步验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案已经写好，下一步交付",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "prd通过了，安排验收",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "项目进度完成，开始压测",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "任务清单完成，开始联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "交付里程碑有问题，需要上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案和部署都要在今天搞定",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档还没做，先部署吧",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "技术方案更新了，准备联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "代码审查已经写好，下一步联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案有问题，需要联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "接口文档别忘记联调",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "里程碑已经写好，下一步排期",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "性能优化这块需要上线一下",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "这个功能更新了，准备上线",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "架构方案更新了，准备部署",
+    "expected": "respond",
+    "category": "keyword",
+    "reason": "keyword-score"
+  },
+  {
+    "input": "ok!",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -4860,499 +4512,19 @@
     "reason": "idle-chat"
   },
   {
-    "input": "docker pull nginx@sha256:abc123……",
+    "input": "嗯嗯，好的～",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "docker pull nginx@sha256:abc123？",
+    "input": "喝杯咖啡？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "docker pull nginx@sha256:abc123～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "你说得对～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我看看方案～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "这个比较好吃～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "辛苦啦～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "谢谢老板～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "周末愉快～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "今天天气不错～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "发个位置给我～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "记得打卡～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的收到～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "晚安～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "早安",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "早安，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "早安～",
+    "input": "加油",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5364,283 +4536,25 @@
     "reason": "idle-chat"
   },
   {
-    "input": "早安……",
+    "input": "周末愉快……",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "早安？",
+    "input": "今天股票又跌了……",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "早安～啦",
+    "input": "哈哈哈哈，大家呢？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "随便聊聊",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "随便聊聊～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "有没有人～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "我先去开会了～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "+1～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "收到～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "嗯嗯～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "行吧",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "行吧，大家呢？",
+    "input": "下班了",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5652,109 +4566,265 @@
     "reason": "idle-chat"
   },
   {
+    "input": "喝杯咖啡……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天股票又跌了",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚安？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个比较好吃……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "加油？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "喝杯咖啡!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "@所有人 记得提交日报？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我通过了考试……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "+1，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "午饭吃什么，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "早安～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "喝杯咖啡～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末去爬山吗～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "在吗",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "联系 admin@example.com 谢谢",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚安!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天股票又跌了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，好的",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我先去开会了!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "docker pull nginx@sha256:abc123～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "午饭吃什么",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末去爬山吗～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你说得对……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我先去开会了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "联系 admin@example.com 谢谢!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "有没有人!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
     "input": "行吧!",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "行吧……",
+    "input": "有没有人",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "行吧？",
+    "input": "周末去爬山吗!",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "行吧～啦",
+    "input": "发个位置给我……",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "稍等",
+    "input": "+1",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "稍等，大家呢？",
+    "input": "随便聊聊～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "稍等～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "稍等!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "稍等……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "稍等？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "稍等～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "ok～啦",
+    "input": "收到……",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5766,55 +4836,7 @@
     "reason": "idle-chat"
   },
   {
-    "input": "好的，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "好的～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "明白了",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "明白了，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "明白了～",
+    "input": "下班了，大家呢？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5832,127 +4854,85 @@
     "reason": "idle-chat"
   },
   {
-    "input": "明白了？",
+    "input": "哈哈哈哈",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "明白了～啦",
+    "input": "稍等？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了",
+    "input": "我看看方案～",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了，大家呢？",
+    "input": "午饭吃什么～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了～",
+    "input": "在吗～",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了!",
+    "input": "今天天气不错～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了……",
+    "input": "周末去爬山吗？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了？",
+    "input": "这个笑话真好笑",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "太棒了～啦",
+    "input": "收到～",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "加油",
+    "input": "我通过了考试",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "加油，大家呢？",
+    "input": "联系 admin@example.com 谢谢～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "加油～",
+    "input": "你看那个视频了吗？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "加油!",
+    "input": "确认收到～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "加油……",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "加油？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "加油～啦",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "下班了",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "下班了，大家呢？",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "下班了～",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "下班了!",
-    "expected": "silent",
-    "category": "idle",
-    "reason": "idle-chat"
-  },
-  {
-    "input": "下班了……",
+    "input": "有没有人～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5964,13 +4944,283 @@
     "reason": "idle-chat"
   },
   {
-    "input": "下班了～啦",
+    "input": "假期去哪玩～啦",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "喝杯咖啡",
+    "input": "午饭吃什么～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "docker pull nginx@sha256:abc123……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "天气转凉了？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末去爬山吗",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "下班了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "天气转凉了……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "在吗～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个比较好吃",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "在吗？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "在吗!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "联系 admin@example.com 谢谢～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "发个位置给我？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "哈哈哈哈～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我先去开会了，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "加油……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个比较好吃～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "行吧",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "收到～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天天气不错？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "午饭吃什么!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "加油!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "@所有人 记得提交日报",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "@所有人 记得提交日报，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "ok？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你看那个视频了吗～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "加油～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "天气转凉了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "在吗，大家呢？",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
@@ -5982,19 +5232,769 @@
     "reason": "idle-chat"
   },
   {
+    "input": "好的～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你看那个视频了吗……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "稍等!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "收到？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "+1～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末愉快～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "@所有人 记得提交日报……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "docker pull nginx@sha256:abc123，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天股票又跌了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚安，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "ok……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末愉快，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "行吧，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "加油，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "路上堵车了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "哈哈哈哈～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天股票又跌了!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "路上堵车了!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "+1？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "路上堵车了，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "有没有人，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "早安～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "天气转凉了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "早安，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "发个位置给我!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "路上堵车了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "联系 admin@example.com 谢谢……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你说得对～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "有没有人？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天股票又跌了，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我通过了考试～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "@所有人 记得提交日报!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "稍等，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "行吧？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你看那个视频了吗!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天天气不错!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，好的～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "路上堵车了……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "+1……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "收到!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我先去开会了？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "午饭吃什么？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，好的，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你说得对",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "有没有人～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你说得对～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "下班了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你说得对!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "行吧～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天天气不错～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "哈哈哈哈!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "发个位置给我",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天天气不错，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "ok～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，好的……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我通过了考试？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "ok",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "明白了",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "明白了～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个比较好吃～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "今天天气不错",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "发个位置给我，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "联系 admin@example.com 谢谢，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
     "input": "喝杯咖啡～",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "喝杯咖啡!",
+    "input": "+1!",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
   },
   {
-    "input": "喝杯咖啡……",
+    "input": "周末愉快？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "哈哈哈哈？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "ok，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我通过了考试～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，好的？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "docker pull nginx@sha256:abc123",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "确认收到，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "发个位置给我～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我通过了考试!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "明白了，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "太棒了，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你看那个视频了吗～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "随便聊聊，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "嗯嗯，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "早安……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "谢谢老板!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "行吧……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "收到，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "周末去爬山吗，大家呢？",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "假期去哪玩",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦!",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "这个笑话真好笑～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "好的收到……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我看看方案",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "明白了～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "辛苦啦～",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "记得打卡……",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "你看那个视频了吗",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "晚上一起吃饭？～啦",
+    "expected": "silent",
+    "category": "idle",
+    "reason": "idle-chat"
+  },
+  {
+    "input": "我先去开会了……",
     "expected": "silent",
     "category": "idle",
     "reason": "idle-chat"
