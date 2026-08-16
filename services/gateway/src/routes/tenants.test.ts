@@ -38,9 +38,7 @@ describe('tenant isolation', () => {
       payload: { name: `租户B-${Date.now()}` },
     })
     const tenantB = t2.json().tenant.id as string
-    // 直接改 DB：bob 入租户 B（用户租户分配端点记后续，本计划用 DB UPDATE 模拟）
-    await pool.query(`UPDATE users SET tenant_id = $1 WHERE user_id = 'u-bob'`, [tenantB])
-    // alice（default 租户）建会话（bob 已在租户 B，但 isMember 校验用 session_members——创建成功）
+    // alice（default 租户）先建会话：bob 此时仍在 default 租户，创建会话跨租户成员校验通过
     const session = await built.app.inject({
       method: 'POST',
       url: '/api/v1/sessions',
@@ -48,6 +46,8 @@ describe('tenant isolation', () => {
       payload: { kind: 'project', title: 'A租户会话', memberIds: ['u-bob'] },
     })
     const sessionId = session.json().session.id as string
+    // 直接改 DB：bob 入租户 B（用户租户分配端点记后续，本计划用 DB UPDATE 模拟）
+    await pool.query(`UPDATE users SET tenant_id = $1 WHERE user_id = 'u-bob'`, [tenantB])
     // bob（租户 B）访问 A 租户会话 → 403（跨租户，canAccessSession 租户匹配前置 false）
     const bob = await loginAs('bob')
     const denied = await built.app.inject({

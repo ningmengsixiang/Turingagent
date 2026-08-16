@@ -41,6 +41,18 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
         const dept = await pool.query<{ id: string }>('SELECT id FROM departments WHERE id = $1', [departmentId])
         if (dept.rows.length === 0) return reply.code(400).send({ error: 'department not found' })
       }
+      // 跨租户成员校验（补计划 21 缺口）：已有租户的成员若与创建者租户不同 → 拒绝
+      if (memberIds.length > 0 && request.user!.tenantId) {
+        const members = await pool.query<{ user_id: string; tenant_id: string | null }>(
+          `SELECT user_id, tenant_id FROM users WHERE user_id = ANY($1::text[])`,
+          [memberIds],
+        )
+        for (const m of members.rows) {
+          if (m.tenant_id && m.tenant_id !== request.user!.tenantId) {
+            return reply.code(400).send({ error: `member ${m.user_id} is in a different tenant` })
+          }
+        }
+      }
       const userId = request.user!.id
       const session = await createSession(pool, {
         kind,

@@ -3,7 +3,7 @@ import { requireAuth, requireRoleFor } from '../middleware.js'
 import { AdminLockoutError, listMembers, setRole, type UserRole } from '../repos/users.js'
 import { listAudit, recordAudit } from '../repos/audit.js'
 import { getQuota, setQuotaBudget } from '../repos/quota.js'
-import { createTenant, listTenants, suspendTenant } from '../repos/tenants.js'
+import { createTenant, getTenant, listTenants, suspendTenant, transferUserTenant } from '../repos/tenants.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -187,6 +187,31 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
         detail: { reason: request.body?.reason?.trim() || null },
       }).catch((err) => console.error('[audit] tenant suspend failed:', err))
       return { tenant }
+    },
+  )
+
+  // 用户租户转移（管理员；FR-ORG-01）：null = 移出租户，登录时回 default；审计留痕
+  app.post<{ Params: { id: string }; Body: { tenantId?: string | null } }>(
+    '/api/v1/org/users/:id/tenant',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const userId = request.params.id
+      const tenantId = request.body?.tenantId ?? null
+      if (tenantId !== null) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)) {
+          return reply.code(400).send({ error: 'tenantId must be a uuid or null' })
+        }
+        const tenant = await getTenant(pool, tenantId)
+        if (!tenant) return reply.code(400).send({ error: 'tenant not found' })
+      }
+      await transferUserTenant(pool, userId, tenantId)
+      void recordAudit(pool, {
+        actorId: request.user!.id,
+        action: 'org.user_tenant',
+        target: userId,
+        detail: { tenantId },
+      }).catch((err) => console.error('[audit] tenant transfer failed:', err))
+      return { transferred: true, userId, tenantId }
     },
   )
 }
