@@ -17,6 +17,8 @@ import { registerTaskRoutes } from './routes/tasks.js'
 import { registerOrgRoutes } from './routes/org.js'
 import { registerSkillRoutes } from './routes/skills.js'
 import { registerKbRoutes } from './routes/kb.js'
+import { registerApiKeyRoutes } from './routes/api-keys.js'
+import { registerExternalRoutes } from './routes/external.js'
 import { registerFileRoutes } from './routes/files.js'
 import { registerMemoryRoutes } from './routes/memories.js'
 import { registerWs } from './ws.js'
@@ -78,6 +80,8 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   registerOrgRoutes(app, config, pool)
   registerSkillRoutes(app, config, pool)
   registerKbRoutes(app, config, pool)
+  registerApiKeyRoutes(app, config, pool)
+  registerExternalRoutes(app, config, pool)
   registerFileRoutes(app, config, pool, storage, (message) => events.emit('message.created', message))
   registerWs(app, config, pool, registry, events)
 
