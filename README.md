@@ -255,6 +255,16 @@ pnpm --filter @ta/gateway gen:silence-cases
 
 输入区 🎤 按住说话：实时转写（Web Speech API，Chrome/Edge）→ 松开以文字发送；转写失败或浏览器不支持 → 降级为语音文件消息（可下载播放，决策 D6）。需要 HTTPS 或 localhost（浏览器麦克风安全要求）。
 
+### UI Kit 与设计系统
+
+Web 端内置一套轻量 UI Kit 与设计规范，Apple 风格（品牌蓝 `#0071e3` + 中性灰阶），全部基于 CSS Design Tokens（`--ta-*`，45 个：色板 / 字体阶梯 / 4px 间距刻度 / 圆角 6-10-14 / 三级阴影 / 150-250ms 动效），无需 Tailwind。
+
+- 规范文档：[`docs/design/DESIGN.md`](docs/design/DESIGN.md)（色板、字体、间距、圆角、阴影、动效、组件规格、布局）
+- Tokens 与基础样式：`apps/web/src/design/`（tokens.css / base.css）
+- 组件库：`apps/web/src/ui/`（Button / Input / Badge / Modal / Toast / Spinner / Avatar / Chip / EmptyState / ProgressBar / Skeleton，含测试）
+- 全界面已按 tokens 落地：登录页、三栏聊天（会话侧栏 / 消息气泡 / 看板）、技能包配额、知识库、AI 身份徽章
+- 视觉 QA 自动校验（计算样式断言）：`apps/web/src/design/tokens.test.ts`、`apps/web/src/ui/ui.test.tsx`
+
 ### Web 前端
 
 ```bash
