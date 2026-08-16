@@ -126,6 +126,8 @@ export function Chat({ onLogout }: ChatProps) {
     speechRef.current = s
     setSpeech(s)
     return () => {
+      // S5：卸载时释放麦克风
+      speechRef.current?.stop().catch(() => {})
       speechRef.current = null
     }
   }, [])
@@ -298,9 +300,16 @@ export function Chat({ onLogout }: ChatProps) {
     recordingRef.current = false
     setRecording(false)
     const s = speechRef.current
-    if (!s || !activeId) return
+    if (!s) return
+    // 无条件 stop() 释放麦克风（M3：无会话时松手也必须停录音）
+    let result
     try {
-      const result = await s.stop()
+      result = await s.stop()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '语音发送失败')
+      return
+    }
+    try {
       if (result.kind === 'transcript' && result.text) {
         // 转写成功 → 文字消息（直接走发送链路，避免 setInput 异步读旧值）
         setBusy(true)
@@ -319,12 +328,15 @@ export function Chat({ onLogout }: ChatProps) {
           setBusy(false)
         }
       } else if (result.kind === 'audio' && result.blob.size > 0) {
-        // 降级：语音文件上传（决策 D6）
+        // 降级：语音文件上传（决策 D6）；无会话时也建会话（与 send() 一致）
         const file = new File([result.blob], `语音-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`, {
           type: result.mime,
         })
-        await uploadFile(activeId, file)
-        await loadMessages(activeId)
+        const sessionId = await ensureSession()
+        if (!sessionId) return
+        await uploadFile(sessionId, file)
+        await loadMessages(sessionId)
+        void refreshSessions()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '语音发送失败')
@@ -462,16 +474,25 @@ export function Chat({ onLogout }: ChatProps) {
           <button className="ghost" onClick={() => fileInputRef.current?.click()}>📎</button>
           {speech?.canRecord ? (
             <button
-              className={`ghost ${recording ? 'recording' : ''}`}
+              className={`ghost voice-btn ${recording ? 'recording' : ''}`}
               title={recording ? '松开发送' : '按住说话'}
+              style={recording ? { touchAction: 'none' } : undefined}
               onPointerDown={(e) => {
                 e.preventDefault()
+                // S1：捕获指针，滑出边界不触发 pointerleave，松手仍收到 pointerup
+                e.currentTarget.setPointerCapture(e.pointerId)
                 recordingRef.current = true
                 setRecording(true)
                 speechRef.current?.start()
+                // M2：60s 上限截断即发送（stop 幂等，无双发）
+                window.setTimeout(() => {
+                  if (recordingRef.current) void handleSpeechStop()
+                }, 60_000)
               }}
-              onPointerUp={() => void handleSpeechStop()}
-              onPointerLeave={() => {
+              onPointerUp={() => {
+                if (recordingRef.current) void handleSpeechStop()
+              }}
+              onPointerCancel={() => {
                 if (recordingRef.current) void handleSpeechStop()
               }}
             >
