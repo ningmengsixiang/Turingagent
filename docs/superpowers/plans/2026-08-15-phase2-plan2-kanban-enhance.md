@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。React DnD 原生事件 + 既有 updateTaskStatus/listTasks/sendMessage。
 
+**质量审查决策（T4 后追加）：** 拖拽用例断言真实化——原断言 `findByText(/🔄 进行中/)` 命中恒渲染的列头（空转）；修复为 mockFetch 增 tasks「PATCH 后状态」（patchedTasks 仿 createdMessages 模式）+ 断言 PATCH 调用 + `within(列).findByText(卡片)`（负向验证：禁用合并后用例失败，证明非空转）。日报用例链路真实（POST→重拉→渲染）。**记录 nit**：done 任务无 dueAt 被 `inRange` 排除（产品语义待确认，后续加强日报断言时用带 dueAt 的 mock）；日报断言只验前缀未验正文；messages 死占位 key 可清理。
+
 **质量审查决策（T1-T3 后追加）：** ① 日报/周报范围改为「非 done 必入报 + done 按 dueAt 窗口过滤」——原按 dueAt 过滤会漏掉过期未完成任务（最该曝光的积压项）且无 dueAt 的已完成任务永久入报；② sendTaskReport 加 `if (busy) return` 守卫 + 按钮 disabled（防双击并发重复消息）；③ 报告行显示名用 AGENT_NAMES（与看板卡片一致）；④ 报告头日期本地拼装（原 UTC 在 UTC+8 早晨差一天）。**记录后续**：按钮误拖防护（onDragStart 判 closest('button')）、同列 drop 跳过 PATCH（幂等无害但冗余请求）、时区边界（UTC 时间戳 vs 本地 Date.now）、文件拖到看板列被吞（drop 判 dataTransfer.types 含 Files）、长报告截断（>10000 字符 400，当前负载低风险）、单布尔 busy 重构（计数/分域，与语音同问题）、拖拽中卡片卸载的 dragend 兜底。
 
 **决策记录：** 拖拽用 HTML5 DnD（零依赖、与既有按钮并存）而非 dnd-kit（拖拽库记 Phase 2 后续，若需要动画/触摸增强再引入）；日报周报为「前端聚合 → 文本消息」轻量实现（真实报表/导出 PDF 记后续；智能体自动生成日报记后续任务）；统计瓦片增强不改后端（tasks 无 dueAt 聚合由前端算）；拖拽仅「状态变更」不重排（排序/优先级记后续）。权限：看板操作沿用既有（会话成员即可，服务端校验）。
@@ -237,7 +239,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 - Modify: `apps/web/src/app.css`
 - Modify: `README.md`（根）
 
-- [ ] **Step 1: Chat.test.tsx 补用例**
+- [x] **Step 1: Chat.test.tsx 补用例**
 
 读 `apps/web/src/pages/Chat.test.tsx`（mockFetch 风格、FakeWebSocket、既有用例），追加：
 
@@ -289,7 +291,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 
 > 注：`mockFetch` 对 `PATCH /api/v1/tasks/t1/status` 的 key 形式——核对现有 mockFetch 是否区分 method（读现有实现；若 URL-only 查表，key 为 `/api/v1/tasks/t1/status`；若按 method+url 区分，用现有风格）。`sendMessage` 的 POST key 同理。`fireEvent` 已 import。dragOver 的 `setDragOverStatus` 触发后 drop 才能读到 dragTaskId——fireEvent 顺序 dragStart→dragOver→drop 即可。
 
-- [ ] **Step 2: app.css 增拖拽样式**
+- [x] **Step 2: app.css 增拖拽样式**
 
 在 `.kanban-column` 相关样式后追加：
 
@@ -299,7 +301,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 .kanban-report-actions { display: flex; gap: 6px; padding: 0 0 8px; }
 ```
 
-- [ ] **Step 3: README 增「看板增强」节**
+- [x] **Step 3: README 增「看板增强」节**
 
 在 README「### 多级审批（FR-APP-02）」节之后追加：
 
@@ -309,7 +311,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 看板卡片支持拖拽换状态（HTML5 DnD，保留按钮换状态兜底）；统计瓦片含完成率、阻塞、已到期；📅 日报 / 📆 周报按钮把当前会话任务按状态聚合为文本消息发送到会话（人类+智能体混合任务统一展示）。
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -320,7 +322,7 @@ pnpm --filter @ta/web build
 
 Expected: typecheck exit 0；web 测试全 PASS（17 + 2 新增 = 19）；build 产出 dist/。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add apps/web/src/pages/Chat.test.tsx apps/web/src/app.css README.md
