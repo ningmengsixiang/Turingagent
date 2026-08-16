@@ -72,4 +72,49 @@ describe('org routes', () => {
     const actions = audit.json().events.map((e: { action: string }) => e.action)
     expect(actions).toContain('role.changed')
   })
+
+  it('cannot demote the last admin (409)', async () => {
+    const alice = await loginAs('alice') // 唯一 admin
+    const res = await built.app.inject({
+      method: 'PATCH',
+      url: '/api/v1/org/members/u-alice/role',
+      headers: { authorization: `Bearer ${alice.token}` },
+      payload: { role: 'member' },
+    })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it('returns 404 for an unknown member role change', async () => {
+    const alice = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'PATCH',
+      url: '/api/v1/org/members/u-ghost/role',
+      headers: { authorization: `Bearer ${alice.token}` },
+      payload: { role: 'admin' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('rejects an invalid role with 400', async () => {
+    const alice = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'PATCH',
+      url: '/api/v1/org/members/u-alice/role',
+      headers: { authorization: `Bearer ${alice.token}` },
+      payload: { role: 'superuser' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('member cannot view audit (403)', async () => {
+    const alice = await loginAs('alice')
+    await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } })
+    const bobRes = await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } })
+    const res = await built.app.inject({
+      method: 'GET',
+      url: '/api/v1/org/audit',
+      headers: { authorization: `Bearer ${bobRes.json().token}` },
+    })
+    expect(res.statusCode).toBe(403)
+  })
 })
