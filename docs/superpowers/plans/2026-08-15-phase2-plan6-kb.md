@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG ILIKE 检索 + Fastify + React。
 
+**质量审查决策（T1-T3 后追加）：** 通过（无 must-fix）。**记录 nit**：ILIKE `%`/`_` 用户输入按通配符解释（功能放宽无注入，如需精确匹配转义）；q 无长度上限；会话切换 kbQuery 文本框残留（UX 小瑕）；前端测试未触发搜索分支（mock 有过滤逻辑，用例名略宽）；短文档尾部多余"…"；非成员 403 由真实验收覆盖（测试未含）。
+
 **决策记录：** 全文检索用 ILIKE '%q%'（MVP，pg_trgm 索引/PG 全文检索记 Phase 2 后续）；知识库按 session 隔离（企业级全局库记 Phase 3 多租户）；智能体上下文注入（静默策略 respond 时自动附命中文档）记 Phase 2 后续（本计划仅提供检索 API 供前端/后续注入）；文档上限 content 10,000 字符（与消息一致）；创建权限 = 会话成员（与文件一致）。
 
 ---
@@ -36,7 +38,7 @@
 - Modify: `packages/contracts/src/index.ts`
 - Create: `services/gateway/migrations/011_kb.sql`
 
-- [ ] **Step 1: 契约 KbDocument**
+- [x] **Step 1: 契约 KbDocument**
 
 读 `packages/contracts/src/index.ts`，文件末尾（QuotaStatus 之后）追加：
 
@@ -51,7 +53,7 @@ export interface KbDocument {
 }
 ```
 
-- [ ] **Step 2: 迁移 011**
+- [x] **Step 2: 迁移 011**
 
 创建 `services/gateway/migrations/011_kb.sql`：
 
@@ -69,7 +71,7 @@ CREATE TABLE IF NOT EXISTS kb_documents (
 CREATE INDEX IF NOT EXISTS idx_kb_session ON kb_documents (session_id);
 ```
 
-- [ ] **Step 3: 构建 + 迁移**
+- [x] **Step 3: 构建 + 迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -80,7 +82,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 全 exit 0；011 应用（幂等）。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/011_kb.sql
@@ -97,7 +99,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(kb): 契
 - Create: `services/gateway/src/routes/kb.test.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 写 repos/kb.ts**
+- [x] **Step 1: 写 repos/kb.ts**
 
 创建 `services/gateway/src/repos/kb.ts`：
 
@@ -158,7 +160,7 @@ export async function searchKb(pool: pg.Pool, sessionId: string, q: string): Pro
 }
 ```
 
-- [ ] **Step 2: 写 routes/kb.ts**
+- [x] **Step 2: 写 routes/kb.ts**
 
 创建 `services/gateway/src/routes/kb.ts`：
 
@@ -231,7 +233,7 @@ export function registerKbRoutes(app: FastifyInstance, config: Config, pool: pg.
 }
 ```
 
-- [ ] **Step 3: 写 kb.test.ts**
+- [x] **Step 3: 写 kb.test.ts**
 
 创建 `services/gateway/src/routes/kb.test.ts`（复用既有路由测试风格，先读 skills.test.ts 或 files.test.ts 的 setup）：
 
@@ -339,7 +341,7 @@ describe('kb routes', () => {
 })
 ```
 
-- [ ] **Step 4: server.ts 注册**
+- [x] **Step 4: server.ts 注册**
 
 读 `services/gateway/src/server.ts`，在 `registerSkillRoutes(app, config, pool)` 之后增：
 
@@ -349,7 +351,7 @@ describe('kb routes', () => {
 
 （import 增 `registerKbRoutes`。）
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -360,7 +362,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/routes/kb.test.ts
 
 Expected: typecheck exit 0；kb.test.ts 3 用例全 PASS。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add services/gateway/src/repos/kb.ts services/gateway/src/routes/kb.ts services/gateway/src/routes/kb.test.ts services/gateway/src/server.ts
@@ -377,7 +379,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(kb): 知
 - Modify: `apps/web/src/pages/Chat.test.tsx`
 - Modify: `apps/web/src/app.css`
 
-- [ ] **Step 1: client.ts 增 API**
+- [x] **Step 1: client.ts 增 API**
 
 读 `apps/web/src/api/client.ts`，末尾追加：
 
@@ -394,7 +396,7 @@ export const searchKbDocuments = (sessionId: string, q: string): Promise<{ docum
 
 （import 增 `KbDocument`。）
 
-- [ ] **Step 2: Chat.tsx 知识库面板**
+- [x] **Step 2: Chat.tsx 知识库面板**
 
 读 `apps/web/src/pages/Chat.tsx` 右侧面板（技能包/配额区之后），增知识库区：
 
@@ -467,7 +469,7 @@ export const searchKbDocuments = (sessionId: string, q: string): Promise<{ docum
 
 5. app.css 增样式（kb-panel/kb-search/kb-create/kb-doc/kb-doc-title/kb-doc-snippet）——在技能包样式后追加。
 
-- [ ] **Step 3: Chat.test.tsx 补用例**
+- [x] **Step 3: Chat.test.tsx 补用例**
 
 在现有用例后追加：
 
@@ -495,7 +497,7 @@ export const searchKbDocuments = (sessionId: string, q: string): Promise<{ docum
 
 （mockFetch 的 POST /kb 分支——先读现有 mockFetch 实现确认是否需加分支推入列表；若不加分支，创建后 loadKb 返回空导致断言失败——需在 mockFetch 加 kb POST 分支（仿 files/messages 模式）或简化断言。）
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -508,7 +510,7 @@ pnpm --filter @ta/web build
 
 Expected: 全 exit 0；Chat.test.tsx 21 用例全 PASS（20+1）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add apps/web/src/api/client.ts apps/web/src/pages/Chat.tsx apps/web/src/pages/Chat.test.tsx apps/web/src/app.css
