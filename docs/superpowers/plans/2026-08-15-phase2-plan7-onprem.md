@@ -8,6 +8,8 @@
 
 **Tech Stack:** Docker Compose + nginx:alpine + node:22-alpine + bash install.sh。零代码改动（复用现有 gateway/web 构建产物）。
 
+**质量审查决策（T4 前追加）：** ① web 端口绑定 127.0.0.1（观察 A：原 0.0.0.0 与 README「仅本机访问」声明冲突，反代全栈暴露到局域网）；② 整拷 workspace 修复（e078d65）；③ .env.example 用 git add -f 纳入。**记录观察 B-E（后续）**：install.sh 的 .env 解析补 `tr -d '\r'`（CRLF 下示例 JWT 守卫失效）；`.dockerignore` 缺失（build context 含 .git/node_modules）；compose 的 MODEL_PROVIDER 为 no-op（config.ts 不读，模型走 MODEL_BASE_URL）；minio 无 healthcheck（YAML 与计划注不一致，service_started 兜底）；镜像构建未实测（网络受限，install.sh 实跑记后续）。
+
 **质量审查决策（T1-T3 后追加）：** ① Dockerfile.gateway 运行阶段补 node_modules——原计划只拷 lib/migrations/skills，`node lib/index.js` 缺 fastify/pg 运行时依赖；改为整拷 workspace（package.json/pnpm-workspace/pnpm-lock/node_modules/packages/gateway），可靠性优先（镜像较大可接受，精简镜像记后续）；② compose `command: sh -c "node lib/migrate.js && node lib/index.js"` 经本地验证成立（lib/migrate.js 无 tsx 依赖、DATABASE_URL 读 env 带默认）；③ `.env.example` 被根 .gitignore 的 `.env*` 忽略——需 `git add -f` 纳入。
 
 **决策记录：** 生产镜像用多阶段构建（web: node 构建 dist → nginx 托管；gateway: node 构建 lib → 精简运行镜像）——需在 `deploy/prod/` 放 `Dockerfile.web`/`Dockerfile.gateway`；安装器先做「Compose 起步」（TechDesign onprem/ 明确 Compose 起步 → K8s 后续）；环境变量（JWT_SECRET/MODEL_API_KEY/MINIO_*/端口）从 .env 注入，JWT_SECRET 必须强密钥（gateway config 已校验 ≥32 字符）；healthcheck 对齐 CI 经验（minio 无 curl，用 bash /dev/tcp；postgres pg_isready）；数据卷命名与 dev 隔离（ta-prod-*）；安装器不包含模型 key 默认值（必填，防误配）；Tauri 桌面壳（M2.5 另一半）与 K8s 安装器记 Phase 2 后续。
@@ -385,7 +387,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(deploy):
 
 ## Task 4: README + 全仓验收 + 推送
 
-- [ ] **Step 1: README 追加「私有化部署」节**
+- [x] **Step 1: README 追加「私有化部署」节**
 
 在 README「### 企业知识库（FR-MEM-03）」节之后追加：
 
@@ -395,7 +397,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(deploy):
 一键安装器：`cd deploy/prod && cp .env.example .env`（编辑必填项：JWT_SECRET/MODEL_API_KEY/密码）→ `./install.sh`（构建镜像 → compose 启动 → 健康检查 → 输出访问地址）。生产 compose 含 db/minio/gateway/web 四服务（web 由 nginx 托管并反代 /api /ws），端口默认绑定 127.0.0.1（仅本机访问）。数据卷 ta-prod-* 持久化；备份：`docker compose -f docker-compose.prod.yml exec db pg_dump -U ta ta_prod > backup.sql`。Tauri 桌面壳与 K8s 安装器记后续。
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -410,7 +412,7 @@ docker compose -f deploy/prod/docker-compose.prod.yml config >/dev/null
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 177 + web 34 ≈ 213）；frozen-lockfile 通过；eval:silence 门禁通过；install.sh 语法 OK；compose config 通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan7-onprem.md

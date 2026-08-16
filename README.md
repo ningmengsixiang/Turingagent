@@ -171,6 +171,10 @@ curl -s "localhost:3001/api/v1/sessions/<sessionId>/kb?q=JWT" -H "authorization:
 
 Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行中/已阻塞/已完成）四列分组，点击卡片上的状态按钮流转，与聊天流中的任务卡实时同步；顶部统计瓦片展示总数/进行中/已完成/智能体任务占比。
 
+### 私有化部署（M2.5）
+
+一键安装器：`cd deploy/prod && cp .env.example .env`（编辑必填项：JWT_SECRET/MODEL_API_KEY/密码）→ `./install.sh`（构建镜像 → compose 启动 → 健康检查 → 输出访问地址）。生产 compose 含 db/minio/gateway/web 四服务（web 由 nginx 托管并反代 /api /ws），端口默认绑定 127.0.0.1（仅本机访问）。数据卷 ta-prod-* 持久化；备份：`docker compose -f docker-compose.prod.yml exec db pg_dump -U ta ta_prod > backup.sql`。Tauri 桌面壳与 K8s 安装器记后续。
+
 ### 文件上传
 
 ```bash
