@@ -41,7 +41,14 @@ export class AgentBridge {
     // 无 @ 提及：静默策略（FR-CHAT-05）——respond 路由 Ta-PM（仲裁者），silent 零成本跳过
     const decision = classifySilence(message.content)
     if (decision.decision === 'silent') return { triggered: false, skippedReason: 'silent' }
-    const pm = AGENTS[0]!
+    if (message.content.length > this.options.config.agentMaxPromptChars) {
+      return { triggered: false, skippedReason: 'too-long' }
+    }
+    const pm = AGENTS.find((a) => a.id === 'agent-ta-pm')
+    if (!pm) {
+      console.error('[agent] Ta-PM not found in registry; silent policy disabled')
+      return { triggered: false, skippedReason: 'not-a-mention' }
+    }
     return this.runAgent(message, pm, message.content)
   }
 
