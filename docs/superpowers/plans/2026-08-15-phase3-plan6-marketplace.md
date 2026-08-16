@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。Node fs（目录列举/拷贝）+ Fastify。
 
+**质量审查决策（T1-T2 后追加）：** 通过（簿记收尾）。**记录**：audit marketplace.installed 未在测试中断言（计划原文无 audit 断言，可后续补）；安装即本地技能（热加载生效，语义合理）。
+
 **决策记录：** 市场 MVP 用「目录即市场」模型（marketplace/ 放 manifest 即上架——无独立上架端点，文件放置即发布；上架 API/审计记后续）；安装 = 文件拷贝到本地 skills（热加载生效，与 skills 系统同模式）；安装权限 adminOnly（PR-3：安装=执行变更）；路径安全：id 白名单正则防穿越，目标固定 skills/<id>.json；重名（本地已有同 id）→ 409「已存在，如需覆盖传 force」（force 参数 adminOnly 覆盖）；分成/沙箱白名单/签名校验记 Phase 3 后续（安全工程）；市场初始 1 个示例第三方技能包（qa-review：测试与验收审查）。
 
 ---
@@ -35,7 +37,7 @@
 - Create: `services/gateway/src/routes/marketplace.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 契约**
+- [x] **Step 1: 契约**
 
 读 `packages/contracts/src/index.ts`，文件末尾（ProjectTemplate 之后）追加：
 
@@ -51,7 +53,7 @@ export interface MarketplaceSkill {
 }
 ```
 
-- [ ] **Step 2: 示例第三方技能包**
+- [x] **Step 2: 示例第三方技能包**
 
 创建 `services/gateway/marketplace/qa-review.json`：
 
@@ -64,7 +66,7 @@ export interface MarketplaceSkill {
 }
 ```
 
-- [ ] **Step 3: repos/marketplace.ts**
+- [x] **Step 3: repos/marketplace.ts**
 
 创建 `services/gateway/src/repos/marketplace.ts`：
 
@@ -131,7 +133,7 @@ export function installSkill(id: string, force: boolean): { installed: boolean; 
 }
 ```
 
-- [ ] **Step 4: routes/marketplace.ts**
+- [x] **Step 4: routes/marketplace.ts**
 
 创建 `services/gateway/src/routes/marketplace.ts`：
 
@@ -183,7 +185,7 @@ export function registerMarketplaceRoutes(app: FastifyInstance, config: Config, 
 }
 ```
 
-- [ ] **Step 5: server.ts 注册**
+- [x] **Step 5: server.ts 注册**
 
 读 `services/gateway/src/server.ts`，在 `registerTemplateRoutes(app, config, pool)` 之后增：
 
@@ -193,7 +195,7 @@ export function registerMarketplaceRoutes(app: FastifyInstance, config: Config, 
 
 （import 增 `registerMarketplaceRoutes`。）
 
-- [ ] **Step 6: 验证**
+- [x] **Step 6: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -203,7 +205,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add packages/contracts services/gateway/marketplace services/gateway/src/repos/marketplace.ts services/gateway/src/routes/marketplace.ts services/gateway/src/server.ts
@@ -218,7 +220,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(marketpl
 - Create: `services/gateway/src/routes/marketplace.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: marketplace.test.ts**
+- [x] **Step 1: marketplace.test.ts**
 
 创建 `services/gateway/src/routes/marketplace.test.ts`（复用既有路由测试风格）：
 
@@ -315,7 +317,7 @@ describe('marketplace routes', () => {
 
 > 注：测试直接读写 `skills/` 目录（qa-review.json 安装/清理）——与网关测试并发跑无冲突（vitest fileParallelism false 已配）；清理在 afterEach 保证 skills 目录恢复原状。安装的 qa-review.json 在 afterEach 删除，不污染 skills 系统（GET /api/v1/skills 的既有测试不受影响——但若 marketplace.test.ts 与 skills.test.ts 并行跑会互见——`fileParallelism: false` 已配置避免）。
 
-- [ ] **Step 2: README 追加「技能包市场」节**
+- [x] **Step 2: README 追加「技能包市场」节**
 
 在 README「### 行业项目模板（M3.1 / FR-ORG-05）」节之后追加：
 
@@ -325,7 +327,7 @@ describe('marketplace routes', () => {
 市场 = `services/gateway/marketplace/` 目录（第三方技能包 manifest，热加载）：`GET /api/v1/marketplace/skills` 浏览（含已安装标记）；管理员 `POST /api/v1/marketplace/skills/<id>/install` 一键安装到本地 `skills/`（重名需 `{force:true}` 覆盖；id 白名单防路径穿越；audit 留痕）。分成/沙箱白名单记后续。
 ```
 
-- [ ] **Step 3: 全仓验收**
+- [x] **Step 3: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -338,7 +340,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 198+3≈201 + web 34 ≈ 237）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档/测试安装的临时文件——afterEach 已清理）。
 
-- [ ] **Step 4: 真实验收**
+- [x] **Step 4: 真实验收**
 
 ```bash
 cd /tmp
@@ -350,7 +352,7 @@ cd /tmp
 # 6) 清理：rm skills/qa-review.json（或保留——真实安装可保留，验证热加载）
 ```
 
-- [ ] **Step 5: 提交 + 推送**
+- [x] **Step 5: 提交 + 推送**
 
 ```bash
 git add README.md services/gateway/src/routes/marketplace.test.ts docs/superpowers/plans/2026-08-15-phase3-plan6-marketplace.md
