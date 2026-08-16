@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG 迁移 + repos 扫描函数 + Fastify 端点 + audit。
 
+**质量审查决策（T1-T3 后追加）：** ① escalate 补事务行锁（FOR UPDATE + 锁内重验 status/节点 pending，与 decide/transfer 等跨操作锁协议对齐）——原为唯一无锁的审批写操作，与 decide 并发可污染终态（votes 清空 + 终态 escalated_count+1）；② 测试用例 3「推进重置激活时间」语义修正（原 timeout=0+now+1000 恒假阳性；改为回拨 2h + timeout 1h + 推进后扫描，具区分度）；③ 测试需自插 admin（truncateAll 清 users，无 admin 时 escalate 空转）。**记录后续**：escalated_count 无硬封顶（第 3 次超时仍轮换，FR 若要求硬封顶需补判断）；升级后卡片不展示新审批人（审计留痕，卡片仅待审批文案）；escalate 端点实为全局扫描（id 仅校验，调度入口语义）；自动定时器 cron（记 Phase 2 scheduler）；L1 通知（记后续）。
+
 **决策记录：** 自动超时用「手动端点 + 外部调度调用」而非内置定时器（单机 MVP 无 scheduler 基建；定时器记 Phase 2 后续——CI/部署联动落地时一并接入 cron）；升级链 = 当前节点审批人 → admin 角色用户（直属上级/项目管理员模型记 Phase 2 后续，与组织架构联动）；超时阈值默认 24h（可配置表，调额端点同款模式）；升级后 votes 清空（原审批人失效，PRD「升级后原节点任务失效」）；升级仅限 pending 状态（终态不升级）；escalated_count 封顶 2（企业管理员封顶，再超时继续提示管理员）。自动升级的「L1 通知」（消息推送）记 Phase 2 后续（当前升级落审计 + 可查询）。
 
 ---
@@ -31,7 +33,7 @@
 - Modify: `packages/contracts/src/index.ts`
 - Create: `services/gateway/migrations/010_escalation.sql`
 
-- [ ] **Step 1: 契约 Approval 增 escalatedCount**
+- [x] **Step 1: 契约 Approval 增 escalatedCount**
 
 读 `packages/contracts/src/index.ts`，`Approval` 接口增（`version` 之后）：
 
@@ -40,7 +42,7 @@
   escalatedCount?: number
 ```
 
-- [ ] **Step 2: 写迁移 010**
+- [x] **Step 2: 写迁移 010**
 
 创建 `services/gateway/migrations/010_escalation.sql`，内容逐字如下：
 
@@ -62,7 +64,7 @@ INSERT INTO approval_timeout (id, timeout_hours) VALUES (1, 24)
   ON CONFLICT (id) DO NOTHING;
 ```
 
-- [ ] **Step 3: 迁移**
+- [x] **Step 3: 迁移**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -71,7 +73,7 @@ pnpm --filter @ta/gateway migrate
 
 Expected: 应用 010（幂等）；approvals 有 last_node_activated_at/escalated_count；approval_timeout 表存在默认 24。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add packages/contracts services/gateway/migrations/010_escalation.sql
@@ -86,7 +88,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 - Modify: `services/gateway/src/repos/approvals.ts`
 - Modify: `services/gateway/src/repos/approvals.test.ts`
 
-- [ ] **Step 1: approvals.ts 增超时升级**
+- [x] **Step 1: approvals.ts 增超时升级**
 
 读 `services/gateway/src/repos/approvals.ts`（先读全文，尤其 createApproval/decideApproval/resubmitApproval 的事务），做四处修改：
 
@@ -149,7 +151,7 @@ export async function escalateOverdueApprovals(pool: pg.Pool, now: Date = new Da
 }
 ```
 
-- [ ] **Step 2: 测试扩展**
+- [x] **Step 2: 测试扩展**
 
 读 `services/gateway/src/repos/approvals.test.ts`（先读确认 setup：真实会话/truncate/配额表处理），追加：
 
@@ -207,7 +209,7 @@ export async function escalateOverdueApprovals(pool: pg.Pool, now: Date = new Da
 
 （`sessionId` 用既有测试的真实会话变量；`u-u-alice`/`u-u-bob` 用既有测试的实际用户 id 风格——先读现有用例确认用户 id 命名，若既有用 'u-alice' 则对齐。）
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -218,7 +220,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/repos/approvals.test.ts
 
 Expected: typecheck exit 0；approvals.test.ts 26 用例（23+3）全 PASS。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/repos/approvals.ts services/gateway/src/repos/approvals.test.ts
@@ -233,7 +235,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 - Modify: `services/gateway/src/routes/approvals.ts`
 - Modify: `services/gateway/src/routes/approvals.test.ts`
 
-- [ ] **Step 1: 路由增 escalate 端点**
+- [x] **Step 1: 路由增 escalate 端点**
 
 读 `services/gateway/src/routes/approvals.ts`（先读确认现有端点与 import），追加：
 
@@ -273,7 +275,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 
 （import 增 `escalateOverdueApprovals`。）
 
-- [ ] **Step 2: 路由测试**
+- [x] **Step 2: 路由测试**
 
 读 `services/gateway/src/routes/approvals.test.ts`，追加：
 
@@ -320,7 +322,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 
 （注意：路由测试需要访问 `pool`——核对现有测试是否持有 pool（repos 测试有；routes 测试若没有，用 `built.pool` 或 `createTestPool` 变量——读现有 routes 测试确认可用变量。若 routes 测试无 pool 引用，改为在测试内 `createTestPool()` 或经 buildApp 的返回获取。）
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -331,7 +333,7 @@ pnpm --filter @ta/gateway test --reporter=verbose src/routes/approvals.test.ts s
 
 Expected: typecheck exit 0；路由 17+2=19、仓储 26 全 PASS。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add services/gateway/src/routes/approvals.ts services/gateway/src/routes/approvals.test.ts
