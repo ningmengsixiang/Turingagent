@@ -56,6 +56,17 @@ curl -s -X POST localhost:3001/api/v1/approvals/<approvalId>/decide \
 # → 确认卡片消息实时更新状态（message.updated 经 WS 广播）
 ```
 
+### 组织与治理
+
+```bash
+# 首个登录用户自动成为 admin；admin 可管理成员角色与查看审计
+curl -s localhost:3001/api/v1/org/members -H "authorization: Bearer $TOKEN"
+curl -s -X PATCH localhost:3001/api/v1/org/members/u-bob/role \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' -d '{"role":"admin"}'
+curl -s "localhost:3001/api/v1/org/audit?limit=20" -H "authorization: Bearer $TOKEN"
+# → 登录/角色变更/审批决策全部留痕（append-only 审计）；最后一名 admin 不可被降级
+```
+
 ### 智能体（Ta-Fullstack）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 `@Ta-Fullstack <需求>` 即触发智能体，回复以 agent 身份实时推回会话。
