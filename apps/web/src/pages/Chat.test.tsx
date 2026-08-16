@@ -458,4 +458,50 @@ describe('Chat', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /重新提交/ })).toBeTruthy())
     expect(screen.getByRole('button', { name: /撤销/ })).toBeTruthy()
   })
+
+  it('moves a task via drag and drop', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': {
+        tasks: [
+          { id: 't1', sessionId: 's1', title: '写登录页', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'todo' },
+        ],
+      },
+      // PATCH /api/v1/tasks/t1/status 命中 URL 查表（mockFetch 按 url 精确匹配，不区分 method）
+      '/api/v1/tasks/t1/status': { task: { id: 't1', sessionId: 's1', title: '写登录页', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'in_progress' } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/写登录页/)).toBeTruthy()
+    const card = screen.getByText(/写登录页/)
+    const doneColumn = screen.getByText(/🔄 进行中/)
+    fireEvent.dragStart(card.closest('.kanban-card')!)
+    fireEvent.dragOver(doneColumn.closest('.kanban-column')!)
+    fireEvent.drop(doneColumn.closest('.kanban-column')!)
+    expect(await screen.findByText(/🔄 进行中/)).toBeTruthy()
+  })
+
+  it('sends a daily report message', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': {
+        tasks: [
+          { id: 't1', sessionId: 's1', title: '写登录页', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'done' },
+        ],
+      },
+      // POST /messages 分支会按发送体自建 message 并推入 createdMessages，此 key 仅作占位（与 mockFetch 实现一致）
+      '/api/v1/sessions/s1/messages': { message: { id: 'm9', clientMsgId: 'c9', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'text', content: '【日报】', seq: 9, createdAt: '', ref: null } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/写登录页/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /📅 日报/ }))
+    expect(await screen.findByText(/【日报】/)).toBeTruthy()
+  })
 })

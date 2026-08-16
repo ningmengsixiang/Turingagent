@@ -83,6 +83,9 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .kanban-card-assignee { font-size: 11px; color: #6e6e73; }
 .kanban-card-actions { display: flex; flex-wrap: wrap; gap: 4px; }
 .kanban-empty { font-size: 12px; color: #c7c7cc; text-align: center; padding: 6px 0; }
+.kanban-card.dragging { opacity: 0.4; }
+.kanban-column.drag-over { outline: 2px dashed #4a7dff; background: rgba(74, 125, 255, 0.06); }
+.kanban-report-actions { display: flex; gap: 6px; padding: 0 0 8px; }
 .approval-title { font-weight: 600; }
 .approval-nodes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .approval-node { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 12px; color: #6e6e73; background: #f5f5f7; }
