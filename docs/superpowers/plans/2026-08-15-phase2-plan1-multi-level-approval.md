@@ -985,7 +985,7 @@ async function findCardMessageId(pool: pg.Pool, approvalId: string): Promise<str
 }
 ```
 
-> 注：需要契约新增 `isApprovalNodeMode` 类型守卫（Task 1 未含——**本计划在此追加**：`packages/contracts/src/index.ts` 在 ApprovalNodeMode 定义后加 `export const isApprovalNodeMode = (v: unknown): v is ApprovalNodeMode => typeof v === 'string' && (Object.values(ApprovalNodeMode) as string[]).includes(v)`，并重建 contracts）。若你不便改契约，路由内用 `Object.values` 判断亦可（记录取舍），但推荐加守卫。
+> 注：`isApprovalNodeMode` 类型守卫已在 Task 1 的契约代码块中包含（ApprovalNodeMode 定义之后），无需再追加；直接 import 使用即可。
 
 - [ ] **Step 2: 扩展路由测试**
 
