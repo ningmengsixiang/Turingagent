@@ -654,7 +654,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 
 ## Task 4: 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -667,7 +667,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 137 + web 20+ ≈ 160）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 2: 真实验收（降级路径 + 后端链路）**
+- [x] **Step 2: 真实验收（降级路径 + 后端链路）**
 
 Web Speech API 需真实浏览器，无法用 curl 验收；验收降级路径与既有后端链路：
 
@@ -685,7 +685,7 @@ curl -s -X POST "localhost:3001/api/v1/sessions/<sid>/files" -H "authorization: 
 
 Expected: 上传返回 201 file+message（contentType=file、content=语音-test.webm、mime=audio/webm）；下载 200 且内容一致。转写主路径（Web Speech）标注为「浏览器手动验收项」（Chrome 打开 :5173 → 按住 🎤 说话 → 松开转成文字发送）。
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase1-plan11-voice-input.md
