@@ -110,4 +110,66 @@ describe('api key routes', () => {
     })
     expect(denied.statusCode).toBe(401)
   })
+
+  it('rejects a revoked api key with 401', async () => {
+    const admin = await loginAs('alice')
+    const created = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/api-keys',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { name: '临时', memberUser: 'alice' },
+    })
+    const key = created.json().key as string
+    const session = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { kind: 'project', title: '撤销测试', memberIds: ['u-bob'] },
+    })
+    const sessionId = session.json().session.id as string
+    // 撤销前可用
+    const before = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/external/sessions/${sessionId}/messages`,
+      headers: { 'x-api-key': key },
+    })
+    expect(before.statusCode).toBe(200)
+    // 撤销
+    const list = await built.app.inject({ method: 'GET', url: '/api/v1/api-keys', headers: { authorization: `Bearer ${admin}` } })
+    const id = list.json().keys.find((k: { name: string }) => k.name === '临时').id as string
+    await built.app.inject({ method: 'POST', url: `/api/v1/api-keys/${id}/revoke`, headers: { authorization: `Bearer ${admin}` } })
+    // 撤销后 401
+    const after = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/external/sessions/${sessionId}/messages`,
+      headers: { 'x-api-key': key },
+    })
+    expect(after.statusCode).toBe(401)
+  })
+
+  it('rejects an external call when the bound user is not a member', async () => {
+    const admin = await loginAs('alice')
+    await loginAs('carol') // 先注册 carol，否则生成 key 时 user not found → 400
+    const created = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/api-keys',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { name: '外部工单', memberUser: 'carol' }, // carol 不是会话成员
+    })
+    const key = created.json().key as string
+    const session = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { kind: 'project', title: '成员测试', memberIds: ['u-bob'] },
+    })
+    const sessionId = session.json().session.id as string
+    const denied = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/external/sessions/${sessionId}/messages`,
+      headers: { 'x-api-key': key },
+      payload: { content: 'carol 非成员应被拒' },
+    })
+    expect(denied.statusCode).toBe(403)
+  })
 })
