@@ -12,6 +12,7 @@ import { registerMe } from './routes/me.js'
 import { registerSessionRoutes } from './routes/sessions.js'
 import { registerMessageRoutes } from './routes/messages.js'
 import { registerApprovalRoutes } from './routes/approvals.js'
+import { registerTaskRoutes } from './routes/tasks.js'
 import { registerOrgRoutes } from './routes/org.js'
 import { registerWs } from './ws.js'
 import pg from 'pg'
@@ -53,6 +54,13 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     events.emit('message.created', message)
   })
   registerApprovalRoutes(
+    app,
+    config,
+    pool,
+    (message) => events.emit('message.created', message),
+    (message) => events.emit('message.updated', message),
+  )
+  registerTaskRoutes(
     app,
     config,
     pool,
