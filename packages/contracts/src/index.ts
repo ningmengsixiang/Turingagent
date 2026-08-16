@@ -31,6 +31,8 @@ export interface Session {
   memberIds: string[]
   /** ABAC：归属部门（项目会话可见性属性） */
   departmentId?: string
+  /** 多租户（FR-ORG-01/FR-SEC-02）：会话归属租户（创建时继承创建者租户） */
+  tenantId?: string
 }
 
 export interface Message {
@@ -155,6 +157,8 @@ export interface OrgMember {
   name: string
   role: 'admin' | 'member'
   createdAt: string
+  /** 多租户（FR-ORG-01/FR-SEC-02）：用户归属租户 */
+  tenantId?: string
 }
 
 export interface AuditEvent {
@@ -253,4 +257,17 @@ export interface ApiKeyInfo {
   memberUserId: string
   createdAt: string
   revokedAt?: string
+}
+
+export const TenantStatus = {
+  Active: 'active',
+  Suspended: 'suspended',
+} as const
+export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus]
+
+export interface Tenant {
+  id: string
+  name: string
+  status: TenantStatus
+  createdAt: string
 }
