@@ -30,7 +30,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo >&3 && exec 3>&-' || exit 1"
+          --health-cmd "sh -c 'exec 3<>/dev/tcp/localhost/9000 && exec 3>&-' || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
