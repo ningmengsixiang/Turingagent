@@ -8,6 +8,7 @@ import { createEvents } from './events.js'
 import { createModelProvider, type ModelProvider } from './model/provider.js'
 import { AgentBridge } from './agent/bridge.js'
 import { registerHealth } from './routes/health.js'
+import { registerMetricsRoutes, metricsOnResponse } from './metrics.js'
 import { registerAuth } from './routes/auth.js'
 import { registerMe } from './routes/me.js'
 import { registerSessionRoutes } from './routes/sessions.js'
@@ -59,6 +60,9 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
   await app.register(websocket)
   await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } })
   registerHealth(app)
+  // metrics 端点无鉴权（与 /healthz 一致，供 Prometheus 抓取；生产在 LB/内网暴露）
+  registerMetricsRoutes(app, pool)
+  app.addHook('onResponse', metricsOnResponse)
   registerAuth(app, config, pool)
   registerMe(app, config)
   registerSessionRoutes(app, config, pool)
