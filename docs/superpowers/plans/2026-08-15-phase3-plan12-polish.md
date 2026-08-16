@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。PG 迁移 + 仓储 + 路由小改。
 
+**质量审查决策（T1-T2 后追加）：** ① 契约 Session.templateId 必要适配（计划自审「已有」前提错误——接口本无该字段，TS2353 必需）；② listSessionsVisible 与 listSessionsForUser 均补 template_id（两个列表路径统一返回）；③ 404 校验顺序（tenantId 格式 400 优先于用户存在 404，与 role 端点先例一致）。
+
 **决策记录：** template_id 用 TEXT（模板 id 是文件名约定的 `[a-z0-9-]+`，非 UUID——不加 FK/校验约束，创建时已校验存在）；查询返回 templateId（listSessionsVisible/详情均返回——mapSession 统一）；前端后续可用（模板徽标展示）；转移 404 用「查用户存在 → 404」最小实现（无 0 行 UPDATE 检测——UPDATE 本身无 rowCount 语义，显式查更清晰）。
 
 ---
@@ -33,7 +35,7 @@
 - Modify: `services/gateway/src/repos/sessions.ts`
 - Modify: `services/gateway/src/routes/sessions.ts`
 
-- [ ] **Step 1: 迁移 016**
+- [x] **Step 1: 迁移 016**
 
 创建 `services/gateway/migrations/016_template_id.sql`：
 
@@ -42,18 +44,18 @@
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS template_id TEXT;
 ```
 
-- [ ] **Step 2: repos/sessions.ts**
+- [x] **Step 2: repos/sessions.ts**
 
 读 `services/gateway/src/repos/sessions.ts`：
 1. `SessionRow` 增 `template_id: string | null`。
 2. `mapSession` 返回增 `templateId: row.template_id ?? undefined`。
 3. `createSession` input 增 `templateId?: string`；INSERT 增列（`INSERT INTO sessions (kind, title, tenant_id, template_id) VALUES ($1,$2,$3,$4)`——读现状核对现有 INSERT 列）。
 
-- [ ] **Step 3: routes/sessions.ts**
+- [x] **Step 3: routes/sessions.ts**
 
 读 `services/gateway/src/routes/sessions.ts` 创建路由：`createSession` 调用传 `templateId`（从已校验的 template 变量取——`template?.id`）。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -64,7 +66,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: 016 应用；typecheck exit 0。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/migrations/016_template_id.sql services/gateway/src/repos/sessions.ts services/gateway/src/routes/sessions.ts
@@ -81,7 +83,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 - Modify: `services/gateway/src/routes/tenants.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: org.ts 转移端点 404**
+- [x] **Step 1: org.ts 转移端点 404**
 
 读 `services/gateway/src/routes/org.ts` 转移端点（~:200-215），在 `transferUserTenant` 前增用户存在校验：
 
@@ -92,7 +94,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
       }
 ```
 
-- [ ] **Step 2: 测试**
+- [x] **Step 2: 测试**
 
 1. `tenants.test.ts` 追加：
 ```tsx
@@ -130,7 +132,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 
 （核对 sessions 详情端点存在——routes/sessions.ts 有 GET /sessions/:id ✓；用户 id 风格 u-bob。）
 
-- [ ] **Step 3: README 更新**
+- [x] **Step 3: README 更新**
 
 读 README「### 行业项目模板（M3.1 / FR-ORG-05）」节，追加一句：
 
@@ -138,7 +140,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 模板套用会持久化到会话（`templateId` 字段，查询返回）。
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -150,7 +152,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；新增用例 PASS；全量 211 用例（209+2）全 PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/routes/org.ts services/gateway/src/routes/tenants.test.ts services/gateway/src/routes/sessions.test.ts services/gateway/src/routes/templates.test.ts README.md
@@ -161,7 +163,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(ops): �
 
 ## Task 3: 全仓验收 + 推送
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -174,7 +176,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 211 + web 34 ≈ 247）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 2: 提交 + 推送**
+- [x] **Step 2: 提交 + 推送**
 
 ```bash
 git add docs/superpowers/plans/2026-08-15-phase3-plan12-polish.md
