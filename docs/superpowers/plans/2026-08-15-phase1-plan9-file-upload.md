@@ -8,7 +8,7 @@
 
 **Tech Stack:** 新增依赖 `minio`（S3 客户端）与 `@fastify/multipart`（multipart 解析）；MinIO 容器（minio/minio:latest，9000 API / 9001 控制台）；测试用真实 MinIO（docker compose）+ 上传小文件断言。
 
-**决策记录：** 存储 key = `files/<uuid>`（内容寻址，防重名冲突）；下载 = 预签名 URL（15 分钟过期，前端点击时获取，避免网关代理大文件）；上传权限 = 会话成员；文件大小上限 20MB（@fastify/multipart limits）；文件消息 content = 文件名，`Message.file` 携带结构化元数据；MinIO 凭据 dev 默认 `ta/ta12345678`（compose 同步，生产环境变量覆盖）。
+**决策记录：** 存储 key = `files/<uuid>`（内容寻址，防重名冲突）；下载 = 预签名 URL（15 分钟过期，前端点击时获取，避免网关代理大文件）；上传权限 = 会话成员；文件大小上限 20MB（@fastify/multipart limits）；文件消息 content = 文件名，`Message.file` 携带结构化元数据；MinIO 凭据 dev 默认 `taadmin/ta12345678`（compose 同步，生产环境变量覆盖）。
 
 ---
 
@@ -55,7 +55,7 @@
     container_name: ta-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ta
+      MINIO_ROOT_USER: taadmin
       MINIO_ROOT_PASSWORD: ta12345678
     ports:
       - "9000:9000"
@@ -85,7 +85,7 @@ loadConfig return 增：
 
 ```ts
     minioEndpoint: env.MINIO_ENDPOINT ?? 'localhost:9000',
-    minioAccessKey: env.MINIO_ACCESS_KEY ?? 'ta',
+    minioAccessKey: env.MINIO_ACCESS_KEY ?? 'taadmin',
     minioSecretKey: env.MINIO_SECRET_KEY ?? 'ta12345678',
     minioBucket: env.MINIO_BUCKET ?? 'ta-files',
     minioUseSsl: env.MINIO_USE_SSL === 'true',
