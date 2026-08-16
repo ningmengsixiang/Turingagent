@@ -29,7 +29,7 @@ export function registerKbRoutes(app: FastifyInstance, config: Config, pool: pg.
       if (!content || content.length > MAX_CONTENT) {
         return reply.code(400).send({ error: `content is required (<=${MAX_CONTENT} chars)` })
       }
-      if (!(await isMember(pool, sessionId, request.user!.id))) {
+      if (!(await isMember(pool, sessionId, request.user!.id, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const doc = await createKbDocument(pool, {

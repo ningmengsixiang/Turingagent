@@ -112,11 +112,21 @@ export async function listSessionsVisible(pool: pg.Pool, userId: string): Promis
   }))
 }
 
-export async function isMember(pool: pg.Pool, sessionId: string, userId: string): Promise<boolean> {
-  const res = await pool.query('SELECT 1 FROM session_members WHERE session_id = $1 AND user_id = $2', [
-    sessionId,
-    userId,
-  ])
+/** 成员校验（FR-SEC-02 多租户）：传 tenantId 时强制会话租户与调用方租户一致（跨租户残留成员记录不可写）；
+ *  不传 tenantId 时退化为旧行为（仅查成员表）；NULL 租户会话对任意租户可见（与 canAccessSession 双真判据对齐） */
+export async function isMember(
+  pool: pg.Pool,
+  sessionId: string,
+  userId: string,
+  tenantId?: string,
+): Promise<boolean> {
+  const res = await pool.query(
+    `SELECT 1 FROM session_members sm
+     JOIN sessions s ON s.id = sm.session_id
+     WHERE sm.session_id = $1 AND sm.user_id = $2
+       AND (s.tenant_id IS NULL OR $3::uuid IS NULL OR s.tenant_id = $3)`,
+    [sessionId, userId, tenantId ?? null],
+  )
   return res.rowCount !== null && res.rowCount > 0
 }
 

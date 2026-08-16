@@ -56,7 +56,7 @@ export function registerApprovalRoutes(
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await isMember(pool, sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const title = request.body?.title?.trim()
@@ -73,7 +73,7 @@ export function registerApprovalRoutes(
             return reply.code(400).send({ error: `node ${i} needs mode and non-empty approverIds` })
           }
           for (const a of n.approverIds) {
-            if (!(await isMember(pool, sessionId, a))) {
+            if (!(await isMember(pool, sessionId, a, request.user!.tenantId))) {
               return reply.code(400).send({ error: `node ${i} approver ${a} is not a member of this session` })
             }
           }
@@ -83,7 +83,7 @@ export function registerApprovalRoutes(
       if (nodes === undefined && !approverId) {
         return reply.code(400).send({ error: 'approverId is required when nodes is absent' })
       }
-      if (approverId && !(await isMember(pool, sessionId, approverId))) {
+      if (approverId && !(await isMember(pool, sessionId, approverId, request.user!.tenantId))) {
         return reply.code(400).send({ error: 'approver must be a member of this session' })
       }
       let approval: Awaited<ReturnType<typeof createApproval>>
@@ -200,7 +200,7 @@ export function registerApprovalRoutes(
       // S1（T3 质量审查）：newApproverId 必须是会话成员；approval 不存在 → 404 优先于成员校验
       const existing = await getApproval(pool, approvalId)
       if (!existing) return reply.code(404).send({ error: 'approval not found' })
-      if (!(await isMember(pool, existing.sessionId, newApproverId))) {
+      if (!(await isMember(pool, existing.sessionId, newApproverId, request.user!.tenantId))) {
         return reply.code(400).send({ error: 'newApproverId must be a member of the approval session' })
       }
       try {
@@ -335,7 +335,7 @@ export function registerApprovalRoutes(
       if (approval.status !== 'pending') {
         return reply.code(409).send({ error: `approval is ${approval.status}, cannot escalate` })
       }
-      if (!(await isMember(pool, approval.sessionId, request.user!.id))) {
+      if (!(await isMember(pool, approval.sessionId, request.user!.id, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of the approval session' })
       }
       const escalated = await escalateOverdueApprovals(pool)

@@ -43,7 +43,9 @@ export function registerExternalRoutes(app: FastifyInstance, config: Config, poo
       if (!content || content.length > 10_000) {
         return reply.code(400).send({ error: 'content is required (<=10000 chars)' })
       }
-      if (!(await isMember(pool, sessionId, apiKeyUser))) {
+      // FR-SEC-02：外部路径无 JWT user，取绑定用户 DB 租户作期望值（会话租户须匹配绑定用户租户）
+      const boundTenant = await getUserTenant(pool, apiKeyUser)
+      if (!(await isMember(pool, sessionId, apiKeyUser, boundTenant))) {
         return reply.code(403).send({ error: 'bound user is not a member of this session' })
       }
       const { message } = await createMessage(pool, {
@@ -74,7 +76,9 @@ export function registerExternalRoutes(app: FastifyInstance, config: Config, poo
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const apiKeyUser = (request as FastifyRequest & { apiKeyUser?: string }).apiKeyUser!
-      if (!(await isMember(pool, sessionId, apiKeyUser))) {
+      // FR-SEC-02：外部路径无 JWT user，取绑定用户 DB 租户作期望值（会话租户须匹配绑定用户租户）
+      const boundTenant = await getUserTenant(pool, apiKeyUser)
+      if (!(await isMember(pool, sessionId, apiKeyUser, boundTenant))) {
         return reply.code(403).send({ error: 'bound user is not a member of this session' })
       }
       const afterSeq = Number(request.query.after_seq ?? 0)
@@ -83,4 +87,10 @@ export function registerExternalRoutes(app: FastifyInstance, config: Config, poo
       return { messages }
     },
   )
+}
+
+/** 取用户 DB 租户（外部 API-Key 路径无 JWT user；无租户用户返回 undefined → isMember 退化为旧行为） */
+async function getUserTenant(pool: pg.Pool, userId: string): Promise<string | undefined> {
+  const res = await pool.query<{ tenant_id: string | null }>('SELECT tenant_id FROM users WHERE user_id = $1', [userId])
+  return res.rows[0]?.tenant_id ?? undefined
 }

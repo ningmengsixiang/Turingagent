@@ -41,7 +41,7 @@ export function registerMessageRoutes(
     async (request, reply) => {
       const sessionId = request.params.id
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await isMember(pool, sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const clientMsgId = request.body?.clientMsgId?.trim()
@@ -89,7 +89,7 @@ export function registerMessageRoutes(
     async (request, reply) => {
       const sessionId = request.params.id
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await isMember(pool, sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const seq = request.body?.seq

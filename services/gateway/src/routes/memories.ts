@@ -41,7 +41,7 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await isMember(pool, sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const title = request.body?.title?.trim()
@@ -68,7 +68,7 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
       const userId = request.user!.id
       const memory = await getMemory(pool, memoryId)
       if (!memory) return reply.code(404).send({ error: 'memory not found' })
-      if (!(await isMember(pool, memory.sessionId, userId))) {
+      if (!(await isMember(pool, memory.sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of the memory session' })
       }
       const content = request.body?.content?.trim()
@@ -103,7 +103,7 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
       const userId = request.user!.id
       const memory = await getMemory(pool, memoryId)
       if (!memory) return reply.code(404).send({ error: 'memory not found' })
-      if (!(await isMember(pool, memory.sessionId, userId))) {
+      if (!(await isMember(pool, memory.sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of the memory session' })
       }
       const versions = await listMemoryVersions(pool, memoryId)
@@ -120,7 +120,7 @@ export function registerMemoryRoutes(app: FastifyInstance, config: Config, pool:
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await isMember(pool, sessionId, userId, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       if (!provider) {

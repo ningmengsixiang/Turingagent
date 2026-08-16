@@ -96,4 +96,51 @@ describe('tenant isolation', () => {
     const denied = await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'carol' } })
     expect(denied.statusCode).toBe(403)
   })
+
+  it('blocks cross-tenant writes (messages/tasks)', async () => {
+    const admin = await loginAs('alice')
+    // 先注册 bob（计划注：先 loginAs 注册再 UPDATE，否则 UPDATE 无行可改、bob 登录落入 default 租户）
+    await built.app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: { username: 'bob' } })
+    const t2 = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/org/tenants',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { name: `租户W-${Date.now()}` },
+    })
+    const tenantW = t2.json().tenant.id as string
+    // alice（default 租户）建会话，bob 仍是会话成员（残留成员记录）
+    const session = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { kind: 'project', title: 'A写测试', memberIds: ['u-bob'] },
+    })
+    const sessionId = session.json().session.id as string
+    // 直接改 DB：bob 挪入租户 W → 残留成员 + 跨租户（isMember 租户感知后写路径 403）
+    await pool.query(`UPDATE users SET tenant_id = $1 WHERE user_id = 'u-bob'`, [tenantW])
+    const bob = await loginAs('bob')
+    // 跨租户写消息 → 403
+    const denied = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/messages`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { clientMsgId: 'x-1', contentType: 'text', content: '跨租户注入' },
+    })
+    expect(denied.statusCode).toBe(403)
+    // 跨租户建任务 → 403
+    const task = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/tasks`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { title: '注入任务' },
+    })
+    expect(task.statusCode).toBe(403)
+    // 成员名单不泄露（跨租户 bob 看不到 A 会话成员）——GET members 传租户后 403
+    const members = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/sessions/${sessionId}/members`,
+      headers: { authorization: `Bearer ${bob}` },
+    })
+    expect(members.statusCode).toBe(403)
+  })
 })

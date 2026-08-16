@@ -28,7 +28,7 @@ export function registerSkillRoutes(app: FastifyInstance, config: Config, pool: 
       const skillId = request.body?.skillId?.trim()
       if (!skillId) return reply.code(400).send({ error: 'skillId is required' })
       if (!getSkill(skillId)) return reply.code(400).send({ error: `skill ${skillId} not found` })
-      if (!(await isMember(pool, sessionId, request.user!.id))) {
+      if (!(await isMember(pool, sessionId, request.user!.id, request.user!.tenantId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       void recordAudit(pool, {
