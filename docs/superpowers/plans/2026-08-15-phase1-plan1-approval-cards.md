@@ -897,3 +897,11 @@ Expected: 推送成功。
 - **占位符扫描**：无 TBD；Task 2 的 findCardMessage 注明可简化实现。
 - **类型一致性**：`Approval` 契约（description?/createdBy）在 contracts/repo/map/测试一致；`WsMessageUpdated` 在 contracts/events/ws.ts/前端一致；`createMessage` 增 `ref` 参数在 repo/路由/既有调用（不传 ref 为 undefined，兼容）一致。
 - **已知取舍**：单级审批（多级/会签 Phase 2）；卡片状态经消息内容表达（无独立卡片协议）；仅 approver 可决策（Phase 2 加会签/转办）；未做审批撤销/超时升级（FR-APP-05/06 Phase 2）。
+
+## 决策记录（T2 质量审查后）
+
+1. **ApprovalStateError 带 code**：`NOT_FOUND` / `ALREADY_DECIDED` / `NOT_APPROVER` 三码；路由映射 404/409/403（原 catch-all 409 语义错误且泄露存在性）。
+2. **路由 UUID 校验**：审批创建/决策的 `:id` 参数正则校验（非法即 400，避免 PG 22P02 → 500）。
+3. **两步写补偿**：创建审批+卡片，卡片写失败时回删 approval（补偿）；决策更新卡片失败时 console.error 并照常返回成功（approval 为真值源，卡片陈旧可接受，前端 200 后本地更新）。
+4. **ref 索引**：002 迁移补 `CREATE INDEX IF NOT EXISTS idx_messages_ref ON messages (ref_kind, ref_id)`（dev 库手工收敛）。
+5. **延后项**：审批幂等键（D6，Phase 2 与多级审批一起设计）；决策路径成员复检（无移除成员 API，暂不触发）；approverId/description 长度与类型校验（随全仓 schema 化路由统一）。
