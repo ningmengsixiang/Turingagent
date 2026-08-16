@@ -679,7 +679,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(quota): 
 
 ## Task 5: README + 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: README 追加「技能包与配额」节**
+- [x] **Step 1: README 追加「技能包与配额」节**
 
 在 README「### CI/CD 集成（M2.3 / FR-INT-01）」节之后追加：
 
@@ -698,7 +698,7 @@ curl -s -X POST localhost:3001/api/v1/org/quota -H "authorization: Bearer $TOKEN
 ```
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -711,7 +711,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 164+3+2≈169 + web 32+1≈33 ≈ 204）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 3: 真实验收（技能包 + 配额熔断）**
+- [x] **Step 3: 真实验收（技能包 + 配额熔断）**
 
 ```bash
 cd /tmp
@@ -724,7 +724,7 @@ cd /tmp
 
 Expected: 熔断时回复配额提示且无 LLM 调用；恢复后正常；用量累计。
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan4-skills-quota.md
