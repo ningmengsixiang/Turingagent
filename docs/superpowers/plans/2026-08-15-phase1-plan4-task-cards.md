@@ -59,6 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_session ON tasks (session_id);
 ```ts
 import pg from 'pg'
 import type { Task, TaskStatus } from '@ta/contracts'
+import { AGENT_DISPLAY_NAMES } from '../agent/registry.js'
 
 export interface TaskRow {
   id: string
@@ -92,7 +93,9 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
 }
 
 export function taskCardContent(task: Task): string {
-  const assignee = task.assigneeKind === 'agent' ? `@${task.assigneeId.replace('agent-', '')}` : task.assigneeId
+  // agent 显示名复用注册表（T1 阻塞点修正：单一事实来源，避免小写 id 直接展示）
+  const assignee =
+    task.assigneeKind === 'agent' ? `@${AGENT_DISPLAY_NAMES[task.assigneeId] ?? task.assigneeId}` : task.assigneeId
   return `${STATUS_LABEL[task.status]}：${task.title}（负责人 ${assignee}）`
 }
 
