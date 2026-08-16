@@ -1,0 +1,26 @@
+# 多阶段构建：node 构建 gateway lib → 精简运行镜像
+FROM node:22-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/contracts/package.json packages/contracts/
+COPY services/gateway/package.json services/gateway/
+RUN pnpm install --frozen-lockfile
+COPY packages/contracts/ packages/contracts/
+COPY services/gateway/ services/gateway/
+RUN pnpm --filter @ta/contracts build && pnpm --filter @ta/gateway build
+
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/packages/contracts/package.json /app/packages/contracts/package.json
+COPY --from=build /app/packages/contracts/lib /app/packages/contracts/lib
+COPY --from=build /app/services/gateway/package.json /app/services/gateway/package.json
+COPY --from=build /app/services/gateway/lib /app/services/gateway/lib
+COPY --from=build /app/services/gateway/migrations /app/services/gateway/migrations
+COPY --from=build /app/services/gateway/skills /app/services/gateway/skills
+# 迁移 001-011 在启动时由 entrypoint 执行（避免容器内 tsx；用编译产物直接跑 SQL）
+COPY --from=build /app/services/gateway/lib/migrate.js /app/services/gateway/lib/migrate.js
+WORKDIR /app/services/gateway
+EXPOSE 3001
+CMD ["node", "lib/index.js"]
