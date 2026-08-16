@@ -1356,7 +1356,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(approval
 
 ## Task 5: README + 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: README 追加「多级审批」节**
+- [x] **Step 1: README 追加「多级审批」节**
 
 在 README「### 审批卡片」节（若有）或「### 任务看板」前追加：
 
@@ -1377,7 +1377,7 @@ curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/approvals \
 ```
 ```
 
-- [ ] **Step 2: 全仓验收**
+- [x] **Step 2: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -1390,7 +1390,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 137+14≈151 + web 27+1≈28 ≈ 181）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 3: 真实验收（多级串行 + 会签 + 转办）**
+- [x] **Step 3: 真实验收（多级串行 + 会签 + 转办）**
 
 ```bash
 cd /tmp
@@ -1405,7 +1405,7 @@ cd /tmp
 
 Expected: 每步状态与 PRD 一致；audit 事件（approval.decided/transferred/returned/resubmitted/cancelled）落库。
 
-- [ ] **Step 4: 提交 + 推送**
+- [x] **Step 4: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan1-multi-level-approval.md
