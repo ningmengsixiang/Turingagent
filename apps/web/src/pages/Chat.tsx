@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Memory, Message, SessionMember, TaskStatus } from '@ta/contracts'
-import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
+import type { Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
+import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -32,6 +32,8 @@ export function Chat({ onLogout }: ChatProps) {
   const [showMembers, setShowMembers] = useState(false)
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [showMention, setShowMention] = useState(false)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const creatingRef = useRef(false)
@@ -76,6 +78,15 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }, [])
 
+  const loadTasks = useCallback(async (sessionId: string) => {
+    try {
+      const res = await listTasks(sessionId)
+      setTasks(res.tasks)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载任务失败')
+    }
+  }, [])
+
   useEffect(() => {
     void refreshSessions()
     const ws = new WsClient(
@@ -92,6 +103,7 @@ export function Chat({ onLogout }: ChatProps) {
           if (ev.message.sessionId === activeIdRef.current) {
             setMessages((prev) => prev.map((m) => (m.id === ev.message!.id ? ev.message! : m)))
           }
+          if (ev.message.contentType === 'task_card') void loadTasks(ev.message.sessionId)
         }
       },
     )
@@ -107,8 +119,9 @@ export function Chat({ onLogout }: ChatProps) {
       void loadMessages(activeId)
       void loadMemories(activeId)
       void loadMembers(activeId)
+      void loadTasks(activeId)
     }
-  }, [activeId, loadMessages, loadMemories, loadMembers])
+  }, [activeId, loadMessages, loadMemories, loadMembers, loadTasks])
 
   async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
@@ -176,6 +189,19 @@ export function Chat({ onLogout }: ChatProps) {
       const assignee = task.assigneeKind === 'agent' ? `@${AGENT_NAMES[task.assigneeId] ?? task.assigneeId}` : task.assigneeId
       const content = `${label}：${task.title}（负责人 ${assignee}）`
       setMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, content } : m)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '任务更新失败')
+    }
+  }
+
+  async function moveTaskFromBoard(taskId: string, status: TaskStatus) {
+    setError(null)
+    try {
+      await updateTaskStatus(taskId, status)
+      if (activeId) {
+        await loadTasks(activeId)
+        await loadMessages(activeId)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '任务更新失败')
     }
@@ -326,6 +352,50 @@ export function Chat({ onLogout }: ChatProps) {
           </button>
         </footer>
       </main>
+
+      <aside className={`chat-panel ${panelOpen ? '' : 'collapsed'}`}>
+        <div className="panel-head">
+          <strong>看板</strong>
+          <button className="ghost" onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? '收起' : '展开'}</button>
+        </div>
+        {panelOpen && (
+          <>
+            <div className="kanban-stats">
+              <span className="stat">{tasks.length} 总</span>
+              <span className="stat">{tasks.filter((t) => t.status === 'in_progress').length} 进行中</span>
+              <span className="stat">{tasks.filter((t) => t.status === 'done').length} 完成</span>
+              <span className="stat">{tasks.filter((t) => t.assigneeKind === 'agent').length} 智能体</span>
+            </div>
+            <div className="kanban-columns">
+              {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((status) => {
+                const label = { todo: '📋 待开始', in_progress: '🔄 进行中', blocked: '⛔ 已阻塞', done: '✅ 已完成' }[status]
+                const columnTasks = tasks.filter((t) => t.status === status)
+                return (
+                  <div key={status} className="kanban-column">
+                    <div className="kanban-column-head">{label} <span className="count">{columnTasks.length}</span></div>
+                    {columnTasks.map((t) => (
+                      <div key={t.id} className="kanban-card">
+                        <div className="kanban-card-title">{t.title}</div>
+                        <div className="kanban-card-assignee">
+                          {t.assigneeKind === 'agent' ? `🤖 ${AGENT_NAMES[t.assigneeId] ?? t.assigneeId}` : t.assigneeId}
+                        </div>
+                        <div className="kanban-card-actions">
+                          {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((s) => (
+                            <button key={s} className="ghost small" onClick={() => void moveTaskFromBoard(t.id, s)}>
+                              {s === 'todo' ? '待开始' : s === 'in_progress' ? '进行中' : s === 'blocked' ? '阻塞' : '完成'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {columnTasks.length === 0 && <div className="kanban-empty">空</div>}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </aside>
 
       {editing !== null && (
         <div className="memory-modal">
