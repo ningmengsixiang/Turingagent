@@ -31,7 +31,7 @@ sed -e "s|REPLACE_ME_JWT_SECRET|$(b64 "$JWT_SECRET")|" \
 echo "✅ secret 已应用"
 
 # 应用清单（替换镜像前缀与 host）
-for f in namespace.yaml configmap.yaml postgres.yaml minio.yaml gateway.yaml web.yaml ingress.yaml; do
+for f in namespace.yaml configmap.yaml redis.yaml postgres.yaml minio.yaml gateway.yaml web.yaml ingress.yaml; do
   sed -e "s|REPLACE_IMAGE_PREFIX|$IMAGE_PREFIX|g" -e "s|REPLACE_HOST|$HOST|g" "$f" | kubectl apply -f - >/dev/null
   echo "  应用 $f"
 done
