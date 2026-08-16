@@ -572,3 +572,4 @@ Expected: 推送成功。
 ## 决策记录（T1 阻塞点）
 
 1. **test-helpers.ts 的 truncateAll 必须扩展**：`TRUNCATE messages, session_members, sessions, users, audit_events RESTART IDENTITY CASCADE`——新增 users/audit_events 表后，既有清库语句漏掉它们导致用例间串扰（已实证）。
+2. **users.test.ts「sets and reads roles」必须自包含**：开头先 upsert `u-alice`（保证 `u-bob` 以 member 身份注册，不依赖前序用例残留）——清库修复后此用例原本依赖残留而确定性失败。
