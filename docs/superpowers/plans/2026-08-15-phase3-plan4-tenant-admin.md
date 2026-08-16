@@ -31,31 +31,12 @@
 - Create: `services/gateway/migrations/015_tenant_backfill.sql`
 - Modify: `services/gateway/src/repos/tenants.ts`
 
-- [ ] **Step 1: 读 sessions 表结构确认 created_by**
+- [ ] **Step 1: 迁移 015（已核对：sessions 无 created_by 列——回填 default 租户）**
 
-```bash
-cd /Users/wanzichanpinjingli/Desktop/TuringAgent
-docker exec ta-db psql -U ta -d ta_dev -c "\d sessions" | head -20
-```
+创建 `services/gateway/migrations/015_tenant_backfill.sql`：
 
-确认 sessions 有无 created_by 列（决定回填策略）。
-
-- [ ] **Step 2: 迁移 015**
-
-创建 `services/gateway/migrations/015_tenant_backfill.sql`（按 Step 1 结果选择）：
-- 若有 created_by：
 ```sql
--- 存量会话租户回填：NULL 租户会话回填为创建者租户（创建者无租户则 default）
-UPDATE sessions s
-SET tenant_id = COALESCE(u.tenant_id, '00000000-0000-0000-0000-000000000001')
-FROM users u
-WHERE s.tenant_id IS NULL AND u.user_id = s.created_by;
-
-UPDATE sessions SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-```
-- 若无 created_by：
-```sql
--- 存量会话租户回填：全部回填 default 租户（无 created_by 列）
+-- 存量会话租户回填：NULL 租户会话回填 default 租户（sessions 无 created_by 列）
 UPDATE sessions SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
 ```
 
@@ -217,17 +198,12 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(tenant):
   })
 
   it('backfills null-tenant sessions on migration', async () => {
-    // 模拟存量 NULL 租户会话 → 回填后为 default 租户
+    // 模拟存量 NULL 租户会话 → 手动跑回填 SQL → 非 NULL
     const admin = await loginAs('alice')
     const session = await built.app.inject({ method: 'POST', url: '/api/v1/sessions', headers: { authorization: `Bearer ${admin}` }, payload: { kind: 'project', title: '回填测试', memberIds: [] } })
     const sessionId = session.json().session.id as string
     await pool.query(`UPDATE sessions SET tenant_id = NULL WHERE id = $1`, [sessionId])
-    // 迁移已在 beforeEach 的 buildApp 时运行？——回填迁移是一次性的（schema_migrations 已记账，不再跑）。
-    // 验证方式：直接断言当前迁移状态——若本测试环境迁移已应用（015 在 schema_migrations），NULL 会话是测试内手动造的，
-    // 回填不会自动再跑。改为验证「回填 SQL 幂等可手动执行」：手动跑回填 UPDATE 后断言 tenant_id 非 NULL。
-    await pool.query(
-      `UPDATE sessions SET tenant_id = COALESCE((SELECT u.tenant_id FROM users u WHERE u.user_id = sessions.created_by), '00000000-0000-0000-0000-000000000001') WHERE tenant_id IS NULL`,
-    )
+    await pool.query(`UPDATE sessions SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL`)
     const row = await pool.query<{ tenant_id: string | null }>('SELECT tenant_id FROM sessions WHERE id = $1', [sessionId])
     expect(row.rows[0]!.tenant_id).not.toBeNull()
   })
