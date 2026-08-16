@@ -15,7 +15,13 @@ interface Case {
 }
 
 const casesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'silence-cases.json')
-const raw = JSON.parse(readFileSync(casesPath, 'utf8')) as unknown[]
+let raw: unknown
+try {
+  raw = JSON.parse(readFileSync(casesPath, 'utf8'))
+} catch {
+  console.error(`评测集损坏：JSON 解析失败（${casesPath}）`)
+  process.exit(1)
+}
 
 // 运行时校验：防手改/损坏的 JSON 静默抬高准确率
 if (!Array.isArray(raw) || raw.length === 0) {
@@ -34,6 +40,25 @@ for (const c of raw) {
     console.error('评测集损坏：字段非法（input/expected/category/reason 必需）', JSON.stringify(c))
     process.exit(1)
   }
+}
+// 固定集规模校验：防缩集绕过（1000 条 / 每类 250 / 输入唯一）
+if (raw.length !== 1000) {
+  console.error(`评测集损坏：固定集应为 1000 条，实际 ${raw.length}`)
+  process.exit(1)
+}
+const catCount = new Map<string, number>()
+for (const c of raw as Case[]) {
+  catCount.set(c.category, (catCount.get(c.category) ?? 0) + 1)
+}
+for (const cat of ['mention', 'decision', 'keyword', 'idle']) {
+  if (catCount.get(cat) !== 250) {
+    console.error(`评测集损坏：类别 ${cat} 应为 250 条，实际 ${catCount.get(cat) ?? 0}`)
+    process.exit(1)
+  }
+}
+if (new Set((raw as Case[]).map((c) => c.input)).size !== 1000) {
+  console.error('评测集损坏：输入必须 1000 个唯一')
+  process.exit(1)
 }
 const cases = raw as Case[]
 
