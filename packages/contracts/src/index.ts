@@ -29,6 +29,8 @@ export interface Session {
   kind: 'direct' | 'project' | 'group'
   title: string
   memberIds: string[]
+  /** ABAC：归属部门（项目会话可见性属性） */
+  departmentId?: string
 }
 
 export interface Message {
@@ -233,5 +235,11 @@ export interface KbDocument {
   title: string
   content: string
   createdBy: string
+  createdAt: string
+}
+
+export interface Department {
+  id: string
+  name: string
   createdAt: string
 }
