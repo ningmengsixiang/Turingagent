@@ -148,11 +148,11 @@ describe('tenant management routes', () => {
       method: 'POST',
       url: '/api/v1/org/tenants',
       headers: { authorization: `Bearer ${admin}` },
-      payload: { name: '租户B' },
+      payload: { name: `租户B-${Date.now()}` },
     })
     expect(res.statusCode).toBe(201)
     const tenant = res.json().tenant
-    expect(tenant.name).toBe('租户B')
+    expect(tenant.name).toContain('租户B')
     expect(tenant.status).toBe('active')
     const list = await built.app.inject({
       method: 'GET',
@@ -162,22 +162,23 @@ describe('tenant management routes', () => {
     expect(list.statusCode).toBe(200)
     const names = list.json().tenants.map((t: { name: string }) => t.name)
     expect(names).toContain('default') // 种子租户常驻（test-helpers 不 truncate tenants）
-    expect(names).toContain('租户B')
+    expect(names.some((n: string) => n.includes('租户B'))).toBe(true)
   })
 
   it('rejects a duplicate tenant name with 409', async () => {
     const admin = await loginAs('alice')
+    const dupName = `租户Dup-${Date.now()}`
     await built.app.inject({
       method: 'POST',
       url: '/api/v1/org/tenants',
       headers: { authorization: `Bearer ${admin}` },
-      payload: { name: '租户B' },
+      payload: { name: dupName },
     })
     const dup = await built.app.inject({
       method: 'POST',
       url: '/api/v1/org/tenants',
       headers: { authorization: `Bearer ${admin}` },
-      payload: { name: '租户B' },
+      payload: { name: dupName },
     })
     expect(dup.statusCode).toBe(409)
   })
@@ -202,7 +203,7 @@ describe('tenant management routes', () => {
       method: 'POST',
       url: '/api/v1/org/tenants',
       headers: { authorization: `Bearer ${bobToken}` },
-      payload: { name: '租户B' },
+      payload: { name: `租户B-${Date.now()}` },
     })
     expect(res.statusCode).toBe(403)
   })
@@ -213,7 +214,7 @@ describe('tenant management routes', () => {
       method: 'POST',
       url: '/api/v1/org/tenants',
       headers: { authorization: `Bearer ${admin}` },
-      payload: { name: '租户C' },
+      payload: { name: `租户C-${Date.now()}` },
     })
     const tenantId = created.json().tenant.id as string
     const suspended = await built.app.inject({
