@@ -122,6 +122,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    globals: true, // @testing-library/react 自动 cleanup 依赖全局 afterEach
     include: ['src/**/*.test.{ts,tsx}'],
   },
 })
@@ -250,8 +251,15 @@ export interface SessionWithUnread extends Session {
   unreadCount: number
 }
 
-export const login = (username: string): Promise<LoginResponse> =>
-  request('/api/v1/auth/login', { method: 'POST', body: JSON.stringify({ username }) })
+export const login = async (username: string): Promise<LoginResponse> => {
+  const res = await request<LoginResponse>('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  })
+  // 登录成功即存 token（T2 阻塞点修正：login 自身负责存储，调用方不需重复 setToken）
+  setToken(res.token)
+  return res
+}
 
 export const listSessions = (): Promise<{ sessions: SessionWithUnread[] }> => request('/api/v1/sessions')
 
@@ -341,7 +349,6 @@ export function Login({ onAuthed }: LoginProps) {
     setError(null)
     try {
       const res = await login(username.trim())
-      setToken(res.token)
       onAuthed(res.user.name)
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败')
