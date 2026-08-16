@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
-import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, summarizeMemory, updateMemory, updateTaskStatus } from '../api/client.js'
+import { createMemory, createSession, decideApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, sendMessage, summarizeMemory, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -33,6 +33,7 @@ export function Chat({ onLogout }: ChatProps) {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [showMention, setShowMention] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
@@ -255,6 +256,30 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }
 
+  async function upload(files: FileList | null) {
+    if (!activeId || !files || files.length === 0) return
+    const file = files[0]!
+    setError(null)
+    try {
+      await uploadFile(activeId, file)
+      await loadMessages(activeId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '上传失败')
+    }
+  }
+
+  async function downloadFile(fileId: string, name: string) {
+    try {
+      const { url } = await getFileDownloadUrl(fileId)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = name
+      a.click()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '下载失败')
+    }
+  }
+
   return (
     <div className="chat-layout mention-host">
       <aside className="session-sidebar">
@@ -302,6 +327,7 @@ export function Chat({ onLogout }: ChatProps) {
           {messages.map((m) => {
             const isCard = m.contentType === 'confirmation_card'
             const isTask = m.contentType === 'task_card'
+            const isFile = m.contentType === 'file'
             const isPending = isCard && m.content.startsWith('待审批')
             return (
               <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
@@ -342,6 +368,13 @@ export function Chat({ onLogout }: ChatProps) {
                       </div>
                     ) : null}
                   </div>
+                ) : isFile ? (
+                  <div className="file-bubble">
+                    <span>📎 {m.content}</span>
+                    {m.ref?.kind === 'file' ? (
+                      <button className="ghost small" onClick={() => void downloadFile(m.ref!.id, m.content)}>下载</button>
+                    ) : null}
+                  </div>
                 ) : (
                   <div className="bubble">{m.content}</div>
                 )}
@@ -356,7 +389,18 @@ export function Chat({ onLogout }: ChatProps) {
             <button className="ghost" onClick={() => setReplyingTo(null)}>取消</button>
           </div>
         )}
-        <footer className="input-area">
+        <footer
+          className="input-area"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => { e.preventDefault(); void upload(e.dataTransfer.files) }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: 'none' }}
+            onChange={(e) => { void upload(e.target.files); e.target.value = '' }}
+          />
+          <button className="ghost" onClick={() => fileInputRef.current?.click()}>📎</button>
           <button className="ghost" onClick={() => setShowMention((v) => !v)}>@</button>
           <input
             value={input}

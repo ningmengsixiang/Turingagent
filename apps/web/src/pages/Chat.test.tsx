@@ -207,6 +207,24 @@ describe('Chat', () => {
     await waitFor(() => expect(screen.getByText('会话记忆 2026-08-16')).toBeTruthy())
   })
 
+  it('renders a file message', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [
+          { id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'u-alice', senderKind: 'human', contentType: 'file', content: '需求文档.txt', seq: 1, createdAt: '', ref: { kind: 'file', id: 'f1' } },
+        ],
+      },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [{ userId: 'u-alice', name: 'alice', kind: 'human' }] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/需求文档.txt/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /下载/ })).toBeTruthy()
+  })
+
   it('renders a pending confirmation card with decide buttons', async () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },

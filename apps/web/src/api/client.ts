@@ -1,4 +1,4 @@
-import type { Approval, Memory, MemoryVersion, Message, Session, SessionMember, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, FileInfo, Memory, MemoryVersion, Message, Session, SessionMember, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -123,3 +123,22 @@ export const summarizeMemory = (sessionId: string): Promise<{ memory: Memory }> 
 
 export const listSessionMembers = (sessionId: string): Promise<{ members: SessionMember[] }> =>
   request(`/api/v1/sessions/${sessionId}/members`)
+
+export const uploadFile = async (sessionId: string, file: File): Promise<{ file: FileInfo; message: Message }> => {
+  const token = getToken()
+  const form = new FormData()
+  form.append('file', file, file.name)
+  const res = await fetch(`/api/v1/sessions/${sessionId}/files`, {
+    method: 'POST',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+    body: form,
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error ?? `http ${res.status}`)
+  }
+  return (await res.json()) as { file: FileInfo; message: Message }
+}
+
+export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file: FileInfo }> =>
+  request(`/api/v1/files/${fileId}`)
