@@ -33,6 +33,8 @@ export interface Session {
   departmentId?: string
   /** 多租户（FR-ORG-01/FR-SEC-02）：会话归属租户（创建时继承创建者租户） */
   tenantId?: string
+  /** 项目模板（FR-ORG-05）：创建时套用的模板 id，持久化到 sessions.template_id */
+  templateId?: string
 }
 
 export interface Message {

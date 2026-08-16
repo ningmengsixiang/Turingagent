@@ -14,6 +14,7 @@ export interface SessionRow {
   last_seq: string
   created_at: Date
   tenant_id: string | null
+  template_id: string | null
 }
 
 function mapSession(row: SessionRow): Session {
@@ -23,19 +24,20 @@ function mapSession(row: SessionRow): Session {
     title: row.title,
     memberIds: [],
     tenantId: row.tenant_id ?? undefined,
+    templateId: row.template_id ?? undefined,
   }
 }
 
 export async function createSession(
   pool: pg.Pool,
-  input: { kind: 'direct' | 'project' | 'group'; title: string; memberIds: string[]; tenantId?: string },
+  input: { kind: 'direct' | 'project' | 'group'; title: string; memberIds: string[]; tenantId?: string; templateId?: string },
 ): Promise<Session> {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
     const res = await client.query<SessionRow>(
-      'INSERT INTO sessions (kind, title, tenant_id) VALUES ($1, $2, $3) RETURNING *',
-      [input.kind, input.title, input.tenantId ?? null],
+      'INSERT INTO sessions (kind, title, tenant_id, template_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [input.kind, input.title, input.tenantId ?? null, input.templateId ?? null],
     )
     const session = mapSession(res.rows[0]!)
     const members = [...new Set([...input.memberIds])]
@@ -60,9 +62,10 @@ export async function listSessionsForUser(pool: pg.Pool, userId: string): Promis
     id: string
     kind: 'direct' | 'project' | 'group'
     title: string
+    template_id: string | null
     unread: string
   }>(
-    `SELECT s.id, s.kind, s.title,
+    `SELECT s.id, s.kind, s.title, s.template_id,
             (SELECT count(*) FROM messages m
               WHERE m.session_id = s.id
                 AND m.seq > sm.last_read_seq
@@ -78,6 +81,7 @@ export async function listSessionsForUser(pool: pg.Pool, userId: string): Promis
     kind: r.kind,
     title: r.title,
     memberIds: [],
+    templateId: r.template_id ?? undefined,
     unreadCount: Number(r.unread),
   }))
 }
@@ -90,9 +94,10 @@ export async function listSessionsVisible(pool: pg.Pool, userId: string): Promis
     id: string
     kind: 'direct' | 'project' | 'group'
     title: string
+    template_id: string | null
     unread: string
   }>(
-    `SELECT s.id, s.kind, s.title,
+    `SELECT s.id, s.kind, s.title, s.template_id,
             (SELECT count(*) FROM messages m
               WHERE m.session_id = s.id
                 AND m.seq > COALESCE((SELECT last_read_seq FROM session_members
@@ -108,6 +113,7 @@ export async function listSessionsVisible(pool: pg.Pool, userId: string): Promis
     kind: r.kind,
     title: r.title,
     memberIds: [],
+    templateId: r.template_id ?? undefined,
     unreadCount: Number(r.unread),
   }))
 }
