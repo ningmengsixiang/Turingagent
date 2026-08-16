@@ -204,6 +204,11 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
         const tenant = await getTenant(pool, tenantId)
         if (!tenant) return reply.code(400).send({ error: 'tenant not found' })
       }
+      // 用户存在校验（补计划 22 缺口）：转移不存在的用户 → 404（0 行 UPDATE 无 rowCount 语义，显式查更清晰）
+      const userExists = await pool.query<{ user_id: string }>('SELECT user_id FROM users WHERE user_id = $1', [userId])
+      if (userExists.rows.length === 0) {
+        return reply.code(404).send({ error: 'user not found' })
+      }
       await transferUserTenant(pool, userId, tenantId)
       void recordAudit(pool, {
         actorId: request.user!.id,

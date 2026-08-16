@@ -189,4 +189,15 @@ describe('tenant isolation', () => {
     const row = await pool.query<{ tenant_id: string | null }>('SELECT tenant_id FROM sessions WHERE id = $1', [sessionId])
     expect(row.rows[0]!.tenant_id).not.toBeNull()
   })
+
+  it('returns 404 when transferring an unknown user', async () => {
+    const admin = await loginAs('alice')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/org/users/u-ghost/tenant',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { tenantId: null },
+    })
+    expect(res.statusCode).toBe(404)
+  })
 })

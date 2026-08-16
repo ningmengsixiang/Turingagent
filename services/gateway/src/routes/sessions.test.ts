@@ -130,4 +130,21 @@ describe('session routes', () => {
     expect(members.some((m: { userId: string }) => m.userId === 'u-bob')).toBe(true)
     expect(members.some((m: { userId: string; kind: string }) => m.userId === 'agent-ta-fullstack' && m.kind === 'agent')).toBe(true)
   })
+
+  it('persists templateId on session', async () => {
+    const admin = await loginAs('alice')
+    const created = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${admin}` },
+      payload: { kind: 'project', title: '模板持久化', memberIds: ['u-bob'], templateId: 'software-delivery' },
+    })
+    const sessionId = created.json().session.id as string
+    // 详情/列表查询返回 templateId
+    const detail = await built.app.inject({ method: 'GET', url: `/api/v1/sessions/${sessionId}`, headers: { authorization: `Bearer ${admin}` } })
+    expect(detail.json().session.templateId).toBe('software-delivery')
+    const list = await built.app.inject({ method: 'GET', url: '/api/v1/sessions', headers: { authorization: `Bearer ${admin}` } })
+    const found = (list.json().sessions as Array<{ id: string; templateId?: string }>).find((s) => s.id === sessionId)
+    expect(found?.templateId).toBe('software-delivery')
+  })
 })

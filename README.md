@@ -202,7 +202,7 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 
 ### 行业项目模板（M3.1 / FR-ORG-05）
 
-项目模板 = `services/gateway/templates/<id>.json` manifest（id/name/description/skillIds，热加载）：`GET /api/v1/templates` 列表；新建项目会话带 `templateId` 一键套用（自动绑定模板技能包，audit 留痕）。审批流模板/角色权限模板为 manifest 预留字段（Phase 3 后续消费）。初始模板：软件交付（pm+fullstack）、需求管理（pm）。
+项目模板 = `services/gateway/templates/<id>.json` manifest（id/name/description/skillIds，热加载）：`GET /api/v1/templates` 列表；新建项目会话带 `templateId` 一键套用（自动绑定模板技能包，audit 留痕）。审批流模板/角色权限模板为 manifest 预留字段（Phase 3 后续消费）。初始模板：软件交付（pm+fullstack）、需求管理（pm）。模板套用会持久化到会话（`templateId` 字段，查询返回）。
 
 ### 技能包市场（M3.1 / FR-ECO-01）
 
