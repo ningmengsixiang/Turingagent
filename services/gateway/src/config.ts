@@ -13,6 +13,7 @@ export interface Config {
   minioSecretKey: string
   minioBucket: string
   minioUseSsl: boolean
+  escalationCron: string
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
@@ -56,5 +57,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     minioSecretKey: env.MINIO_SECRET_KEY ?? 'ta12345678',
     minioBucket: env.MINIO_BUCKET ?? 'ta-files',
     minioUseSsl: env.MINIO_USE_SSL === 'true',
+    escalationCron: env.ESCALATION_CRON ?? '0 * * * *',
   }
 }

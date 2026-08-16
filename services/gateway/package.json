@@ -15,16 +15,18 @@
     "eval:silence": "tsx src/eval/run-silence.ts"
   },
   "dependencies": {
+    "@fastify/multipart": "^9.0.0",
     "@fastify/websocket": "^11.0.2",
     "@ta/contracts": "workspace:*",
     "fastify": "^5.2.1",
     "jose": "^5.9.6",
-    "@fastify/multipart": "^9.0.0",
     "minio": "^8.0.2",
+    "node-cron": "^4.6.0",
     "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.10",
     "@types/ws": "^8.5.13",
     "form-data": "^4.0.0",
