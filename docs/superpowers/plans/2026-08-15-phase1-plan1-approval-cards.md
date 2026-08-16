@@ -243,7 +243,7 @@ export async function updateMessageContent(
 - [ ] **Step 5: 写 repos/approvals.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { createTestPool, truncateAll } from './test-helpers.js'
 import { createSession } from './sessions.js'
@@ -543,7 +543,7 @@ import 增 `registerApprovalRoutes`；在 `registerMessageRoutes` 之后追加�
 - [ ] **Step 5: 写 routes/approvals.test.ts**
 
 ```ts
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import pg from 'pg'
 import { buildApp, type BuiltApp } from '../server.js'
 import { createTestPool, truncateAll } from '../repos/test-helpers.js'
