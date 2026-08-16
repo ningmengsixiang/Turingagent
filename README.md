@@ -155,7 +155,7 @@ pnpm dev:gateway
 ```bash
 # 评测集门禁（1,000 组固定评测集，准确率 ≥95% 为发布门槛）
 pnpm --filter @ta/gateway eval:silence
-# 重新生成固定评测集（确定性，seed=42）
+# 重新生成固定评测集（确定性，per-category seed）
 pnpm --filter @ta/gateway gen:silence-cases
 ```
 

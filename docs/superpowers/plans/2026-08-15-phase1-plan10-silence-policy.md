@@ -26,7 +26,7 @@
 |---|---|---|
 | `services/gateway/src/agent/silence.ts` | 创建 | 静默策略分类器（纯函数） |
 | `services/gateway/src/agent/silence.test.ts` | 创建 | 分类器单元测试 |
-| `services/gateway/src/eval/gen-cases.ts` | 创建 | 确定性评测集生成器（mulberry32 seed=42） |
+| `services/gateway/src/eval/gen-cases.ts` | 创建 | 确定性评测集生成器（mulberry32 per-category seed，无放回抽样） |
 | `services/gateway/src/eval/silence-cases.json` | 创建（生成产物入库） | 1,000 组固定评测集（真源） |
 | `services/gateway/src/eval/run-silence.ts` | 创建 | 门禁 runner（<95% 退出 1） |
 | `services/gateway/src/eval/silence.test.ts` | 创建 | 门禁 vitest 用例（条数 + 准确率） |
@@ -762,7 +762,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 ```bash
 # 评测集门禁（1,000 组固定评测集，准确率 ≥95% 为发布门槛）
 pnpm --filter @ta/gateway eval:silence
-# 重新生成固定评测集（确定性，seed=42）
+# 重新生成固定评测集（确定性，per-category seed）
 pnpm --filter @ta/gateway gen:silence-cases
 ```
 ```
