@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto'
 import type { Config } from '../config.js'
 import type { ModelProvider } from '../model/provider.js'
 import { createMessage } from '../repos/messages.js'
-import { findAgentByMention } from './registry.js'
+import { classifySilence } from './silence.js'
+import { AGENTS, findAgentByMention, type AgentDefinition } from './registry.js'
 import type pg from 'pg'
 
 export interface AgentBridgeOptions {
@@ -17,7 +18,8 @@ export interface MentionResult {
   triggered: boolean
   agentId?: string
   reply?: Message
-  skippedReason?: 'not-a-mention' | 'agent-message' | 'disabled' | 'too-long' | 'error'
+  /** 未触发原因：silent = 无 @ 提及且静默策略判闲聊（FR-CHAT-05，零 LLM 成本跳过）；not-a-mention = 非文本消息 */
+  skippedReason?: 'not-a-mention' | 'agent-message' | 'disabled' | 'too-long' | 'error' | 'silent'
 }
 
 export class AgentBridge {
@@ -29,12 +31,25 @@ export class AgentBridge {
     if (!this.options.config.agentEnabled) return { triggered: false, skippedReason: 'disabled' }
 
     const hit = findAgentByMention(message.content)
-    if (!hit) return { triggered: false, skippedReason: 'not-a-mention' }
-    if (hit.requirement.length > this.options.config.agentMaxPromptChars) {
-      return { triggered: false, skippedReason: 'too-long' }
+    if (hit) {
+      if (hit.requirement.length > this.options.config.agentMaxPromptChars) {
+        return { triggered: false, skippedReason: 'too-long' }
+      }
+      return this.runAgent(message, hit.agent, hit.requirement)
     }
 
-    const { agent, requirement } = hit
+    // 无 @ 提及：静默策略（FR-CHAT-05）——respond 路由 Ta-PM（仲裁者），silent 零成本跳过
+    const decision = classifySilence(message.content)
+    if (decision.decision === 'silent') return { triggered: false, skippedReason: 'silent' }
+    const pm = AGENTS[0]!
+    return this.runAgent(message, pm, message.content)
+  }
+
+  private async runAgent(
+    message: Message,
+    agent: AgentDefinition,
+    requirement: string,
+  ): Promise<MentionResult> {
     const systemPrompt = agent.persona.replaceAll('{{cwd}}', process.cwd())
     try {
       const completion = await this.options.provider.complete(systemPrompt, requirement)

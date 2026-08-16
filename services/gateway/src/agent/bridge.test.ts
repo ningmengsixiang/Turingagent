@@ -104,7 +104,7 @@ describe('agent bridge', () => {
     const { bridge, provider } = makeBridge()
     const result = await bridge.handle(userMessage('今天天气不错'))
     expect(result.triggered).toBe(false)
-    expect(result.skippedReason).toBe('not-a-mention')
+    expect(result.skippedReason).toBe('silent')
     expect(provider.calls).toHaveLength(0)
   })
 
@@ -171,5 +171,58 @@ describe('agent bridge', () => {
     expect(second.triggered).toBe(true)
     const messages = await listMessages(pool, sessionId, 0, 10)
     expect(messages).toHaveLength(2)
+  })
+
+  it('responds via Ta-PM on decision point without mention', async () => {
+    const { bridge } = makeBridge()
+    const res = await bridge.handle({
+      id: 'm-d1',
+      clientMsgId: 'c-d1',
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: '这个方案你定吧',
+      seq: 2,
+      createdAt: new Date().toISOString(),
+    } as Message)
+    expect(res.triggered).toBe(true)
+    expect(res.agentId).toBe('agent-ta-pm')
+    expect(res.reply?.senderId).toBe('agent-ta-pm')
+  })
+
+  it('stays silent on idle chat (no provider call)', async () => {
+    const { bridge, provider } = makeBridge()
+    const res = await bridge.handle({
+      id: 'm-s1',
+      clientMsgId: 'c-s1',
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: '哈哈哈哈',
+      seq: 3,
+      createdAt: new Date().toISOString(),
+    } as Message)
+    expect(res.triggered).toBe(false)
+    expect(res.skippedReason).toBe('silent')
+    expect(provider.calls).toHaveLength(0)
+  })
+
+  it('responds via Ta-PM on keyword signal without mention', async () => {
+    const { bridge } = makeBridge()
+    const res = await bridge.handle({
+      id: 'm-k1',
+      clientMsgId: 'c-k1',
+      sessionId,
+      senderId: 'u-alice',
+      senderKind: 'human',
+      contentType: 'text',
+      content: '测试用例写完了，开始验收',
+      seq: 4,
+      createdAt: new Date().toISOString(),
+    } as Message)
+    expect(res.triggered).toBe(true)
+    expect(res.agentId).toBe('agent-ta-pm')
   })
 })
