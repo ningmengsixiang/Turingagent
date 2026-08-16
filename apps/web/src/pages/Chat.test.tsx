@@ -543,4 +543,20 @@ describe('Chat', () => {
     fireEvent.click(screen.getByRole('button', { name: /📅 日报/ }))
     expect(await screen.findByText(/【日报】/)).toBeTruthy()
   })
+
+  it('shows skill chips and quota bar', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+      '/api/v1/skills': { skills: [{ id: 'fullstack', name: '全栈开发', description: 'd', toolAllowlist: [] }] },
+      '/api/v1/org/quota': { quota: { level: 'enterprise', budget: 1000000, used: 500000, ratio: 0.5, tripped: false } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/全栈开发/)).toBeTruthy()
+    expect(await screen.findByText(/配额 50%/)).toBeTruthy()
+  })
 })

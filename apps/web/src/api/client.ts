@@ -1,4 +1,4 @@
-import type { Approval, FileInfo, Memory, MemoryVersion, Message, Session, SessionMember, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, FileInfo, Memory, MemoryVersion, Message, QuotaStatus, Session, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -169,3 +169,7 @@ export const uploadFile = async (sessionId: string, file: File): Promise<{ file:
 
 export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file: FileInfo }> =>
   request(`/api/v1/files/${fileId}`)
+
+export const listSkills = (): Promise<{ skills: Skill[] }> => request('/api/v1/skills')
+
+export const getQuota = (): Promise<{ quota: QuotaStatus }> => request('/api/v1/org/quota')

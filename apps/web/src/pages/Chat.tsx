@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Approval, ApprovalStatus, Memory, Message, SessionMember, Task, TaskStatus } from '@ta/contracts'
-import { cancelApproval, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, listMemories, listMessages, listSessions, listSessionMembers, listTasks, resubmitApproval, returnApproval, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
+import type { Approval, ApprovalStatus, Memory, Message, QuotaStatus, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
+import { cancelApproval, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, getQuota, listMemories, listMessages, listSessions, listSessionMembers, listSkills, listTasks, resubmitApproval, returnApproval, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
@@ -45,6 +45,8 @@ export function Chat({ onLogout }: ChatProps) {
   const speechRef = useRef<SpeechSession | null>(null)
   const recordingRef = useRef(false)
   const [tasks, setTasks] = useState<Task[]>([])
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [quota, setQuota] = useState<QuotaStatus | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
@@ -164,6 +166,12 @@ export function Chat({ onLogout }: ChatProps) {
       speechRef.current?.stop().catch(() => {})
       speechRef.current = null
     }
+  }, [])
+
+  // 技能包 + 配额条（挂载时拉一次；Chat 仅在登录后挂载，token 已就绪，与 refreshSessions 同时机）
+  useEffect(() => {
+    void listSkills().then((r) => setSkills(r.skills)).catch(() => {})
+    void getQuota().then((r) => setQuota(r.quota)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -686,6 +694,22 @@ export function Chat({ onLogout }: ChatProps) {
               <span className="stat">
                 {tasks.filter((t) => t.dueAt && new Date(t.dueAt).getTime() < Date.now() && t.status !== 'done').length} 已到期
               </span>
+            </div>
+            <div className="skill-panel">
+              <strong>技能包</strong>
+              <div className="skill-list">
+                {skills.map((s) => (
+                  <span key={s.id} className="skill-chip" title={s.description}>{s.name}</span>
+                ))}
+              </div>
+              {quota ? (
+                <div className="quota-bar">
+                  <span>配额 {Math.round(quota.ratio * 100)}%{quota.tripped ? ' ⚠️ 已熔断' : ''}</span>
+                  <div className="quota-track">
+                    <div className={`quota-fill ${quota.tripped ? 'tripped' : quota.ratio >= 0.8 ? 'warn' : ''}`} style={{ width: `${Math.min(100, quota.ratio * 100)}%` }} />
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="kanban-columns">
               {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((status) => {

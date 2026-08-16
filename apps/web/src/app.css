@@ -93,3 +93,14 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .approval-node.approved { border-color: #34c759; color: #228a3c; background: #eaf9ee; }
 .approval-node.rejected { border-color: #ff3b30; color: #d70015; background: #ffecec; }
 .approval-version { font-size: 11px; color: #6e6e73; border: 1px dashed #d2d2d7; border-radius: 8px; padding: 2px 6px; }
+
+/* 技能包 + 配额条（M2.4 / FR-ORG-04 / FR-ORG-07） */
+.skill-panel { display: flex; flex-direction: column; gap: 6px; }
+.skill-panel strong { font-size: 13px; }
+.skill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-chip { display: inline-flex; align-items: center; padding: 3px 10px; background: #fff; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 12px; color: #1d1d1f; cursor: default; }
+.quota-bar { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6e6e73; }
+.quota-track { height: 8px; background: #e5e5ea; border-radius: 4px; overflow: hidden; }
+.quota-fill { height: 100%; background: #34c759; border-radius: 4px; transition: width 0.3s ease; }
+.quota-fill.warn { background: #ff9f0a; }
+.quota-fill.tripped { background: #ff3b30; }
