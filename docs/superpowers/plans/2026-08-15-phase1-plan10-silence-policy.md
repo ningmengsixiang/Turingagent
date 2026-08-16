@@ -12,6 +12,8 @@
 
 **质量审查决策（T1 后追加）：** `MENTION_RE` 收窄为 Ta 系白名单 `/@\s*Ta[-_]?(?:PM|Architect|Fullstack|QA)(?![\w-])/i`（与 registry 一致；消除 email `a@b.com`、镜像 `nginx@sha256:…`、分支名 `feature@dev` 误报，`\w` 不含中文故 `@所有人` 本不匹配）；决策正则移除「同意|通过」（授予侧非审批请求侧，消除「我通过了考试」「打卡通过了」误报）——两项修正实证对评测集准确率影响为 0（100% 保持）。**关键锚定用例（T1 修复点）已固化为 vitest 硬断言**（`silence.test.ts` 的 `does not fire on emails, code fragments or approval-ack phrases`：admin@example.com/nginx@sha256/feature@dev/我同意/我通过了考试/打卡通过了/@所有人 必须 silent）——发布门禁除 ≥95% 阈值外，这些硬断言独立于评测集生效。**已知误报类（记 Phase 2，修需联动重生成 decision 模板，当前 10 条模板 7 条依赖这些模式）**：闲聊决策「你决定去哪吃饭/选哪个餐厅/红烧肉还是清蒸鱼好/哪个更好吃/股票跌了怎么办」；**已知漏报类（记 Phase 2 LLM 分类器）**：`吗`-问句（「这个需求要做吗」）、「进度怎么样」、空格敏感（「版本 1 和版本 2」vs「版本1和版本2」、`方案1 vs 方案2`）。评测集结构性弱点已记录：100% 源于模板与正则同源设计，靠 idle 模板补易混淆负例（Task 2 已含「我通过了考试 / admin@example.com / @所有人 / docker pull nginx@sha256:…」）与持续扩充缓解；频率限制器（≤3 条/轮、≥30s）兜底刷屏。
 
+**质量审查决策（T3 后追加）：** runner 本体补固定集规模/类别/唯一性校验（`raw.length !== 1000`、四类各 250、input 唯一 1000，防手改缩集 5 条全对即 100% 绕过门禁）+ `JSON.parse` try/catch 友好报错（非法语法 exit 1）；门禁阈值 `<95% exit 1` 与 PRD「≥95% 为门槛」一致（恰好 95% 通过，浮点 950/1000 精确相等实证）；`eval:silence` 为独立脚本（tsx src，vitest 不执行），**CI/CD 接线记 Phase 2 M2.3**（CI 须同时跑 eval:silence exit-code 门禁 + vitest，落地前发布流程手动执行）；runner 退出码测试（抽导出函数方案）与 lib/ 产物不含 silence-cases.json 记入后续任务。
+
 **质量审查决策（T2 后追加）：** ① keyword 类改为**无放回抽样**（rng 洗牌 1600 组合取前 250）消除 18 组重复；② **per-category seed**（mention/decision/keyword/idle 各自 `mulberry32(42+类别序号)`）隔离 rng 消费，新增模板不再导致其他类别漂移；③ 生成器提炼 `take()` 辅助并修正「无词重叠」注释（`交付里程碑` 含 B 词 `交付`，因词表 includes 去重不影响分数）；④ reason 字段携带增益信息（keyword 记分值、decision 记命中正则索引）便于调试；⑤ runner 增加 JSON 运行时校验（input/expected/category/reason 四字段 + expected ∈ {respond,silent}），防手改 JSON 静默抬高准确率；⑥ 门禁生效依赖 Task 3 落地（runner + vitest + 脚本），此前「≥95% 发布门禁」无执行点——Task 3 完成后闭环。**门禁防退化实证**：≥95% 阈值允许 50 例失败，单条正则删除多逃逸（4/8 条决策正则删除 0 失败，模板双锚定遮蔽）；核心防线 = 关键锚定硬断言（见上）+ 三大机制整体存在性（删整条 keyword/MENTION 路径 → 75% 红）。记 Phase 2：补回 slice 截断的 8 个 idle 模板、`吗`-问句/进度/空格敏感正例、mention 边界负例（`@@`/`@bob`/全角 ＠/多 agent）、真实多句长消息语料、三重常量（generator/classifier/registry）去重或一致性测试。
 
 ---
@@ -442,7 +444,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(silence)
 - Create: `services/gateway/src/eval/silence.test.ts`
 - Modify: `services/gateway/package.json`
 
-- [ ] **Step 1: 写 runner**
+- [x] **Step 1: 写 runner**
 
 创建 `services/gateway/src/eval/run-silence.ts`，内容逐字如下：
 
@@ -520,7 +522,7 @@ if (accuracy < MIN_ACCURACY) {
 console.log(`门禁通过：准确率 ≥ ${MIN_ACCURACY * 100}%`)
 ```
 
-- [ ] **Step 2: package.json 增脚本**
+- [x] **Step 2: package.json 增脚本**
 
 读 `services/gateway/package.json`，在 `"migrate"` 后追加：
 
@@ -531,7 +533,7 @@ console.log(`门禁通过：准确率 ≥ ${MIN_ACCURACY * 100}%`)
 
 （注意 JSON 逗号正确。）
 
-- [ ] **Step 3: 写 vitest 门禁用例**
+- [x] **Step 3: 写 vitest 门禁用例**
 
 创建 `services/gateway/src/eval/silence.test.ts`，内容逐字如下：
 
@@ -576,7 +578,7 @@ describe('silence eval gate', () => {
 })
 ```
 
-- [ ] **Step 4: 跑门禁**
+- [x] **Step 4: 跑门禁**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -584,9 +586,9 @@ pnpm --filter @ta/gateway eval:silence
 pnpm --filter @ta/gateway test --reporter=verbose src/eval/silence.test.ts
 ```
 
-Expected: `eval:silence` 输出准确率 ≥ 95%（若 <95%，是分类器与评测集模板不齐——修正 `agent/silence.ts` 的决策点正则或词表，不得改评测集 JSON 来凑数；重跑直到通过，并在汇报中说明修正点）；vitest 2 用例 PASS。
+Expected: `eval:silence` 输出准确率 ≥ 95%（若 <95%，是分类器与评测集模板不齐——修正 `agent/silence.ts` 的决策点正则或词表，不得改评测集 JSON 来凑数；重跑直到通过，并在汇报中说明修正点）；vitest 3 用例 PASS（1000 固定集 / 结构校验含唯一性 / 准确率 ≥95%）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add services/gateway/src/eval/run-silence.ts services/gateway/src/eval/silence.test.ts services/gateway/package.json
