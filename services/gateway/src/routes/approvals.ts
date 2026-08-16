@@ -21,6 +21,21 @@ import pg from 'pg'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_NODES = 10
 
+/** 统一错误码映射（T3 质量审查 S4）：NOT_FOUND→404、AGENT_NOT_ALLOWED→400、NOT_APPROVER/NOT_OWNER→403、其余（ALREADY_DECIDED/NOT_PENDING）→409 */
+function approvalErrorStatus(err: ApprovalStateError): number {
+  switch (err.code) {
+    case 'NOT_FOUND':
+      return 404
+    case 'AGENT_NOT_ALLOWED':
+      return 400
+    case 'NOT_APPROVER':
+    case 'NOT_OWNER':
+      return 403
+    default:
+      return 409
+  }
+}
+
 export function registerApprovalRoutes(
   app: FastifyInstance,
   config: Config,
@@ -145,19 +160,23 @@ export function registerApprovalRoutes(
           decision,
           reason: request.body?.reason?.trim() || undefined,
         })
-        await updateCard(pool, approvalId, approval.status, approval.reason, approval.title, emitMessageUpdated)
+        try {
+          // 尽力而为（T3 质量审查 S2）：卡片更新失败不污染 mutation 响应
+          await updateCard(pool, approvalId, approval.status, approval.reason, approval.title, emitMessageUpdated)
+        } catch (err) {
+          console.error('[approval] card update failed:', err)
+        }
         void recordAudit(pool, {
           actorId: userId,
           action: 'approval.decided',
           target: approval.id,
-          detail: { decision: approval.status, title: approval.title, currentNodeIndex: approval.currentNodeIndex },
+          // 审计记录实际投票（T3 质量审查 S3）：decision=请求原始投票，status=结果状态
+          detail: { decision, status: approval.status, nodeIndex: approval.currentNodeIndex, title: approval.title },
         }).catch((err) => console.error('[audit] decision record failed:', err))
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          // 错误码映射：保留 T2 的 NOT_FOUND→404 / NOT_APPROVER→403 / ALREADY_DECIDED→409（质量审查 M1），增 AGENT_NOT_ALLOWED→400
-          const status = err.code === 'NOT_FOUND' ? 404 : err.code === 'NOT_APPROVER' ? 403 : err.code === 'AGENT_NOT_ALLOWED' ? 400 : 409
-          return reply.code(status).send({ error: err.message })
+          return reply.code(approvalErrorStatus(err)).send({ error: err.message })
         }
         throw err
       }
@@ -176,6 +195,12 @@ export function registerApprovalRoutes(
       if (!newApproverId) {
         return reply.code(400).send({ error: 'newApproverId is required' })
       }
+      // S1（T3 质量审查）：newApproverId 必须是会话成员；approval 不存在 → 404 优先于成员校验
+      const existing = await getApproval(pool, approvalId)
+      if (!existing) return reply.code(404).send({ error: 'approval not found' })
+      if (!(await isMember(pool, existing.sessionId, newApproverId))) {
+        return reply.code(400).send({ error: 'newApproverId must be a member of the approval session' })
+      }
       try {
         const approval = await transferApproval(pool, { id: approvalId, operatorId: request.user!.id, newApproverId })
         void recordAudit(pool, {
@@ -187,8 +212,7 @@ export function registerApprovalRoutes(
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          const status = err.code === 'NOT_FOUND' ? 404 : err.code === 'AGENT_NOT_ALLOWED' ? 400 : 409
-          return reply.code(status).send({ error: err.message })
+          return reply.code(approvalErrorStatus(err)).send({ error: err.message })
         }
         throw err
       }
@@ -209,7 +233,12 @@ export function registerApprovalRoutes(
       }
       try {
         const approval = await returnApproval(pool, { id: approvalId, operatorId: request.user!.id, reason })
-        await updateCard(pool, approvalId, approval.status, approval.reason, approval.title, emitMessageUpdated)
+        try {
+          // 尽力而为（T3 质量审查 S2）
+          await updateCard(pool, approvalId, approval.status, approval.reason, approval.title, emitMessageUpdated)
+        } catch (err) {
+          console.error('[approval] card update failed:', err)
+        }
         void recordAudit(pool, {
           actorId: request.user!.id,
           action: 'approval.returned',
@@ -219,8 +248,7 @@ export function registerApprovalRoutes(
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          const status = err.code === 'NOT_FOUND' ? 404 : 409
-          return reply.code(status).send({ error: err.message })
+          return reply.code(approvalErrorStatus(err)).send({ error: err.message })
         }
         throw err
       }
@@ -237,7 +265,12 @@ export function registerApprovalRoutes(
       }
       try {
         const approval = await resubmitApproval(pool, { id: approvalId, operatorId: request.user!.id })
-        await updateCard(pool, approvalId, approval.status, undefined, approval.title, emitMessageUpdated)
+        try {
+          // 尽力而为（T3 质量审查 S2）
+          await updateCard(pool, approvalId, approval.status, undefined, approval.title, emitMessageUpdated)
+        } catch (err) {
+          console.error('[approval] card update failed:', err)
+        }
         void recordAudit(pool, {
           actorId: request.user!.id,
           action: 'approval.resubmitted',
@@ -247,8 +280,7 @@ export function registerApprovalRoutes(
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          const status = err.code === 'NOT_FOUND' ? 404 : 409
-          return reply.code(status).send({ error: err.message })
+          return reply.code(approvalErrorStatus(err)).send({ error: err.message })
         }
         throw err
       }
@@ -265,7 +297,12 @@ export function registerApprovalRoutes(
       }
       try {
         const approval = await cancelApproval(pool, { id: approvalId, operatorId: request.user!.id })
-        await updateCard(pool, approvalId, approval.status, undefined, approval.title, emitMessageUpdated)
+        try {
+          // 尽力而为（T3 质量审查 S2）
+          await updateCard(pool, approvalId, approval.status, undefined, approval.title, emitMessageUpdated)
+        } catch (err) {
+          console.error('[approval] card update failed:', err)
+        }
         void recordAudit(pool, {
           actorId: request.user!.id,
           action: 'approval.cancelled',
@@ -275,8 +312,7 @@ export function registerApprovalRoutes(
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          const status = err.code === 'NOT_FOUND' ? 404 : 409
-          return reply.code(status).send({ error: err.message })
+          return reply.code(approvalErrorStatus(err)).send({ error: err.message })
         }
         throw err
       }

@@ -402,6 +402,12 @@ export async function cancelApproval(pool: pg.Pool, input: { id: string; operato
     if (row.created_by !== input.operatorId) {
       throw new ApprovalStateError('NOT_OWNER', 'only the creator can cancel')
     }
+    // S6（PRD FR-APP-05）：首个/当前节点已产生投票时不可撤销（锁内重读 votes）
+    const nodes = await loadNodes(client, input.id)
+    const node = nodes[row.current_node_index]
+    if (node && Object.keys(node.votes ?? {}).length > 0) {
+      throw new ApprovalStateError('NOT_PENDING', 'first node already has votes, cannot cancel')
+    }
     await client.query(`UPDATE approvals SET status = 'cancelled', decided_at = now() WHERE id = $1`, [input.id])
     await client.query('COMMIT')
   } catch (err) {

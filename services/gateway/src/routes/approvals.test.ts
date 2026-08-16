@@ -239,7 +239,14 @@ describe('approval routes', () => {
 
   it('transfers the approval to another approver', async () => {
     const alice = await loginAs('alice')
-    const sessionId = await createProjectSession(alice)
+    // S1：转办目标必须是会话成员，故会话需包含 u-carol
+    const sessionRes = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob', 'u-carol'] },
+    })
+    const sessionId = sessionRes.json().session.id as string
     const created = await built.app.inject({
       method: 'POST',
       url: `/api/v1/sessions/${sessionId}/approvals`,
@@ -256,6 +263,55 @@ describe('approval routes', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().approval.nodes[0].approverIds).toEqual(['u-carol'])
+  })
+
+  it('rejects transfer to a non-session member with 400 (S1)', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice) // 成员仅 u-bob
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '转办给非成员', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/transfer`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { newApproverId: 'u-carol' },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toContain('must be a member of the approval session')
+  })
+
+  it('rejects transfer to an agent with 400 (AGENT_NOT_ALLOWED)', async () => {
+    const alice = await loginAs('alice')
+    // agent 先进会话成员，才能走到仓储层 AGENT_NOT_ALLOWED（而非「非成员」400）
+    const sessionRes = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob', 'agent-ta-pm'] },
+    })
+    const sessionId = sessionRes.json().session.id as string
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '转办给 agent', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    const res = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/transfer`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { newApproverId: 'agent-ta-pm' },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toContain('approver must be a human')
   })
 
   it('returns for revision and resubmits', async () => {
@@ -304,7 +360,8 @@ describe('approval routes', () => {
       url: `/api/v1/approvals/${approvalId}/cancel`,
       headers: { authorization: `Bearer ${bob}` },
     })
-    expect(denied.statusCode).toBe(409)
+    // S4：NOT_OWNER 是权限错误 → 403（原 409）
+    expect(denied.statusCode).toBe(403)
     const cancelled = await built.app.inject({
       method: 'POST',
       url: `/api/v1/approvals/${approvalId}/cancel`,
@@ -312,5 +369,72 @@ describe('approval routes', () => {
     })
     expect(cancelled.statusCode).toBe(200)
     expect(cancelled.json().approval.status).toBe('cancelled')
+  })
+
+  it('creator cannot cancel once the first node has votes (S6 → 409)', async () => {
+    const alice = await loginAs('alice')
+    const sessionRes = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob', 'u-carol'] },
+    })
+    const sessionId = sessionRes.json().session.id as string
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '会签撤销', nodes: [{ mode: 'all', approverIds: ['u-bob', 'u-carol'] }] },
+    })
+    const approvalId = created.json().approval.id as string
+    const bob = await loginAs('bob')
+    await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/decide`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { decision: 'approved' },
+    })
+    const cancelled = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/cancel`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(cancelled.statusCode).toBe(409)
+  })
+
+  it('GET /api/v1/approvals/:id: member 200 with nodes, non-member 403, unknown 404', async () => {
+    const alice = await loginAs('alice')
+    const carol = await loginAs('carol')
+    const sessionId = await createProjectSession(alice) // 成员仅 u-bob
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '查询', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    // 成员 → 200 且 { approval } 含 nodes
+    const member = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/approvals/${approvalId}`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(member.statusCode).toBe(200)
+    expect(member.json().approval.id).toBe(approvalId)
+    expect(member.json().approval.nodes).toHaveLength(1)
+    // 非成员 → 403
+    const nonMember = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/approvals/${approvalId}`,
+      headers: { authorization: `Bearer ${carol}` },
+    })
+    expect(nonMember.statusCode).toBe(403)
+    // 不存在 → 404
+    const missing = await built.app.inject({
+      method: 'GET',
+      url: '/api/v1/approvals/00000000-0000-0000-0000-000000000000',
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(missing.statusCode).toBe(404)
   })
 })

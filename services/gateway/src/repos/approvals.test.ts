@@ -250,6 +250,29 @@ describe('approval repository', () => {
     expect(cancelled.status).toBe('cancelled')
   })
 
+  it('refuses to cancel once the first node has votes; cancels when unvoted (S6)', async () => {
+    const created = await createApproval(pool, {
+      sessionId,
+      title: '会签撤销',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'all', approverIds: ['u-bob', 'u-carol'] }],
+    })
+    // 会签首票（未齐票仍 pending）后发起人不可撤销
+    await decideApproval(pool, { id: created.id, approverId: 'u-bob', decision: 'approved' })
+    await expect(cancelApproval(pool, { id: created.id, operatorId: 'u-alice' })).rejects.toMatchObject({
+      code: 'NOT_PENDING',
+    })
+    // 未投票时撤销 → cancelled
+    const fresh = await createApproval(pool, {
+      sessionId,
+      title: '直接撤销',
+      createdBy: 'u-alice',
+      nodes: [{ mode: 'single', approverIds: ['u-bob'] }],
+    })
+    const cancelled = await cancelApproval(pool, { id: fresh.id, operatorId: 'u-alice' })
+    expect(cancelled.status).toBe('cancelled')
+  })
+
   it('rejects agent approvers', async () => {
     await expect(
       createApproval(pool, {
