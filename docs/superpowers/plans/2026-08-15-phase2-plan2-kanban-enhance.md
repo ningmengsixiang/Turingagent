@@ -333,7 +333,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 
 ## Task 5: 全仓验收 + 推送 + 真实验收
 
-- [ ] **Step 1: 全仓验收**
+- [x] **Step 1: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -346,7 +346,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 164 + web 19 ≈ 185）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净（除 README/计划文档）。
 
-- [ ] **Step 2: 真实验收（拖拽后端链路 + 日报消息）**
+- [x] **Step 2: 真实验收（拖拽后端链路 + 日报消息）**
 
 拖拽与日报为前端交互，浏览器手动验收标注；curl 验收后端链路：
 
@@ -360,7 +360,7 @@ cd /tmp
 
 Expected: 任务创建/换状态/列表一致；日报消息入流（seq 递增）。
 
-- [ ] **Step 3: 提交 + 推送**
+- [x] **Step 3: 提交 + 推送**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-08-15-phase2-plan2-kanban-enhance.md
