@@ -83,6 +83,22 @@ curl -s -X PATCH localhost:3001/api/v1/tasks/<taskId>/status \
 curl -s localhost:3001/api/v1/sessions/<sessionId>/tasks -H "authorization: Bearer $TOKEN"
 ```
 
+### 记忆文档
+
+```bash
+# 创建记忆（会话内讨论的沉淀）→ 编辑自动生成新版本（留痕可查）
+curl -s -X POST localhost:3001/api/v1/sessions/<sessionId>/memories \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"title":"需求基线","content":"报销系统需求基线 v1"}'
+
+curl -s -X PUT localhost:3001/api/v1/memories/<memoryId> \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -d '{"content":"v2 更新内容"}'
+
+curl -s localhost:3001/api/v1/memories/<memoryId>/versions -H "authorization: Bearer $TOKEN"
+# → 版本历史 [v1, v2, …]，append-only 留痕
+```
+
 ### 智能体团队（四角色）
 
 网关内置模型网关（DeepSeek，OpenAI 兼容）。会话内 @ 对应智能体即触发，回复以该智能体身份实时推回：
