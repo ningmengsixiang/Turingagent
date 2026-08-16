@@ -45,6 +45,18 @@ export function mapMemoryVersion(row: MemoryVersionRow): MemoryVersion {
   }
 }
 
+export type MemoryErrorCode = 'NOT_FOUND'
+
+export class MemoryStateError extends Error {
+  readonly code: MemoryErrorCode
+
+  constructor(code: MemoryErrorCode, message: string) {
+    super(message)
+    this.name = 'MemoryStateError'
+    this.code = code
+  }
+}
+
 export async function createMemory(
   pool: pg.Pool,
   input: { sessionId: string; title: string; content: string; createdBy: string },
@@ -93,7 +105,7 @@ export async function updateMemoryContent(
   try {
     await client.query('BEGIN')
     const cur = await client.query<MemoryRow>('SELECT * FROM memories WHERE id = $1 FOR UPDATE', [input.id])
-    if (!cur.rows[0]) throw new Error('memory not found')
+    if (!cur.rows[0]) throw new MemoryStateError('NOT_FOUND', 'memory not found')
     const nextVersion = cur.rows[0].current_version + 1
     const res = await client.query<MemoryRow>(
       `UPDATE memories

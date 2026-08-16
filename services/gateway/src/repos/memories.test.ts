@@ -52,6 +52,25 @@ describe('memory repository', () => {
     expect(versions[2]!.editedBy).toBe('u-alice')
   })
 
+  it('assigns unique versions under concurrent edits (并发回归)', async () => {
+    const memory = await createMemory(pool, {
+      sessionId,
+      title: '需求基线',
+      content: 'v1',
+      createdBy: 'u-alice',
+    })
+    const results = await Promise.all([
+      updateMemoryContent(pool, { id: memory.id, content: '并发 A', editedBy: 'u-alice' }),
+      updateMemoryContent(pool, { id: memory.id, content: '并发 B', editedBy: 'u-bob' }),
+    ])
+    const versions = results.map((r) => r.currentVersion).sort((a, b) => a - b)
+    expect(new Set(versions).size).toBe(2)
+    expect(versions[0]).toBe(2)
+    expect(versions[1]).toBe(3)
+    const all = await listMemoryVersions(pool, memory.id)
+    expect(all.map((v) => v.version)).toEqual([1, 2, 3])
+  })
+
   it('lists memories newest first', async () => {
     await createMemory(pool, { sessionId, title: '记忆一', content: 'a', createdBy: 'u-alice' })
     await createMemory(pool, { sessionId, title: '记忆二', content: 'b', createdBy: 'u-alice' })
