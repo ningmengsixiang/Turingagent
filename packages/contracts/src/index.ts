@@ -243,3 +243,14 @@ export interface Department {
   name: string
   createdAt: string
 }
+
+export interface ApiKeyInfo {
+  id: string
+  /** 脱敏显示（ta_****abcd） */
+  name: string
+  /** 脱敏 key 尾缀 */
+  maskedKey: string
+  memberUserId: string
+  createdAt: string
+  revokedAt?: string
+}
