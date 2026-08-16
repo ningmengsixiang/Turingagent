@@ -8,6 +8,8 @@
 
 **Tech Stack:** 浏览器原生 Web Speech API（`SpeechRecognition`，Chrome/Edge 支持，实时转写零成本零 key）+ MediaRecorder（WebM/Opus 录音）+ 现有 `uploadFile`。测试用 vitest jsdom + mock（`window.SpeechRecognition`/`MediaRecorder`/`HTMLMediaElement.play`）。
 
+**质量审查决策（T3 后追加）：** ① 测试 afterEach 加 `mockStop.mockClear()` 与 `start.mockClear()`（mock 卫生；实测 vitest 3.2.7 的 mockClear 不丢弃未消费 Once 队列——根治需 mockReset+重挂默认实现，当前用例顺序确定无实际泄漏，记入后续）；② 补 `canRecord=false` 隐藏 🎤 用例；③ README 措辞「可播放」→「可下载播放」（生产「播放」按钮实为下载，attachment 头；Phase 2 内联播放需非 attachment URL）。**记录后续**：replyingTo 未清（transcript 路径也漏，语音回复后引用条残留，需 setReplyingTo(null) 且注意闭包读旧值）；60s 自动截断/无会话释放用例（fake timers）；FakeWebSocket stub 冗余（jsdom 25 自带 WebSocket，实测删除后 13/13 仍过）；inline touchAction 与 .voice-btn CSS 冗余（留 CSS 删 inline）；transcript 用例静态路由 key 永不命中（可删）；计划 Task 2 Step 5「19 用例」笔误（实际 13）。
+
 **质量审查决策（T2 后追加）：** ① 60s 自动停止上移 Chat（onPointerDown 内 `setTimeout(handleSpeechStop, 60_000)`，配合 speech.stop 幂等无双发）——原实现 60s 内部 stop 结果被丢弃（整段录音丢失 + UI 卡录音态 + 松手空 blob 不发送），must-fix；② 无会话时 handleSpeechStop 先无条件 `stop()` 释放麦克风再守卫发送（audio 分支用 ensureSession 建会话，与 send 一致），must-fix；③ pointer capture（setPointerCapture + onPointerCancel + touch-action:none）——原 onPointerLeave 滑出边界即停即发，must-fix；④ unmount cleanup 调 stop() 释放麦克风；⑤ Task 3 夹具修正：user-event v14 无 pointerDown → fireEvent.pointerDown/Up；mockFetch 为 URL-only 查表（无 POST: 前缀）；files-POST 分支须推 message 入列表；断言文本改「🎤 语音消息」+ 播放按钮（语音气泡不显示文件名）。**记录后续**：远端语音消息 WS 广播缺 file 元数据 → 远端成员显示普通文件气泡（Phase 2 enrich 或前端按 `语音-*.webm` 兜底）；3s 转写期内快速重按丢新录音（start 时清 inflight 或期间禁用 mic）；busy 单布尔并发竞态（busy 计数）；降级路径未清 replyingTo（语音回复后引用条残留）；「播放」实为下载（attachment 头，Phase 2 内联播放需非 attachment URL）。
 
 **质量审查决策（T1 后追加）：** ① start/getUserMedia 竞态修复——代次计数 `startGen`，stop 时使未决 start 失效并释放刚获取的 stream（防松手后继续录音 + 麦克风泄漏，must-fix）；② Safari MIME 降级失效修复——候选 MIME `['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']` + 无 mimeType 兜底构造（Safari 仅支持 audio/mp4，原回退 webm 必抛 NotSupportedError 被吞、录音静默失效，must-fix）；③ stop 幂等——in-flight Promise 缓存（双 stop 同 tick 首调用悬挂修复）；④ 转写分支异常安全——`new SR()` 包 try/catch（构造抛错悬挂修复）+ `settled` 标志防多路 resolve + `stopRecognition` 统一停识别（降级路径 rec.stop() 防麦克风灯不灭）；⑤ 陈旧 3s 兜底定时器跨 stop 污染经 `settled` 标志修复；⑥ 测试改造——flush gUM 微任务后 stop（修复用例 2/3 空转）+ 补双 stop 幂等/start 竞态回归用例。记录：`declare global` 未来与 lib.dom 冲突风险（引入 @types/dom-speech-recognition 时需调整）、权限拒绝无 UX 反馈（MVP 可接受）、60s 自动停止无 lib 级测试（nit）。
@@ -523,7 +525,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(web): �
 - Modify: `apps/web/src/app.css`
 - Modify: `README.md`（根）
 
-- [ ] **Step 1: Chat.test.tsx 增语音用例**
+- [x] **Step 1: Chat.test.tsx 增语音用例**
 
 读 `apps/web/src/pages/Chat.test.tsx`，在文件顶部 import 区（`vi` 已导入）与既有 mockFetch 之后增语音 mock 辅助（放在文件内 describe 之前或顶部，保持风格一致）：
 
@@ -610,7 +612,7 @@ vi.mock('../lib/speech.js', () => ({
 
 > 注：speech 的 FakeRecorder/FakeSpeechRecognition 类若 Task 1 测试已有，可在本文件内复制一份（测试文件互相独立，不共享）。用例 2 的 mockFetch key 必须与现有实现一致（若现有 files-POST 用例已存在，直接照抄其 key 与返回结构）；`fireEvent` 需从 `@testing-library/react` 导入（现有测试若已 import，复用）。
 
-- [ ] **Step 2: app.css 增语音样式**
+- [x] **Step 2: app.css 增语音样式**
 
 在 `.file-bubble` 之后追加：
 
@@ -620,7 +622,7 @@ vi.mock('../lib/speech.js', () => ({
 .voice-btn { touch-action: none; user-select: none; }
 ```
 
-- [ ] **Step 3: README 增「语音输入」节**
+- [x] **Step 3: README 增「语音输入」节**
 
 在 README「### 静默策略（FR-CHAT-05）」节之后追加：
 
@@ -630,7 +632,7 @@ vi.mock('../lib/speech.js', () => ({
 输入区 🎤 按住说话：实时转写（Web Speech API，Chrome/Edge）→ 松开以文字发送；转写失败或浏览器不支持 → 降级为语音文件消息（可播放，决策 D6）。需要 HTTPS 或 localhost（浏览器麦克风安全要求）。
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -641,7 +643,7 @@ pnpm --filter @ta/web build
 
 Expected: typecheck exit 0；web 测试全 PASS（11 + 2 新增语音用例）；build 产出 dist/。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add apps/web/src/pages/Chat.test.tsx apps/web/src/app.css README.md
