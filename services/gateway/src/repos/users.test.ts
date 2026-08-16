@@ -33,6 +33,7 @@ describe('user repository', () => {
   })
 
   it('sets and reads roles', async () => {
+    await upsertUser(pool, 'u-alice', 'alice') // 先注册 admin，保证 u-bob 是 member（不依赖前序用例残留）
     await upsertUser(pool, 'u-bob', 'bob')
     expect(await getUserRole(pool, 'u-bob')).toBe('member')
     const updated = await setRole(pool, 'u-bob', 'admin')

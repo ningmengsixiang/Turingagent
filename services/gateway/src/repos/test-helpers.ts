@@ -10,5 +10,5 @@ export async function createTestPool(): Promise<pg.Pool> {
 }
 
 export async function truncateAll(pool: pg.Pool): Promise<void> {
-  await pool.query('TRUNCATE messages, session_members, sessions RESTART IDENTITY CASCADE')
+  await pool.query('TRUNCATE messages, session_members, sessions, users, audit_events RESTART IDENTITY CASCADE')
 }
