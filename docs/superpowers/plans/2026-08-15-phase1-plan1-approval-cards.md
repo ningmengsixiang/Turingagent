@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS approvals (
   session_id UUID NOT NULL REFERENCES sessions (id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
   approver_id TEXT NOT NULL,
   created_by TEXT NOT NULL,
   reason TEXT,
