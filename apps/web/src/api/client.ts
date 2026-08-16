@@ -1,4 +1,4 @@
-import type { Approval, Message, Session, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, Memory, MemoryVersion, Message, Session, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -100,3 +100,20 @@ export const updateTaskStatus = (taskId: string, status: TaskStatus): Promise<{ 
 
 export const listTasks = (sessionId: string): Promise<{ tasks: Task[] }> =>
   request(`/api/v1/sessions/${sessionId}/tasks`)
+
+export const listMemories = (sessionId: string): Promise<{ memories: Memory[] }> =>
+  request(`/api/v1/sessions/${sessionId}/memories`)
+
+export const createMemory = (
+  sessionId: string,
+  input: { title: string; content: string },
+): Promise<{ memory: Memory }> =>
+  request(`/api/v1/sessions/${sessionId}/memories`, { method: 'POST', body: JSON.stringify(input) })
+
+export const updateMemory = (
+  memoryId: string,
+  input: { title?: string; content: string },
+): Promise<{ memory: Memory }> => request(`/api/v1/memories/${memoryId}`, { method: 'PUT', body: JSON.stringify(input) })
+
+export const listMemoryVersions = (memoryId: string): Promise<{ versions: MemoryVersion[] }> =>
+  request(`/api/v1/memories/${memoryId}/versions`)

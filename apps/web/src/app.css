@@ -47,3 +47,12 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .task-actions button { padding: 4px 12px; border: 1px solid #d2d2d7; border-radius: 10px; background: #fff; cursor: pointer; font-size: 12px; }
 .task-actions .approve { background: #34c759; color: #fff; border-color: #34c759; }
 .task-actions .reject { background: #ff3b30; color: #fff; border-color: #ff3b30; }
+.memory-block { border-top: 1px solid #e5e5ea; padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.memory-head { display: flex; justify-content: space-between; align-items: center; }
+.memory-head strong { font-size: 13px; color: #6e6e73; }
+.memory-item .memory-title { width: 100%; text-align: left; border: none; background: none; cursor: pointer; padding: 6px 8px; border-radius: 8px; font-size: 13px; }
+.memory-item .memory-title:hover { background: #f0f0f5; }
+.memory-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.memory-modal-box { background: #fff; border-radius: 14px; padding: 20px; width: 480px; display: flex; flex-direction: column; gap: 10px; }
+.memory-modal-box input, .memory-modal-box textarea { padding: 8px 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px; font-family: inherit; }
+.memory-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }

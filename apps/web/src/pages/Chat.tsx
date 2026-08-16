@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Message, TaskStatus } from '@ta/contracts'
-import { createSession, decideApproval, listMessages, listSessions, sendMessage, updateTaskStatus } from '../api/client.js'
+import type { Memory, Message, TaskStatus } from '@ta/contracts'
+import { createMemory, createSession, decideApproval, listMemories, listMessages, listSessions, sendMessage, updateMemory, updateTaskStatus } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -24,6 +24,10 @@ export function Chat({ onLogout }: ChatProps) {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [memories, setMemories] = useState<Memory[]>([])
+  const [editing, setEditing] = useState<Memory | 'new' | null>(null)
+  const [memTitle, setMemTitle] = useState('')
+  const [memContent, setMemContent] = useState('')
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const creatingRef = useRef(false)
@@ -47,6 +51,15 @@ export function Chat({ onLogout }: ChatProps) {
       setMessages(res.messages)
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载消息失败')
+    }
+  }, [])
+
+  const loadMemories = useCallback(async (sessionId: string) => {
+    try {
+      const res = await listMemories(sessionId)
+      setMemories(res.memories)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载记忆失败')
     }
   }, [])
 
@@ -77,8 +90,11 @@ export function Chat({ onLogout }: ChatProps) {
   }, [refreshSessions])
 
   useEffect(() => {
-    if (activeId) void loadMessages(activeId)
-  }, [activeId, loadMessages])
+    if (activeId) {
+      void loadMessages(activeId)
+      void loadMemories(activeId)
+    }
+  }, [activeId, loadMessages, loadMemories])
 
   async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
@@ -154,6 +170,34 @@ export function Chat({ onLogout }: ChatProps) {
     setInput((prev) => (prev.startsWith(AGENT_HINT) ? prev : AGENT_HINT + prev))
   }
 
+  function openNewMemory() {
+    setEditing('new')
+    setMemTitle('')
+    setMemContent('')
+  }
+
+  function openEditMemory(mem: Memory) {
+    setEditing(mem)
+    setMemTitle(mem.title)
+    setMemContent(mem.content)
+  }
+
+  async function saveMemory() {
+    if (!activeId) return
+    try {
+      if (editing === 'new') {
+        await createMemory(activeId, { title: memTitle.trim(), content: memContent.trim() })
+      } else if (editing) {
+        await updateMemory(editing.id, { content: memContent.trim(), title: memTitle.trim() || undefined })
+      }
+      setEditing(null)
+      const res = await listMemories(activeId)
+      setMemories(res.memories)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '记忆保存失败')
+    }
+  }
+
   return (
     <div className="chat-layout">
       <aside className="session-sidebar">
@@ -175,6 +219,17 @@ export function Chat({ onLogout }: ChatProps) {
             </li>
           ))}
         </ul>
+        <div className="memory-block">
+          <div className="memory-head">
+            <strong>记忆</strong>
+            <button className="ghost" onClick={openNewMemory}>＋</button>
+          </div>
+          {memories.map((mem) => (
+            <div key={mem.id} className="memory-item">
+              <button className="memory-title" onClick={() => openEditMemory(mem)}>{mem.title}</button>
+            </div>
+          ))}
+        </div>
       </aside>
 
       <main className="chat-main">
@@ -244,6 +299,20 @@ export function Chat({ onLogout }: ChatProps) {
           </button>
         </footer>
       </main>
+
+      {editing !== null && (
+        <div className="memory-modal">
+          <div className="memory-modal-box">
+            <h3>{editing === 'new' ? '新建记忆' : '编辑记忆'}</h3>
+            <input value={memTitle} onChange={(e) => setMemTitle(e.target.value)} placeholder="标题" />
+            <textarea value={memContent} onChange={(e) => setMemContent(e.target.value)} rows={6} placeholder="内容" />
+            <div className="memory-modal-actions">
+              <button className="ghost" onClick={() => setEditing(null)}>取消</button>
+              <button onClick={() => void saveMemory()}>保存</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

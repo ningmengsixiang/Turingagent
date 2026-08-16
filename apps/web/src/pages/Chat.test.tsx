@@ -120,6 +120,18 @@ describe('Chat', () => {
     await waitFor(() => expect(screen.getByText(/进行中：支付网关对接/)).toBeTruthy())
   })
 
+  it('lists memories in the sidebar', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [{ id: 'mem1', sessionId: 's1', title: '需求基线', content: '基线内容', currentVersion: 1, createdBy: 'u-alice', createdAt: '', updatedAt: '' }] },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('需求基线')).toBeTruthy()
+    expect(screen.getByText('记忆')).toBeTruthy()
+  })
+
   it('renders a pending confirmation card with decide buttons', async () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
