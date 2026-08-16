@@ -133,6 +133,12 @@ export const uploadFile = async (sessionId: string, file: File): Promise<{ file:
     headers: token ? { authorization: `Bearer ${token}` } : {},
     body: form,
   })
+  if (res.status === 401) {
+    clearToken()
+    // 与 request() 保持一致：401 → 通知 UI 回到登录页
+    window.dispatchEvent(new Event('ta:unauthorized'))
+    throw new Error('unauthorized')
+  }
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error ?? `http ${res.status}`)
