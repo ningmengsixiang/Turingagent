@@ -202,6 +202,10 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 
 项目模板 = `services/gateway/templates/<id>.json` manifest（id/name/description/skillIds，热加载）：`GET /api/v1/templates` 列表；新建项目会话带 `templateId` 一键套用（自动绑定模板技能包，audit 留痕）。审批流模板/角色权限模板为 manifest 预留字段（Phase 3 后续消费）。初始模板：软件交付（pm+fullstack）、需求管理（pm）。
 
+### 技能包市场（M3.1 / FR-ECO-01）
+
+市场 = `services/gateway/marketplace/` 目录（第三方技能包 manifest，热加载）：`GET /api/v1/marketplace/skills` 浏览（含已安装标记）；管理员 `POST /api/v1/marketplace/skills/<id>/install` 一键安装到本地 `skills/`（重名需 `{force:true}` 覆盖；id 白名单防路径穿越；audit 留痕）。分成/沙箱白名单记后续。
+
 ### 文件上传
 
 ```bash
