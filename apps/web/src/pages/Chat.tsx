@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Message } from '@ta/contracts'
-import { createSession, decideApproval, listMessages, listSessions, sendMessage } from '../api/client.js'
+import type { Message, TaskStatus } from '@ta/contracts'
+import { createSession, decideApproval, listMessages, listSessions, sendMessage, updateTaskStatus } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -135,6 +135,21 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }
 
+  async function moveTask(message: Message, status: TaskStatus) {
+    if (!message.ref || message.ref.kind !== 'task') return
+    setError(null)
+    try {
+      const { task } = await updateTaskStatus(message.ref.id, status)
+      // 用服务端返回的 task 重新构造卡片内容（避免解析 content 前缀）
+      const label = { todo: '📋 待开始', in_progress: '🔄 进行中', blocked: '⛔ 已阻塞', done: '✅ 已完成' }[status]
+      const assignee = task.assigneeKind === 'agent' ? `@${AGENT_NAMES[task.assigneeId] ?? task.assigneeId}` : task.assigneeId
+      const content = `${label}：${task.title}（负责人 ${assignee}）`
+      setMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, content } : m)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '任务更新失败')
+    }
+  }
+
   function mentionAgent() {
     setInput((prev) => (prev.startsWith(AGENT_HINT) ? prev : AGENT_HINT + prev))
   }
@@ -170,6 +185,7 @@ export function Chat({ onLogout }: ChatProps) {
         <div className="message-list">
           {messages.map((m) => {
             const isCard = m.contentType === 'confirmation_card'
+            const isTask = m.contentType === 'task_card'
             const isPending = isCard && m.content.startsWith('待审批')
             return (
               <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
@@ -186,6 +202,23 @@ export function Chat({ onLogout }: ChatProps) {
                       <div className="approval-actions">
                         <button className="approve" onClick={() => void decide(m, 'approved')}>通过</button>
                         <button className="reject" onClick={() => void decide(m, 'rejected')}>驳回</button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : isTask ? (
+                  <div className="task-card">
+                    <strong>{m.content}</strong>
+                    {m.ref?.kind === 'task' ? (
+                      <div className="task-actions">
+                        {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((s) => (
+                          <button
+                            key={s}
+                            className={s === 'done' ? 'approve' : s === 'blocked' ? 'reject' : undefined}
+                            onClick={() => void moveTask(m, s)}
+                          >
+                            {s === 'todo' ? '待开始' : s === 'in_progress' ? '进行中' : s === 'blocked' ? '阻塞' : '完成'}
+                          </button>
+                        ))}
                       </div>
                     ) : null}
                   </div>

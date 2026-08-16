@@ -101,6 +101,25 @@ describe('Chat', () => {
     expect(screen.getByText('Ta-QA')).toBeTruthy()
   })
 
+  it('renders a task card with status buttons', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [{
+          id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'u-alice', senderKind: 'human',
+          contentType: 'task_card', content: '📋 待开始：支付网关对接（负责人 @Ta-Fullstack）', seq: 1, createdAt: '',
+          ref: { kind: 'task', id: 't1' },
+        }],
+      },
+      '/api/v1/tasks/t1/status': { task: { id: 't1', sessionId: 's1', title: '支付网关对接', assigneeId: 'agent-ta-fullstack', assigneeKind: 'agent', status: 'in_progress' } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText(/支付网关对接/)).toBeTruthy()
+    await userEvent.click(screen.getByRole('button', { name: /进行中/ }))
+    await waitFor(() => expect(screen.getByText(/进行中：支付网关对接/)).toBeTruthy())
+  })
+
   it('renders a pending confirmation card with decide buttons', async () => {
     mockFetch({
       '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },

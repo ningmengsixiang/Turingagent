@@ -1,4 +1,4 @@
-import type { Approval, Message, Session } from '@ta/contracts'
+import type { Approval, Message, Session, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -88,3 +88,15 @@ export const decideApproval = (
   input: { decision: 'approved' | 'rejected'; reason?: string },
 ): Promise<{ approval: Approval }> =>
   request(`/api/v1/approvals/${approvalId}/decide`, { method: 'POST', body: JSON.stringify(input) })
+
+export const createTask = (
+  sessionId: string,
+  input: { title: string; assigneeId: string; assigneeKind: 'human' | 'agent'; dueAt?: string },
+): Promise<{ task: Task; cardMessage: Message }> =>
+  request(`/api/v1/sessions/${sessionId}/tasks`, { method: 'POST', body: JSON.stringify(input) })
+
+export const updateTaskStatus = (taskId: string, status: TaskStatus): Promise<{ task: Task }> =>
+  request(`/api/v1/tasks/${taskId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
+
+export const listTasks = (sessionId: string): Promise<{ tasks: Task[] }> =>
+  request(`/api/v1/sessions/${sessionId}/tasks`)

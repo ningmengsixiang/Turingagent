@@ -42,3 +42,8 @@ body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
 .approval-actions button { padding: 6px 16px; border: none; border-radius: 12px; cursor: pointer; font-size: 13px; }
 .approve { background: #34c759; color: #fff; }
 .reject { background: #ff3b30; color: #fff; }
+.task-card { padding: 12px 14px; border: 1px solid #e5e5ea; border-radius: 14px; background: #fff; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.task-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.task-actions button { padding: 4px 12px; border: 1px solid #d2d2d7; border-radius: 10px; background: #fff; cursor: pointer; font-size: 12px; }
+.task-actions .approve { background: #34c759; color: #fff; border-color: #34c759; }
+.task-actions .reject { background: #ff3b30; color: #fff; border-color: #ff3b30; }
