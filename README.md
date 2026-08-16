@@ -175,6 +175,10 @@ Web 右侧上下文面板提供会话任务看板：按状态（待开始/进行
 
 一键安装器：`cd deploy/prod && cp .env.example .env`（编辑必填项：JWT_SECRET/MODEL_API_KEY/密码）→ `./install.sh`（构建镜像 → compose 启动 → 健康检查 → 输出访问地址）。生产 compose 含 db/minio/gateway/web 四服务（web 由 nginx 托管并反代 /api /ws），端口默认绑定 127.0.0.1（仅本机访问）。数据卷 ta-prod-* 持久化；备份：`docker compose -f docker-compose.prod.yml exec db pg_dump -U ta ta_prod > backup.sql`。Tauri 桌面壳与 K8s 安装器记后续。
 
+### ABAC 数据行级权限（M3.2 / FR-PERM-02）
+
+部门属性 + 数据行级可见性：项目会话可归属部门（`departmentId`），访问规则 = 管理员全可见 / 会话成员可见 / 同部门成员可见（读端点），写操作仍需会话成员身份。部门管理：管理员 `POST /api/v1/org/departments` 创建、`POST /api/v1/org/users/:id/department` 分配用户部门。会话列表按可见性过滤。完整属性规则引擎记后续。
+
 ### 文件上传
 
 ```bash
