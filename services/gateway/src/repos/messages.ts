@@ -34,7 +34,7 @@ export function mapMessage(row: MessageRow): Message {
     contentType,
     ref:
       row.ref_kind && row.ref_id
-        ? { kind: row.ref_kind as 'approval' | 'task', id: row.ref_id }
+        ? { kind: row.ref_kind as 'approval' | 'task' | 'file', id: row.ref_id }
         : undefined,
     replyTo: row.reply_to ?? undefined,
     file:

@@ -42,7 +42,7 @@ export interface Message {
   /** 文本内容（卡片/文件类的展示文本）；结构化负载由 Plan 2 补齐 */
   content: string
   /** 卡片等消息引用的业务对象（如审批） */
-  ref?: { kind: 'approval' | 'task'; id: string }
+  ref?: { kind: 'approval' | 'task' | 'file'; id: string }
   /** 引用回复：被引消息 id */
   replyTo?: string
   /** 被引消息摘要（服务端生成，前端渲染引用行） */
