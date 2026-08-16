@@ -9,7 +9,8 @@ import type pg from 'pg'
 export const AGENT_USER_ID = 'agent-ta-fullstack'
 export const AGENT_DISPLAY_NAME = 'Ta-Fullstack'
 
-const MENTION_PATTERN = /@\s*Ta[-_]?Fullstack/gi
+// 注意：不带 /g 标志——/g 会让 exec 的 lastIndex 跨调用泄漏，连续 @ 消息第二条静默漏触发（B1 修复）
+const MENTION_PATTERN = /@\s*Ta[-_]?Fullstack/i
 
 export interface AgentBridgeOptions {
   pool: pg.Pool
@@ -55,16 +56,23 @@ export class AgentBridge {
       return { triggered: true, reply }
     } catch (err) {
       console.error('[agent] run failed:', err)
-      const { message: reply } = await createMessage(this.options.pool, {
-        sessionId: message.sessionId,
-        senderId: AGENT_USER_ID,
-        senderKind: 'agent',
-        contentType: 'text',
-        content: '⚠️ Ta-Fullstack 处理失败：' + (err instanceof Error ? err.message : String(err)),
-        clientMsgId: `agent-${randomUUID()}`,
-      })
-      this.options.emitMessageCreated(reply)
-      return { triggered: true, reply, skippedReason: 'error' }
+      try {
+        // 用户侧固定文案（I2 修复）：完整错误只进日志，不写共享会话
+        const { message: reply } = await createMessage(this.options.pool, {
+          sessionId: message.sessionId,
+          senderId: AGENT_USER_ID,
+          senderKind: 'agent',
+          contentType: 'text',
+          content: '⚠️ Ta-Fullstack 处理失败，请稍后重试。',
+          clientMsgId: `agent-${randomUUID()}`,
+        })
+        this.options.emitMessageCreated(reply)
+        return { triggered: true, reply, skippedReason: 'error' }
+      } catch (replyErr) {
+        // 错误回复也写不进去（DB 故障等）：绝不逃逸，进程不崩（B2 修复）
+        console.error('[agent] failed to persist error reply:', replyErr)
+        return { triggered: false, skippedReason: 'error' }
+      }
     }
   }
 

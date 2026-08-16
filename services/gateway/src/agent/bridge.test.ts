@@ -119,7 +119,32 @@ describe('agent bridge', () => {
     const result = await bridge.handle(userMessage('@Ta-Fullstack 帮我做东西'))
     expect(result.triggered).toBe(true)
     expect(result.skippedReason).toBe('error')
-    expect(result.reply?.content).toContain('处理失败')
+    // I2：用户侧固定文案，不泄露原始错误
+    expect(result.reply?.content).toBe('⚠️ Ta-Fullstack 处理失败，请稍后重试。')
     expect(emitted).toHaveLength(1)
+    const messages = await listMessages(pool, sessionId, 0, 10)
+    expect(messages).toHaveLength(1)
+    expect(messages[0]!.content).toBe('⚠️ Ta-Fullstack 处理失败，请稍后重试。')
+  })
+
+  it('triggers on consecutive mention messages (B1 回归：无 /g lastIndex 泄漏)', async () => {
+    const { bridge } = makeBridge('好的')
+    const first = await bridge.handle(userMessage('@Ta-Fullstack 第一个需求'))
+    const second = await bridge.handle(userMessage('@Ta-Fullstack 第二个需求'))
+    expect(first.triggered).toBe(true)
+    expect(second.triggered).toBe(true)
+    const messages = await listMessages(pool, sessionId, 0, 10)
+    expect(messages).toHaveLength(2)
+  })
+
+  it('skips when the requirement exceeds the prompt char limit (I3：PR-6 长度守卫)', async () => {
+    const provider = new StubProvider()
+    const config = loadConfig({ NODE_ENV: 'test', DEEPSEEK_API_KEY: 'sk-test', AGENT_MAX_PROMPT_CHARS: '20' })
+    const bridge = new AgentBridge({ pool, config, provider, emitMessageCreated: () => {} })
+    const result = await bridge.handle(userMessage('@Ta-Fullstack ' + '很长的需求内容'.repeat(10)))
+    expect(result.skippedReason).toBe('too-long')
+    expect(provider.calls).toHaveLength(0)
+    const messages = await listMessages(pool, sessionId, 0, 10)
+    expect(messages).toHaveLength(0)
   })
 })
