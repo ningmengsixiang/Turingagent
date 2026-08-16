@@ -14,6 +14,7 @@ import { registerMessageRoutes } from './routes/messages.js'
 import { registerApprovalRoutes } from './routes/approvals.js'
 import { registerTaskRoutes } from './routes/tasks.js'
 import { registerOrgRoutes } from './routes/org.js'
+import { registerMemoryRoutes } from './routes/memories.js'
 import { registerWs } from './ws.js'
 import pg from 'pg'
 
@@ -67,6 +68,7 @@ export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): P
     (message) => events.emit('message.created', message),
     (message) => events.emit('message.updated', message),
   )
+  registerMemoryRoutes(app, config, pool)
   registerOrgRoutes(app, config, pool)
   registerWs(app, config, pool, registry, events)
 
