@@ -40,16 +40,20 @@
 创建 `services/gateway/src/agent/silence.ts`，内容逐字如下：
 
 ```ts
-/** FR-CHAT-05 静默策略：决策点/项目关键词 → respond；其余 → silent（零 LLM 成本规则版） */
+/** FR-CHAT-05 静默策略：@提及/决策点/项目关键词 → respond；其余 → silent（零 LLM 成本规则版） */
 
 export type SilenceDecision = { decision: 'respond' | 'silent'; reason: string }
+
+/** @ 提及（必响应，纯规则降级模式的核心兜底；PRD「分类器不可用时降级为仅 @ 必响应」） */
+const MENTION_RE = /@[\w-]+/i
 
 /** 决策点正则（命中即 respond；刻意收紧避免闲聊误报） */
 const DECISION_RE: RegExp[] = [
   /你(?:来)?(?:定|决定|拍板|拿主意|说了算)/i,
-  /(?:选|选择)[^\s，。]{0,10}?(?:还是|或)/i,
-  /(?:还是|或)[^\s，。]{0,6}(?:好|更好)/i,
-  /(?:方案|版本|设计|做法)[一二三四1-4]?(?:与|和|vs|VS)[^\s，。]{0,8}(?:方案|版本|设计|做法)/i,
+  /(?:选|选择)[^，。]{0,10}?(?:还是|或|哪个)/i,
+  /(?:还是|或)[^，。]{0,6}(?:好|更好)/i,
+  /(?:哪个|哪一种)[^，。]{0,6}(?:好|更好|合适)/i,
+  /(?:方案|版本|设计|做法)[一二三四1-4]?(?:与|和|vs|VS)[^，。]{0,8}(?:方案|版本|设计|做法)/i,
   /(?:对比|比较)一下/i,
   /(?:审批|批准|请确认|确认后|确认一下|确认无误|同意|通过|驳回)/i,
   /(?:怎么办|怎么处理|如何处理|如何解决|给个建议|给个意见|你怎么看|大家怎么看)/i,
@@ -71,9 +75,11 @@ const PROJECT_TERMS: ReadonlyArray<[string, number]> = [
   ['重构', 2],
   ['联调', 2],
   ['压测', 2],
+  ['bug', 3],
+  ['api', 2],
+  ['prd', 2],
   ['需求', 1],
   ['功能', 1],
-  ['bug', 1],
   ['缺陷', 1],
   ['测试', 1],
   ['用例', 1],
@@ -81,7 +87,6 @@ const PROJECT_TERMS: ReadonlyArray<[string, number]> = [
   ['设计', 1],
   ['文档', 1],
   ['接口', 1],
-  ['api', 1],
   ['数据库', 1],
   ['后端', 1],
   ['前端', 1],
@@ -94,13 +99,13 @@ const PROJECT_TERMS: ReadonlyArray<[string, number]> = [
   ['版本', 1],
   ['方案', 1],
   ['原型', 1],
-  ['prd', 1],
 ]
 
 const DECISION_THRESHOLD = 3
 
 /** 分类消息：respond（应触发智能体）或 silent（应静默，仅落库） */
 export function classifySilence(content: string): SilenceDecision {
+  if (MENTION_RE.test(content)) return { decision: 'respond', reason: 'mention' }
   for (const re of DECISION_RE) {
     if (re.test(content)) return { decision: 'respond', reason: 'decision-point' }
   }
@@ -246,6 +251,7 @@ const DECISION_TEMPLATES = [
 const DECISION_SUBJECTS = [
   '需求', '功能', '方案', '页面', '接口', '数据库', '架构', '任务', '文档', '部署',
   '排期', '版本', '测试', '代码', '模块', '流程', '原型', '进度', '发布', '评审',
+  '设计', '预算', '上线', '验收', '迭代',
 ]
 
 const KEYWORD_TEMPLATES = [
@@ -261,12 +267,12 @@ const KEYWORD_TEMPLATES = [
   (a: string, b: string) => `${a}这块需要${b}一下`,
 ]
 const KEYWORD_A = [
-  '需求文档', '后端接口', '测试用例', '这个功能', '架构方案', 'prd', '代码审查', '数据库表', '前端页面', '性能压测',
-  '接口文档', '交付物', '任务清单', '项目进度', '部署脚本', '版本计划', '需求评审', '技术方案', 'bug 清单', '里程碑',
+  '需求文档', '后端接口', '测试用例', '这个功能', '架构方案', 'prd', '代码审查', '数据库表', '前端页面', '性能优化',
+  '接口文档', '交付里程碑', '任务清单', '项目进度', '测试脚本', '版本计划', '需求评审', '技术方案', 'bug 清单', '里程碑',
 ]
+// 全部为强词（≥2 分），且与 KEYWORD_B 无词重叠（避免词表去重后分数不足）；任一 A + B 组合总分 ≥3
 const KEYWORD_B = [
-  '上线', '部署', '验收', '交付', '重构', '排期', '联调', '评审', '压测', '实现',
-  '测试', '开发', '发布', '检查', '优化', '审批', '确认', '处理', '跟进', '完成',
+  '上线', '部署', '验收', '交付', '重构', '排期', '联调', '压测',
 ]
 
 const IDLE_TEMPLATES = [
@@ -311,7 +317,7 @@ const IDLE_TEMPLATES = [
   () => '今天股票又跌了',
   () => '假期去哪玩',
 ]
-const IDLE_SUFFIXES = ['', '，大家呢？', '～', '!', '……']
+const IDLE_SUFFIXES = ['', '，大家呢？', '～', '!', '……', '？', '～啦']
 
 // ---- 展开：每类恰 250 组（确定性 slice） ----
 function buildCases(): Case[] {
