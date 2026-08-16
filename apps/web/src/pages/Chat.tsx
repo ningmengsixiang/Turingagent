@@ -310,6 +310,7 @@ export function Chat({ onLogout }: ChatProps) {
   }
 
   async function sendTaskReport(kind: 'daily' | 'weekly') {
+    if (busy) return
     if (!activeId || tasks.length === 0) {
       setError('当前没有任务可汇总')
       return
@@ -319,11 +320,11 @@ export function Chat({ onLogout }: ChatProps) {
       kind === 'daily'
         ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
         : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6)
-    const inRange = tasks.filter((t) => !t.dueAt || new Date(t.dueAt) >= rangeStart)
+    const inRange = tasks.filter((t) => t.status !== 'done' || (t.dueAt && new Date(t.dueAt) >= rangeStart))
     const byStatus = (s: TaskStatus) => inRange.filter((t) => t.status === s)
-    const line = (t: Task) => `- ${t.title}（${t.assigneeKind === 'agent' ? '🤖' : '👤'}${t.assigneeId}）`
+    const line = (t: Task) => `- ${t.title}（🤖${AGENT_NAMES[t.assigneeId] ?? t.assigneeId}）`
     const lines = [
-      `【${kind === 'daily' ? '日报' : '周报'}】${now.toISOString().slice(0, 10)}`,
+      `【${kind === 'daily' ? '日报' : '周报'}】${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
       '',
       `✅ 完成 ${byStatus('done').length} 项：`,
       ...byStatus('done').map(line),
@@ -670,8 +671,8 @@ export function Chat({ onLogout }: ChatProps) {
         {panelOpen && (
           <>
             <div className="kanban-report-actions">
-              <button className="ghost small" onClick={() => void sendTaskReport('daily')}>📅 日报</button>
-              <button className="ghost small" onClick={() => void sendTaskReport('weekly')}>📆 周报</button>
+              <button className="ghost small" onClick={() => void sendTaskReport('daily')} disabled={busy}>📅 日报</button>
+              <button className="ghost small" onClick={() => void sendTaskReport('weekly')} disabled={busy}>📆 周报</button>
             </div>
             <div className="kanban-stats">
               <span className="stat">{tasks.length} 总</span>
