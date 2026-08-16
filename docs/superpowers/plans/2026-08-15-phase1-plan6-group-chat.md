@@ -518,3 +518,8 @@ Expected: 推送成功。
 - **占位符扫描**：无 TBD；Task 3 组件实现注明细节可微调。
 - **类型一致性**：`SessionMember` 在 contracts/repo/路由/前端一致；`Message.replyTo/replyPreview` 在 contracts/repo map/路由/前端一致；`listSessionMembers` 签名一致。
 - **已知取舍**：文件上传（MinIO）与语音转文字（ASR）后续计划；静默策略评测集后续计划；引用回复只存被引 id + 摘要（无嵌套引用）；成员列表智能体固定附加（不与任务/消息动态关联）。
+
+## 决策记录（T2 质量审查后）
+
+1. **replyTo 存在性/同会话校验（必须修 M1）**：`createMessage` 事务内 INSERT 前校验被引消息存在且同会话（`SELECT 1 FROM messages WHERE id=$1 AND session_id=$2`），缺失抛类型化错误由路由转 400——修复 FK 23503 → 500 与跨会话 replyPreview 泄漏。
+2. **补测试**：回复不存在的消息 → 400；跨会话引用 → 400。
