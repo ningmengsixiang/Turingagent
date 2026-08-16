@@ -62,3 +62,12 @@ export async function isTenantActive(pool: pg.Pool, tenantId: string): Promise<b
   const res = await pool.query<{ status: string }>('SELECT status FROM tenants WHERE id = $1', [tenantId])
   return res.rows[0]?.status === 'active'
 }
+
+/** 管理员转移用户租户（null = 移出租户，登录时回 default） */
+export async function transferUserTenant(
+  pool: pg.Pool,
+  userId: string,
+  tenantId: string | null,
+): Promise<void> {
+  await pool.query(`UPDATE users SET tenant_id = $2 WHERE user_id = $1`, [userId, tenantId])
+}
