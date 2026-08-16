@@ -13,22 +13,29 @@ export interface SessionRow {
   title: string
   last_seq: string
   created_at: Date
+  tenant_id: string | null
 }
 
 function mapSession(row: SessionRow): Session {
-  return { id: row.id, kind: row.kind, title: row.title, memberIds: [] }
+  return {
+    id: row.id,
+    kind: row.kind,
+    title: row.title,
+    memberIds: [],
+    tenantId: row.tenant_id ?? undefined,
+  }
 }
 
 export async function createSession(
   pool: pg.Pool,
-  input: { kind: 'direct' | 'project' | 'group'; title: string; memberIds: string[] },
+  input: { kind: 'direct' | 'project' | 'group'; title: string; memberIds: string[]; tenantId?: string },
 ): Promise<Session> {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
     const res = await client.query<SessionRow>(
-      'INSERT INTO sessions (kind, title) VALUES ($1, $2) RETURNING *',
-      [input.kind, input.title],
+      'INSERT INTO sessions (kind, title, tenant_id) VALUES ($1, $2, $3) RETURNING *',
+      [input.kind, input.title, input.tenantId ?? null],
     )
     const session = mapSession(res.rows[0]!)
     const members = [...new Set([...input.memberIds])]

@@ -46,6 +46,8 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
         kind,
         title,
         memberIds: [...new Set([userId, ...memberIds])],
+        // 多租户：会话继承创建者租户（middleware 挂 request.user.tenantId）
+        tenantId: request.user!.tenantId,
       })
       if (departmentId) {
         await pool.query('UPDATE sessions SET department_id = $1 WHERE id = $2', [departmentId, session.id])

@@ -15,6 +15,7 @@ export interface UserRow {
   name: string
   role: string
   created_at: Date
+  tenant_id: string | null
 }
 
 export function mapUser(row: UserRow): OrgMember {
@@ -23,6 +24,7 @@ export function mapUser(row: UserRow): OrgMember {
     name: row.name,
     role: row.role as UserRole,
     createdAt: row.created_at.toISOString(),
+    tenantId: row.tenant_id ?? undefined,
   }
 }
 
@@ -38,9 +40,23 @@ export async function upsertUser(pool: pg.Pool, userId: string, name: string): P
   return mapUser(res.rows[0]!)
 }
 
+export interface UserRoleInfo {
+  role: UserRole
+  tenantId: string | null
+}
+
+/** 角色 + 租户归属（鉴权热路径：一次查询取 role + tenant_id，M2 写放大修复延续） */
+export async function getUserRoleWithTenant(pool: pg.Pool, userId: string): Promise<UserRoleInfo | null> {
+  const res = await pool.query<{ role: string; tenant_id: string | null }>(
+    'SELECT role, tenant_id FROM users WHERE user_id = $1',
+    [userId],
+  )
+  return res.rows[0] ? { role: res.rows[0].role as UserRole, tenantId: res.rows[0].tenant_id } : null
+}
+
 export async function getUserRole(pool: pg.Pool, userId: string): Promise<UserRole | null> {
-  const res = await pool.query<{ role: string }>('SELECT role FROM users WHERE user_id = $1', [userId])
-  return res.rows[0] ? (res.rows[0].role as UserRole) : null
+  const info = await getUserRoleWithTenant(pool, userId)
+  return info ? info.role : null
 }
 
 export async function listMembers(pool: pg.Pool): Promise<OrgMember[]> {
