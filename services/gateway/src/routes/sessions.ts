@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../middleware.js'
 import { createSession, getSessionById, isMember, listSessionMembers, listSessionsVisible } from '../repos/sessions.js'
 import { canAccessSession } from '../repos/access.js'
+import { getTemplate } from '../repos/templates.js'
+import { recordAudit } from '../repos/audit.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
@@ -10,7 +12,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export function registerSessionRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
   const auth = requireAuth(config, pool)
 
-  app.post<{ Body: { kind?: string; title?: string; memberIds?: string[]; departmentId?: string } }>(
+  app.post<{ Body: { kind?: string; title?: string; memberIds?: string[]; departmentId?: string; templateId?: string } }>(
     '/api/v1/sessions',
     { preHandler: auth },
     async (request, reply) => {
@@ -53,6 +55,12 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
           }
         }
       }
+      // 项目模板：可选 templateId（存在性校验；套用 = 创建成功后绑定模板技能包）
+      const templateId = request.body?.templateId?.trim()
+      const template = templateId ? getTemplate(templateId) : null
+      if (templateId && !template) {
+        return reply.code(400).send({ error: 'template not found' })
+      }
       const userId = request.user!.id
       const session = await createSession(pool, {
         kind,
@@ -64,7 +72,21 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
       if (departmentId) {
         await pool.query('UPDATE sessions SET department_id = $1 WHERE id = $2', [departmentId, session.id])
       }
-      return reply.code(201).send({ session: departmentId ? { ...session, departmentId } : session })
+      if (template) {
+        for (const skillId of template.skillIds) {
+          void recordAudit(pool, {
+            actorId: userId,
+            action: 'session.skill_bound',
+            target: session.id,
+            detail: { skillId },
+          }).catch((err) => console.error('[audit] skill bind failed:', err))
+        }
+      }
+      return reply.code(201).send(
+        template
+          ? { session: { ...session, ...(departmentId ? { departmentId } : {}), templateId }, template }
+          : { session: departmentId ? { ...session, departmentId } : session },
+      )
     },
   )
 
