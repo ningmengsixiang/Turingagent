@@ -198,6 +198,10 @@ curl -s -X POST localhost:3001/api/v1/external/sessions/<sessionId>/messages \
 
 多租户管理补全：管理员 `POST /api/v1/org/users/:id/tenant` 转移用户租户（null 移出，登录回 default，审计留痕）；创建会话时跨租户成员加入被拒（400）；存量 NULL 租户会话由迁移 015 回填为 default 租户（sessions 无 created_by 列）。RLS 数据库级双保险记后续。
 
+### 行业项目模板（M3.1 / FR-ORG-05）
+
+项目模板 = `services/gateway/templates/<id>.json` manifest（id/name/description/skillIds，热加载）：`GET /api/v1/templates` 列表；新建项目会话带 `templateId` 一键套用（自动绑定模板技能包，audit 留痕）。审批流模板/角色权限模板为 manifest 预留字段（Phase 3 后续消费）。初始模板：软件交付（pm+fullstack）、需求管理（pm）。
+
 ### 文件上传
 
 ```bash
