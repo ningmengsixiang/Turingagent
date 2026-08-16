@@ -676,6 +676,11 @@ export interface BuildDeps {
 
 export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): Promise<BuiltApp> {
   const config = { ...loadConfig(), ...overrides }
+  // agentEnabled 是 modelApiKey 的派生字段：合并 overrides 后需重新派生，
+  // 否则测试/环境覆盖 modelApiKey 时 enabled 仍为旧值，bridge 静默短路（T3 接线 bug 修复）
+  if (overrides?.modelApiKey !== undefined && overrides.agentEnabled === undefined) {
+    config.agentEnabled = overrides.modelApiKey.length > 0
+  }
   const app = Fastify({ logger: false, ajv: { customOptions: { coerceTypes: false } } })
   const pool = createPool(config.databaseUrl)
   const registry = createRegistry()
