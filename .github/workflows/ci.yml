@@ -36,7 +36,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       - name: Enable pnpm via corepack (读 packageManager 字段，与本地 pnpm 一致)
         run: corepack enable && corepack prepare pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]") --activate && pnpm --version
