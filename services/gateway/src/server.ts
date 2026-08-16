@@ -4,6 +4,8 @@ import { loadConfig, type Config } from './config.js'
 import { createPool } from './db.js'
 import { createRegistry, type ConnectionRegistry } from './registry.js'
 import { createEvents } from './events.js'
+import { createModelProvider, type ModelProvider } from './model/provider.js'
+import { AgentBridge } from './agent/bridge.js'
 import { registerHealth } from './routes/health.js'
 import { registerAuth } from './routes/auth.js'
 import { registerMe } from './routes/me.js'
@@ -17,10 +19,22 @@ export interface BuiltApp {
   config: Config
   pool: pg.Pool
   registry: ConnectionRegistry
+  bridge: AgentBridge | null
 }
 
-export async function buildApp(overrides?: Partial<Config>): Promise<BuiltApp> {
-  const config = { ...loadConfig(), ...overrides }
+export interface BuildDeps {
+  /** 测试注入：覆盖默认 DeepSeek provider */
+  provider?: ModelProvider
+}
+
+export async function buildApp(overrides?: Partial<Config>, deps?: BuildDeps): Promise<BuiltApp> {
+  const merged = { ...loadConfig(), ...overrides }
+  // agentEnabled 是 modelApiKey 的派生字段（见 config.ts）：overrides 覆盖 modelApiKey
+  // 时若不显式给出 agentEnabled，必须同步重新派生，否则注入测试 key 后智能体仍处于禁用态
+  const config: Config =
+    overrides?.agentEnabled === undefined
+      ? { ...merged, agentEnabled: merged.modelApiKey.length > 0 }
+      : merged
   const app = Fastify({ logger: false, ajv: { customOptions: { coerceTypes: false } } })
   const pool = createPool(config.databaseUrl)
   const registry = createRegistry()
@@ -37,5 +51,22 @@ export async function buildApp(overrides?: Partial<Config>): Promise<BuiltApp> {
     events.emit('message.created', message)
   })
   registerWs(app, config, pool, registry, events)
-  return { app, config, pool, registry }
+
+  const provider = deps?.provider ?? createModelProvider(config)
+  const bridge =
+    provider === null
+      ? null
+      : new AgentBridge({
+          pool,
+          config,
+          provider,
+          emitMessageCreated: (message) => events.emit('message.created', message),
+        })
+  if (bridge) {
+    events.on('message.created', (message) => {
+      // 异步触发智能体；失败不崩溃进程（桥接内部已全函数化）
+      void bridge.handle(message).catch((err) => console.error('[agent] unhandled:', err))
+    })
+  }
+  return { app, config, pool, registry, bridge }
 }
