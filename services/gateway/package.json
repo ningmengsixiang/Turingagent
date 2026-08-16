@@ -17,6 +17,8 @@
     "@ta/contracts": "workspace:*",
     "fastify": "^5.2.1",
     "jose": "^5.9.6",
+    "@fastify/multipart": "^9.0.0",
+    "minio": "^8.0.2",
     "pg": "^8.13.1"
   },
   "devDependencies": {

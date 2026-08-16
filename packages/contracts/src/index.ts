@@ -47,6 +47,8 @@ export interface Message {
   replyTo?: string
   /** 被引消息摘要（服务端生成，前端渲染引用行） */
   replyPreview?: string
+  /** 文件消息的元数据（contentType === 'file' 时存在） */
+  file?: { id: string; name: string; size: number; mime: string }
   seq: number
   createdAt: string
   updatedAt?: string
@@ -142,4 +144,14 @@ export interface SessionMember {
   userId: string
   name: string
   kind: 'human' | 'agent'
+}
+
+export interface FileInfo {
+  id: string
+  sessionId: string
+  name: string
+  size: number
+  mime: string
+  uploadedBy: string
+  createdAt: string
 }

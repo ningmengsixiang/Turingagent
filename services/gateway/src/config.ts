@@ -8,6 +8,11 @@ export interface Config {
   modelName: string
   agentEnabled: boolean
   agentMaxPromptChars: number
+  minioEndpoint: string
+  minioAccessKey: string
+  minioSecretKey: string
+  minioBucket: string
+  minioUseSsl: boolean
 }
 
 const DEV_SECRET = 'dev-secret-do-not-use-in-prod'
@@ -46,5 +51,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     modelName: env.MODEL_NAME ?? 'deepseek-chat',
     agentEnabled: modelApiKey.length > 0,
     agentMaxPromptChars,
+    minioEndpoint: env.MINIO_ENDPOINT ?? 'localhost:9000',
+    minioAccessKey: env.MINIO_ACCESS_KEY ?? 'taadmin',
+    minioSecretKey: env.MINIO_SECRET_KEY ?? 'ta12345678',
+    minioBucket: env.MINIO_BUCKET ?? 'ta-files',
+    minioUseSsl: env.MINIO_USE_SSL === 'true',
   }
 }
