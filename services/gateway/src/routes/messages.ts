@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { isMessageContentType, type Message } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember, markRead } from '../repos/sessions.js'
+import { canAccessSession } from '../repos/access.js'
 import { createMessage, listMessages, MessageRefError } from '../repos/messages.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
@@ -24,7 +25,7 @@ export function registerMessageRoutes(
     async (request, reply) => {
       const sessionId = request.params.id
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await canAccessSession(pool, sessionId, userId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const afterSeq = Math.max(0, Number(request.query.after_seq ?? 0) || 0)

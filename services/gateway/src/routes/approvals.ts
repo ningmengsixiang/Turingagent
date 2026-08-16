@@ -3,6 +3,7 @@ import type { Message } from '@ta/contracts'
 import { isApprovalNodeMode } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
+import { canAccessSession } from '../repos/access.js'
 import { createMessage, updateMessageContent } from '../repos/messages.js'
 import {
   createApproval,
@@ -134,7 +135,7 @@ export function registerApprovalRoutes(
       }
       const approval = await getApproval(pool, approvalId)
       if (!approval) return reply.code(404).send({ error: 'approval not found' })
-      if (!(await isMember(pool, approval.sessionId, request.user!.id))) {
+      if (!(await canAccessSession(pool, approval.sessionId, request.user!.id))) {
         return reply.code(403).send({ error: 'not a member of the approval session' })
       }
       return { approval }

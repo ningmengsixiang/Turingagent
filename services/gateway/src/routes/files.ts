@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import type { Client } from 'minio'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
+import { canAccessSession } from '../repos/access.js'
 import { createMessage } from '../repos/messages.js'
 import { createFile, getFile, listFilesForSession } from '../repos/files.js'
 import { ensureBucket, putObject, presignedGetUrl } from '../storage.js'
@@ -82,7 +83,7 @@ export function registerFileRoutes(
       const userId = request.user!.id
       const file = await getFile(pool, fileId)
       if (!file) return reply.code(404).send({ error: 'file not found' })
-      if (!(await isMember(pool, file.sessionId, userId))) {
+      if (!(await canAccessSession(pool, file.sessionId, userId))) {
         return reply.code(403).send({ error: 'not a member of the file session' })
       }
       // FileInfo 契约不含 storage_key（内部 MinIO key），此处单独取
@@ -103,7 +104,7 @@ export function registerFileRoutes(
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await canAccessSession(pool, sessionId, userId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const files = await listFilesForSession(pool, sessionId)

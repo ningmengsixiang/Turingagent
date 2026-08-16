@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
+import { canAccessSession } from '../repos/access.js'
 import { createKbDocument, listKbForSession, searchKb } from '../repos/kb.js'
 import { recordAudit } from '../repos/audit.js'
 import type { Config } from '../config.js'
@@ -55,7 +56,7 @@ export function registerKbRoutes(app: FastifyInstance, config: Config, pool: pg.
       if (!UUID_PATTERN.test(sessionId)) {
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
-      if (!(await isMember(pool, sessionId, request.user!.id))) {
+      if (!(await canAccessSession(pool, sessionId, request.user!.id))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const q = request.query.q?.trim()

@@ -83,4 +83,57 @@ export function registerOrgRoutes(app: FastifyInstance, config: Config, pool: pg
       }
     },
   )
+
+  // 部门管理（管理员；ABAC 属性来源）：创建部门 + 分配用户部门
+  app.post<{ Body: { name?: string } }>(
+    '/api/v1/org/departments',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const name = request.body?.name?.trim()
+      if (!name || name.length > 100) {
+        return reply.code(400).send({ error: 'name is required (<=100 chars)' })
+      }
+      let dept: { id: string; name: string; created_at: Date }
+      try {
+        const res = await pool.query<{ id: string; name: string; created_at: Date }>(
+          'INSERT INTO departments (name) VALUES ($1) RETURNING *',
+          [name],
+        )
+        dept = res.rows[0]!
+      } catch (err) {
+        // departments.name UNIQUE：重名 → 409
+        if (err instanceof Error && err.message.includes('duplicate key')) {
+          return reply.code(409).send({ error: 'department name already exists' })
+        }
+        throw err
+      }
+      void recordAudit(pool, {
+        actorId: request.user!.id,
+        action: 'org.department_created',
+        target: dept.id,
+        detail: { name: dept.name },
+      }).catch((err) => console.error('[audit] department create failed:', err))
+      return reply.code(201).send({ department: { id: dept.id, name: dept.name, createdAt: dept.created_at.toISOString() } })
+    },
+  )
+
+  app.post<{ Params: { id: string }; Body: { departmentId?: string } }>(
+    '/api/v1/org/users/:id/department',
+    { preHandler: adminOnly },
+    async (request, reply) => {
+      const userId = request.params.id
+      const departmentId = request.body?.departmentId?.trim()
+      if (!departmentId) return reply.code(400).send({ error: 'departmentId is required' })
+      const dept = await pool.query<{ id: string }>('SELECT id FROM departments WHERE id = $1', [departmentId])
+      if (dept.rows.length === 0) return reply.code(400).send({ error: 'department not found' })
+      await pool.query('UPDATE users SET department_id = $1 WHERE user_id = $2', [departmentId, userId])
+      void recordAudit(pool, {
+        actorId: request.user!.id,
+        action: 'org.user_department',
+        target: userId,
+        detail: { departmentId },
+      }).catch((err) => console.error('[audit] department assign failed:', err))
+      return { assigned: true }
+    },
+  )
 }

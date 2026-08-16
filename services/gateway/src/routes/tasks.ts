@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import type { Message, TaskStatus } from '@ta/contracts'
 import { requireAuth } from '../middleware.js'
 import { isMember } from '../repos/sessions.js'
+import { canAccessSession } from '../repos/access.js'
 import { createMessage, updateMessageContent } from '../repos/messages.js'
 import { createTask, getTask, listTasksForSession, updateTaskStatus, taskCardContent, TaskStateError } from '../repos/tasks.js'
 import type { Config } from '../config.js'
@@ -130,7 +131,7 @@ export function registerTaskRoutes(
         return reply.code(400).send({ error: 'session id must be a uuid' })
       }
       const userId = request.user!.id
-      if (!(await isMember(pool, sessionId, userId))) {
+      if (!(await canAccessSession(pool, sessionId, userId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
       }
       const tasks = await listTasksForSession(pool, sessionId)
