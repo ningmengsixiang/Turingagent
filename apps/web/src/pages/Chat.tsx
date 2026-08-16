@@ -226,7 +226,7 @@ export function Chat({ onLogout }: ChatProps) {
             <li key={s.id}>
               <button
                 className={s.id === activeId ? 'session-item active' : 'session-item'}
-                onClick={() => setActiveId(s.id)}
+                onClick={() => { setActiveId(s.id); setReplyingTo(null); setShowMembers(false); setShowMention(false) }}
               >
                 <span>{s.title}</span>
                 {s.unreadCount > 0 && <span className="unread">{s.unreadCount}</span>}

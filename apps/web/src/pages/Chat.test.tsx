@@ -150,6 +150,7 @@ describe('Chat', () => {
           { id: 'm2', clientMsgId: 'c2', sessionId: 's1', senderId: 'u-bob', senderKind: 'human', contentType: 'text', content: '引用回复', seq: 2, createdAt: '', replyTo: 'm1', replyPreview: '原始消息' },
         ],
       },
+      '/api/v1/sessions/s1/memories': { memories: [] },
       '/api/v1/sessions/s1/members': {
         members: [
           { userId: 'u-alice', name: 'alice', kind: 'human' },
