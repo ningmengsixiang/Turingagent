@@ -126,4 +126,31 @@ describe('message routes', () => {
     })
     expect(res.statusCode).toBe(204)
   })
+
+  it('sends a message replying to another', async () => {
+    const alice = await loginAs('alice')
+    const sessionId = await createProjectSession(alice)
+    const first = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/messages`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { clientMsgId: 'm1', contentType: 'text', content: '被引用的消息' },
+    })
+    const firstId = first.json().message.id as string
+    const second = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/messages`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { clientMsgId: 'm2', contentType: 'text', content: '引用回复', replyTo: firstId },
+    })
+    expect(second.statusCode).toBe(201)
+    expect(second.json().message.replyTo).toBe(firstId)
+    const list = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/sessions/${sessionId}/messages`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    const reply = list.json().messages.find((m: { replyTo?: string }) => m.replyTo === firstId)
+    expect(reply.replyPreview).toContain('被引用的消息')
+  })
 })

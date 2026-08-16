@@ -6,6 +6,8 @@ import { createMessage, listMessages } from '../repos/messages.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const MAX_LIMIT = 100
 
 export function registerMessageRoutes(
@@ -32,7 +34,7 @@ export function registerMessageRoutes(
     },
   )
 
-  app.post<{ Params: { id: string }; Body: { clientMsgId?: string; contentType?: string; content?: string } }>(
+  app.post<{ Params: { id: string }; Body: { clientMsgId?: string; contentType?: string; content?: string; replyTo?: string } }>(
     '/api/v1/sessions/:id/messages',
     { preHandler: auth },
     async (request, reply) => {
@@ -53,6 +55,10 @@ export function registerMessageRoutes(
       if (typeof content !== 'string' || content.length === 0 || content.length > 10000) {
         return reply.code(400).send({ error: 'content is required (<=10000 chars)' })
       }
+      const replyTo = request.body?.replyTo
+      if (replyTo !== undefined && !UUID_PATTERN.test(replyTo)) {
+        return reply.code(400).send({ error: 'replyTo must be a uuid' })
+      }
       const { message, created } = await createMessage(pool, {
         sessionId,
         senderId: userId,
@@ -60,6 +66,7 @@ export function registerMessageRoutes(
         contentType,
         content,
         clientMsgId,
+        replyTo,
       })
       if (created) onMessageCreated(message)
       return reply.code(created ? 201 : 200).send({ message })

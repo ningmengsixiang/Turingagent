@@ -1,8 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../middleware.js'
-import { createSession, getSessionById, isMember, listSessionsForUser } from '../repos/sessions.js'
+import { createSession, getSessionById, isMember, listSessionMembers, listSessionsForUser } from '../repos/sessions.js'
 import type { Config } from '../config.js'
 import pg from 'pg'
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export function registerSessionRoutes(app: FastifyInstance, config: Config, pool: pg.Pool): void {
   const auth = requireAuth(config, pool)
@@ -54,5 +56,18 @@ export function registerSessionRoutes(app: FastifyInstance, config: Config, pool
     const session = await getSessionById(pool, sessionId)
     if (!session) return reply.code(404).send({ error: 'session not found' })
     return { session }
+  })
+
+  app.get('/api/v1/sessions/:id/members', { preHandler: auth }, async (request, reply) => {
+    const sessionId = (request.params as { id: string }).id
+    if (!UUID_PATTERN.test(sessionId)) {
+      return reply.code(400).send({ error: 'session id must be a uuid' })
+    }
+    const userId = request.user!.id
+    if (!(await isMember(pool, sessionId, userId))) {
+      return reply.code(403).send({ error: 'not a member of this session' })
+    }
+    const members = await listSessionMembers(pool, sessionId)
+    return { members }
   })
 }

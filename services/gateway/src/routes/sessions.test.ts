@@ -109,4 +109,25 @@ describe('session routes', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('lists session members with agents', async () => {
+    const alice = await loginAs('alice')
+    const created = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/sessions',
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { kind: 'project', title: '报销系统', memberIds: ['u-bob'] },
+    })
+    const sessionId = created.json().session.id as string
+    const res = await built.app.inject({
+      method: 'GET',
+      url: `/api/v1/sessions/${sessionId}/members`,
+      headers: { authorization: `Bearer ${alice}` },
+    })
+    expect(res.statusCode).toBe(200)
+    const { members } = res.json()
+    expect(members.some((m: { userId: string }) => m.userId === 'u-alice')).toBe(true)
+    expect(members.some((m: { userId: string }) => m.userId === 'u-bob')).toBe(true)
+    expect(members.some((m: { userId: string; kind: string }) => m.userId === 'agent-ta-fullstack' && m.kind === 'agent')).toBe(true)
+  })
 })
