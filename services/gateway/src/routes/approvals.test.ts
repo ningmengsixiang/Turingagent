@@ -91,7 +91,7 @@ describe('approval routes', () => {
     expect(card.content).toContain('✅ 已通过')
   })
 
-  it('non-approver decision returns 409', async () => {
+  it('non-approver decision returns 403', async () => {
     const alice = await loginAs('alice')
     const sessionId = await createProjectSession(alice)
     const created = await built.app.inject({
@@ -107,6 +107,51 @@ describe('approval routes', () => {
       headers: { authorization: `Bearer ${alice}` },
       payload: { decision: 'approved' },
     })
-    expect(decided.statusCode).toBe(409)
+    expect(decided.statusCode).toBe(403)
+  })
+
+  it('returns 404 for an unknown approval', async () => {
+    const bob = await loginAs('bob')
+    const decided = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/approvals/00000000-0000-0000-0000-000000000000/decide',
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { decision: 'approved' },
+    })
+    expect(decided.statusCode).toBe(404)
+  })
+
+  it('rejects a non-uuid approval id with 400', async () => {
+    const bob = await loginAs('bob')
+    const decided = await built.app.inject({
+      method: 'POST',
+      url: '/api/v1/approvals/not-a-uuid/decide',
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { decision: 'approved' },
+    })
+    expect(decided.statusCode).toBe(400)
+  })
+
+  it('decided card contains the reason suffix', async () => {
+    const alice = await loginAs('alice')
+    const bob = await loginAs('bob')
+    const sessionId = await createProjectSession(alice)
+    const created = await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/sessions/${sessionId}/approvals`,
+      headers: { authorization: `Bearer ${alice}` },
+      payload: { title: '上线审批', approverId: 'u-bob' },
+    })
+    const approvalId = created.json().approval.id as string
+    await built.app.inject({
+      method: 'POST',
+      url: `/api/v1/approvals/${approvalId}/decide`,
+      headers: { authorization: `Bearer ${bob}` },
+      payload: { decision: 'rejected', reason: '缺少测试报告' },
+    })
+    const messages = await listMessages(pool, sessionId, 0, 10)
+    const card = messages.find((m) => m.contentType === 'confirmation_card')!
+    expect(card.content).toContain('❌ 已驳回')
+    expect(card.content).toContain('缺少测试报告')
   })
 })

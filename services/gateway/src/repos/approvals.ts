@@ -29,10 +29,15 @@ export function mapApproval(row: ApprovalRow): Approval {
   }
 }
 
+export type ApprovalErrorCode = 'NOT_FOUND' | 'ALREADY_DECIDED' | 'NOT_APPROVER'
+
 export class ApprovalStateError extends Error {
-  constructor(message: string) {
+  readonly code: ApprovalErrorCode
+
+  constructor(code: ApprovalErrorCode, message: string) {
     super(message)
     this.name = 'ApprovalStateError'
+    this.code = code
   }
 }
 
@@ -58,10 +63,10 @@ export async function decideApproval(
   input: { id: string; approverId: string; decision: 'approved' | 'rejected'; reason?: string },
 ): Promise<Approval> {
   const current = await getApproval(pool, input.id)
-  if (!current) throw new ApprovalStateError('approval not found')
-  if (current.status !== 'pending') throw new ApprovalStateError(`approval already ${current.status}`)
+  if (!current) throw new ApprovalStateError('NOT_FOUND', 'approval not found')
+  if (current.status !== 'pending') throw new ApprovalStateError('ALREADY_DECIDED', `approval already ${current.status}`)
   if (current.approverId !== input.approverId) {
-    throw new ApprovalStateError('only the approver can decide')
+    throw new ApprovalStateError('NOT_APPROVER', 'only the approver can decide')
   }
   // 条件更新（并发双裁决竞态修复）：WHERE 带 status='pending'，
   // 先读后写的窗口期被行锁 + 条件覆盖，胜者恰一次，败者抛 AlreadyDecided
@@ -73,8 +78,8 @@ export async function decideApproval(
   )
   if (res.rowCount !== 1) {
     const now = await getApproval(pool, input.id)
-    if (!now) throw new ApprovalStateError('approval not found')
-    throw new ApprovalStateError(`approval already ${now.status}`)
+    if (!now) throw new ApprovalStateError('NOT_FOUND', 'approval not found')
+    throw new ApprovalStateError('ALREADY_DECIDED', `approval already ${now.status}`)
   }
   return mapApproval(res.rows[0]!)
 }

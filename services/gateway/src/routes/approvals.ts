@@ -7,6 +7,8 @@ import { createApproval, decideApproval, ApprovalStateError } from '../repos/app
 import type { Config } from '../config.js'
 import pg from 'pg'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export function registerApprovalRoutes(
   app: FastifyInstance,
   config: Config,
@@ -21,6 +23,9 @@ export function registerApprovalRoutes(
     { preHandler: auth },
     async (request, reply) => {
       const sessionId = request.params.id
+      if (!UUID_PATTERN.test(sessionId)) {
+        return reply.code(400).send({ error: 'session id must be a uuid' })
+      }
       const userId = request.user!.id
       if (!(await isMember(pool, sessionId, userId))) {
         return reply.code(403).send({ error: 'not a member of this session' })
@@ -43,18 +48,25 @@ export function registerApprovalRoutes(
         approverId,
         createdBy: userId,
       })
-      // 审批卡片消息（PR-1：人类审批闸门的会话内载体）
-      const { message } = await createMessage(pool, {
-        sessionId,
-        senderId: userId,
-        senderKind: 'human',
-        contentType: 'confirmation_card',
-        content: `待审批：${approval.title}`,
-        clientMsgId: `approval-card-${approval.id}`,
-        ref: { kind: 'approval', id: approval.id },
-      })
-      emitMessageCreated(message)
-      return reply.code(201).send({ approval, cardMessage: message })
+      try {
+        // 审批卡片消息（PR-1：人类审批闸门的会话内载体）
+        const { message } = await createMessage(pool, {
+          sessionId,
+          senderId: userId,
+          senderKind: 'human',
+          contentType: 'confirmation_card',
+          content: `待审批：${approval.title}`,
+          clientMsgId: `approval-card-${approval.id}`,
+          ref: { kind: 'approval', id: approval.id },
+        })
+        emitMessageCreated(message)
+        return reply.code(201).send({ approval, cardMessage: message })
+      } catch (err) {
+        // 补偿（T2 质量审查 M3）：卡片写失败则回删 approval，避免孤儿审批
+        console.error('[approval] card creation failed, compensating:', err)
+        await pool.query('DELETE FROM approvals WHERE id = $1', [approval.id])
+        throw err
+      }
     },
   )
 
@@ -62,6 +74,10 @@ export function registerApprovalRoutes(
     '/api/v1/approvals/:id/decide',
     { preHandler: auth },
     async (request, reply) => {
+      const approvalId = request.params.id
+      if (!UUID_PATTERN.test(approvalId)) {
+        return reply.code(400).send({ error: 'approval id must be a uuid' })
+      }
       const userId = request.user!.id
       const decision = request.body?.decision
       if (decision !== 'approved' && decision !== 'rejected') {
@@ -69,7 +85,7 @@ export function registerApprovalRoutes(
       }
       try {
         const approval = await decideApproval(pool, {
-          id: request.params.id,
+          id: approvalId,
           approverId: userId,
           decision,
           reason: request.body?.reason?.trim() || undefined,
@@ -90,7 +106,9 @@ export function registerApprovalRoutes(
         return { approval }
       } catch (err) {
         if (err instanceof ApprovalStateError) {
-          return reply.code(409).send({ error: err.message })
+          // 错误码映射：NOT_FOUND→404、NOT_APPROVER→403、ALREADY_DECIDED→409（T2 质量审查 M1）
+          const status = err.code === 'NOT_FOUND' ? 404 : err.code === 'NOT_APPROVER' ? 403 : 409
+          return reply.code(status).send({ error: err.message })
         }
         throw err
       }

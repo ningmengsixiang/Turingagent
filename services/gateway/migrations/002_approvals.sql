@@ -15,3 +15,5 @@ CREATE INDEX IF NOT EXISTS idx_approvals_session ON approvals (session_id);
 
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS ref_kind TEXT;
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS ref_id TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_messages_ref ON messages (ref_kind, ref_id);
