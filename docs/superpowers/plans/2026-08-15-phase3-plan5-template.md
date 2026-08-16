@@ -8,6 +8,8 @@
 
 **Tech Stack:** 无新依赖。JSON manifest 热加载 + Fastify。
 
+**质量审查决策（T1-T3 后追加）：** ① templateId 仅响应回带不持久化（sessions 表无 template_id 列——已记录取舍，持久化需迁移记 Phase 3 后续）；② 响应合并 departmentId（计划 snippet 会丢 departmentId，实现补合并为正向修正）；③ 模板绑定语义与计划 15 的 POST /sessions/:id/skills 同构（audit 声明性记录，工具执行层消费）。**记录后续**：templateId 持久化（sessions.template_id 迁移）；前端模板选择器；模板扩充（审批流/角色模板消费 approvalFlow/roles 字段）。
+
 **决策记录：** 模板 MVP 聚焦「技能包预设」（复用既有 skills 系统，零新表）；审批流模板/角色权限模板以 manifest 预留 `approvalFlow?`/`roles?` 字段（仅元数据，Phase 3 后续在审批创建时消费）；模板 manifest 热加载（改文件即时生效，与 skills 同模式）；会话创建套用模板 = 绑定模板的 skillIds（多 skillIds 逐个绑定 + audit）；无 templateId 时行为不变（向后兼容）；模板列表登录可见（非敏感）。行业模板集合初始 2 个（软件交付/需求管理），后续扩充。
 
 ---
@@ -38,7 +40,7 @@
 - Create: `services/gateway/src/routes/templates.ts`
 - Modify: `services/gateway/src/server.ts`
 
-- [ ] **Step 1: 契约**
+- [x] **Step 1: 契约**
 
 读 `packages/contracts/src/index.ts`，文件末尾（ApiKeyInfo 之后）追加：
 
@@ -56,7 +58,7 @@ export interface ProjectTemplate {
 }
 ```
 
-- [ ] **Step 2: manifest**
+- [x] **Step 2: manifest**
 
 创建 `services/gateway/templates/software-delivery.json`：
 
@@ -84,7 +86,7 @@ export interface ProjectTemplate {
 }
 ```
 
-- [ ] **Step 3: repos/templates.ts**
+- [x] **Step 3: repos/templates.ts**
 
 创建 `services/gateway/src/repos/templates.ts`：
 
@@ -115,7 +117,7 @@ export function getTemplate(id: string): ProjectTemplate | null {
 }
 ```
 
-- [ ] **Step 4: routes/templates.ts**
+- [x] **Step 4: routes/templates.ts**
 
 创建 `services/gateway/src/routes/templates.ts`：
 
@@ -135,7 +137,7 @@ export function registerTemplateRoutes(app: FastifyInstance, config: Config, poo
 }
 ```
 
-- [ ] **Step 5: server.ts 注册**
+- [x] **Step 5: server.ts 注册**
 
 读 `services/gateway/src/server.ts`，在 `registerApiKeyRoutes(app, config, pool)` 之后增：
 
@@ -145,7 +147,7 @@ export function registerTemplateRoutes(app: FastifyInstance, config: Config, poo
 
 （import 增 `registerTemplateRoutes`。）
 
-- [ ] **Step 6: 验证**
+- [x] **Step 6: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -155,7 +157,7 @@ pnpm --filter @ta/gateway typecheck
 
 Expected: typecheck exit 0。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add packages/contracts services/gateway/templates services/gateway/src/repos/templates.ts services/gateway/src/routes/templates.ts services/gateway/src/server.ts
@@ -169,7 +171,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 **Files:**
 - Modify: `services/gateway/src/routes/sessions.ts`
 
-- [ ] **Step 1: 创建接受 templateId + 绑定技能包**
+- [x] **Step 1: 创建接受 templateId + 绑定技能包**
 
 读 `services/gateway/src/routes/sessions.ts` 创建路由（现有 departmentId/跨租户成员校验后），修改：
 
@@ -203,7 +205,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 
 （import 增 getTemplate from '../repos/templates.js' 与 recordAudit from '../repos/audit.js'——先核对现有 import。）
 
-- [ ] **Step 2: 验证**
+- [x] **Step 2: 验证**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -214,7 +216,7 @@ pnpm --filter @ta/gateway test --reporter=verbose
 
 Expected: typecheck exit 0；全量 gateway 测试全 PASS（195 用例——既有创建不带 templateId，行为不变）。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add services/gateway/src/routes/sessions.ts
@@ -229,7 +231,7 @@ git -c user.name="TuringAgent" -c user.email="ta@local" commit -m "feat(template
 - Create: `services/gateway/src/routes/templates.test.ts`
 - Modify: `README.md`
 
-- [ ] **Step 1: templates.test.ts**
+- [x] **Step 1: templates.test.ts**
 
 创建 `services/gateway/src/routes/templates.test.ts`（复用既有路由测试风格）：
 
@@ -302,7 +304,7 @@ describe('template routes', () => {
 })
 ```
 
-- [ ] **Step 2: README 追加「项目模板」节**
+- [x] **Step 2: README 追加「项目模板」节**
 
 在 README「### 多租户隔离（M3.3 / FR-ORG-01 / FR-SEC-02）」节之后追加：
 
@@ -312,7 +314,7 @@ describe('template routes', () => {
 项目模板 = `services/gateway/templates/<id>.json` manifest（id/name/description/skillIds，热加载）：`GET /api/v1/templates` 列表；新建项目会话带 `templateId` 一键套用（自动绑定模板技能包，audit 留痕）。审批流模板/角色权限模板为 manifest 预留字段（Phase 3 后续消费）。初始模板：软件交付（pm+fullstack）、需求管理（pm）。
 ```
 
-- [ ] **Step 3: 全仓验收**
+- [x] **Step 3: 全仓验收**
 
 ```bash
 cd /Users/wanzichanpinjingli/Desktop/TuringAgent
@@ -325,7 +327,7 @@ pnpm --filter @ta/gateway eval:silence
 
 Expected: build 全过；test 全绿（contracts 2 + gateway 195+3≈198 + web 34 ≈ 234）；frozen-lockfile 通过；eval:silence 门禁通过；`git status` 干净。
 
-- [ ] **Step 4: 真实验收**
+- [x] **Step 4: 真实验收**
 
 ```bash
 cd /tmp
@@ -335,7 +337,7 @@ cd /tmp
 # 4) 未知 templateId → 400
 ```
 
-- [ ] **Step 5: 提交 + 推送**
+- [x] **Step 5: 提交 + 推送**
 
 ```bash
 git add README.md services/gateway/src/routes/templates.test.ts docs/superpowers/plans/2026-08-15-phase3-plan5-template.md
