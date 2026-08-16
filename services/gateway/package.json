@@ -10,7 +10,9 @@
     "start": "node lib/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "migrate": "tsx src/migrate.ts"
+    "migrate": "tsx src/migrate.ts",
+    "gen:silence-cases": "tsx src/eval/gen-cases.ts",
+    "eval:silence": "tsx src/eval/run-silence.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^11.0.2",
