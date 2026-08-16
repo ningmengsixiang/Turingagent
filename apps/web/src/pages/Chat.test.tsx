@@ -83,4 +83,40 @@ describe('Chat', () => {
     expect(await screen.findByText('AI')).toBeTruthy()
     expect(screen.getByText('收到需求')).toBeTruthy()
   })
+
+  it('renders a pending confirmation card with decide buttons', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [{
+          id: 'm1', clientMsgId: 'c1', sessionId: 's1', senderId: 'u-alice', senderKind: 'human',
+          contentType: 'confirmation_card', content: '待审批：上线审批', seq: 1, createdAt: '',
+          ref: { kind: 'approval', id: 'a1' },
+        }],
+      },
+      '/api/v1/approvals/a1/decide': { approval: { id: 'a1', status: 'approved' } },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('待审批：上线审批')).toBeTruthy()
+    await userEvent.click(screen.getByRole('button', { name: /通过/ }))
+    await waitFor(() => expect(screen.getByText(/✅ 已通过/)).toBeTruthy())
+  })
+
+  it('renders a decided card without buttons', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': {
+        messages: [{
+          id: 'm2', clientMsgId: 'c2', sessionId: 's1', senderId: 'u-alice', senderKind: 'human',
+          contentType: 'confirmation_card', content: '✅ 已通过：上线审批', seq: 1, createdAt: '',
+          ref: { kind: 'approval', id: 'a2' },
+        }],
+      },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    expect(await screen.findByText('✅ 已通过：上线审批')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /通过/ })).toBeNull()
+  })
 })

@@ -1,4 +1,4 @@
-import type { Message, Session } from '@ta/contracts'
+import type { Approval, Message, Session } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -76,3 +76,15 @@ export const sendMessage = (
   input: { clientMsgId: string; contentType: string; content: string },
 ): Promise<{ message: Message }> =>
   request(`/api/v1/sessions/${sessionId}/messages`, { method: 'POST', body: JSON.stringify(input) })
+
+export const createApproval = (
+  sessionId: string,
+  input: { title: string; description?: string; approverId: string },
+): Promise<{ approval: Approval; cardMessage: Message }> =>
+  request(`/api/v1/sessions/${sessionId}/approvals`, { method: 'POST', body: JSON.stringify(input) })
+
+export const decideApproval = (
+  approvalId: string,
+  input: { decision: 'approved' | 'rejected'; reason?: string },
+): Promise<{ approval: Approval }> =>
+  request(`/api/v1/approvals/${approvalId}/decide`, { method: 'POST', body: JSON.stringify(input) })

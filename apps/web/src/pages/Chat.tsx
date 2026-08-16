@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Message } from '@ta/contracts'
-import { createSession, listMessages, listSessions, sendMessage } from '../api/client.js'
+import { createSession, decideApproval, listMessages, listSessions, sendMessage } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 
@@ -19,6 +19,7 @@ export function Chat({ onLogout }: ChatProps) {
   const [error, setError] = useState<string | null>(null)
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
+  const creatingRef = useRef(false)
   activeIdRef.current = activeId
 
   const refreshSessions = useCallback(async () => {
@@ -54,6 +55,11 @@ export function Chat({ onLogout }: ChatProps) {
           }
           void refreshSessions()
         }
+        if (ev.type === 'message.updated' && ev.message) {
+          if (ev.message.sessionId === activeIdRef.current) {
+            setMessages((prev) => prev.map((m) => (m.id === ev.message!.id ? ev.message! : m)))
+          }
+        }
       },
     )
     ws.connect()
@@ -67,13 +73,11 @@ export function Chat({ onLogout }: ChatProps) {
     if (activeId) void loadMessages(activeId)
   }, [activeId, loadMessages])
 
-  const creatingRef = useRef(false)
-
   async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
     const me = sessions[0]
     if (me) return me.id
-    if (creatingRef.current) return null // 并发锁：双击不重复建群
+    if (creatingRef.current) return null
     creatingRef.current = true
     try {
       const res = await createSession('project', '报销系统', [])
@@ -102,6 +106,25 @@ export function Chat({ onLogout }: ChatProps) {
       setError(err instanceof Error ? err.message : '发送失败')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function decide(message: Message, decision: 'approved' | 'rejected') {
+    if (!message.ref || message.ref.kind !== 'approval') return
+    setError(null)
+    try {
+      await decideApproval(message.ref.id, { decision })
+      // message.updated 事件会原位更新卡片；这里乐观置为已决，防 WS 延迟
+      const title = message.content.replace('待审批：', '')
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === message.id
+            ? { ...m, content: decision === 'approved' ? `✅ 已通过：${title}` : `❌ 已驳回：${title}` }
+            : m,
+        ),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '决策失败')
     }
   }
 
@@ -138,17 +161,31 @@ export function Chat({ onLogout }: ChatProps) {
           <button className="ghost" onClick={mentionAgent}>@ 智能体</button>
         </header>
         <div className="message-list">
-          {messages.map((m) => (
-            <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
-              <div className="bubble-meta">
-                {m.senderKind === 'agent' ? (
-                  <span className="ai-badge">AI</span>
-                ) : null}
-                <span className="bubble-name">{m.senderKind === 'agent' ? 'Ta-Fullstack' : m.senderId}</span>
+          {messages.map((m) => {
+            const isCard = m.contentType === 'confirmation_card'
+            const isPending = isCard && m.content.startsWith('待审批')
+            return (
+              <div key={m.id} className={m.senderKind === 'agent' ? 'bubble-row agent' : 'bubble-row human'}>
+                <div className="bubble-meta">
+                  {m.senderKind === 'agent' ? <span className="ai-badge">AI</span> : null}
+                  <span className="bubble-name">{m.senderKind === 'agent' ? 'Ta-Fullstack' : m.senderId}</span>
+                </div>
+                {isCard ? (
+                  <div className="approval-card">
+                    <strong>{m.content}</strong>
+                    {m.ref?.kind === 'approval' && isPending ? (
+                      <div className="approval-actions">
+                        <button className="approve" onClick={() => void decide(m, 'approved')}>通过</button>
+                        <button className="reject" onClick={() => void decide(m, 'rejected')}>驳回</button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="bubble">{m.content}</div>
+                )}
               </div>
-              <div className="bubble">{m.content}</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         {error && <p className="chat-error">{error}</p>}
         <footer className="input-area">
