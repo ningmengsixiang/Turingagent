@@ -55,6 +55,9 @@ function mockFetch(routes: Record<string, unknown>) {
   // PATCH 状态变更同款：记录被改状态的任务，GET tasks 时按 id 覆盖种子，
   // 否则拖拽改状态后重拉永远返回旧状态（静态路由无法表达"改状态后"的状态）
   const patchedTasks: Array<Record<string, unknown>> = []
+  // 知识库创建同款：POST /kb 自建 document 并推入 createdKbDocs，GET /kb 时并入种子，
+  // 否则创建后 loadKb 重拉永远返回空列表（静态路由无法表达"创建后"的状态）
+  const createdKbDocs: Array<Record<string, unknown>> = []
   vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET'
     if (method === 'POST' && /\/messages$/.test(url)) {
@@ -105,6 +108,38 @@ function mockFetch(routes: Record<string, unknown>) {
         ),
       ]
       return { ok: true, status: 200, json: async () => ({ tasks: merged }) }
+    }
+    if (method === 'POST' && /\/sessions\/[^/]+\/kb$/.test(url)) {
+      // 创建后 loadKb 重拉列表需看到新文档：按发送体自建 document 推入 createdKbDocs，
+      // GET /kb 分支再并入（与 POST /messages 分支同款模式）
+      const sessionId = /\/sessions\/([^/]+)\/kb$/.exec(url)![1]!
+      const input = JSON.parse(String(init?.body ?? '{}')) as { title?: string; content?: string }
+      const document = {
+        id: `kb-${createdKbDocs.length + 1}`,
+        sessionId,
+        title: input.title ?? '',
+        content: input.content ?? '',
+        createdBy: 'u-alice',
+        createdAt: '',
+      }
+      createdKbDocs.push(document)
+      return { ok: true, status: 201, json: async () => ({ document }) }
+    }
+    if (method === 'GET' && /\/sessions\/[^/]+\/kb(\?|$)/.test(url)) {
+      // 种子 + created 并入：POST /kb 创建的文档出现在重拉列表里；
+      // ?q= 检索按标题/内容包含过滤（ILIKE 的 mock 等价）
+      const baseUrl = url.split('?')[0]!
+      const seeded = (routes[baseUrl] as { documents?: unknown[] } | undefined)?.documents ?? []
+      const merged = [...seeded, ...createdKbDocs]
+      const qMatch = /\?q=([^&]+)/.exec(url)
+      const q = qMatch ? decodeURIComponent(qMatch[1]!) : ''
+      const documents = q
+        ? merged.filter((d) => {
+            const doc = d as { title?: string; content?: string }
+            return `${doc.title ?? ''}${doc.content ?? ''}`.toLowerCase().includes(q.toLowerCase())
+          })
+        : merged
+      return { ok: true, status: 200, json: async () => ({ documents }) }
     }
     const body = routes[url]
     if (body !== undefined) {
@@ -558,5 +593,26 @@ describe('Chat', () => {
     render(<Chat onLogout={vi.fn()} />)
     expect(await screen.findByText(/全栈开发/)).toBeTruthy()
     expect(await screen.findByText(/配额 50%/)).toBeTruthy()
+  })
+
+  it('creates and searches kb documents', async () => {
+    mockFetch({
+      '/api/v1/sessions': { sessions: [{ id: 's1', kind: 'project', title: '报销系统', memberIds: [], unreadCount: 0 }] },
+      '/api/v1/sessions/s1/messages?after_seq=0': { messages: [] },
+      '/api/v1/sessions/s1/memories': { memories: [] },
+      '/api/v1/sessions/s1/members': { members: [] },
+      '/api/v1/sessions/s1/tasks': { tasks: [] },
+      // 种子空列表；POST /kb 分支自建 document 推入 createdKbDocs，GET /kb 并入 → 创建后重拉可见
+      '/api/v1/sessions/s1/kb': { documents: [] },
+    })
+    vi.stubGlobal('WebSocket', FakeWebSocket)
+    render(<Chat onLogout={vi.fn()} />)
+    // 创建
+    await screen.findByText(/知识库/)
+    fireEvent.change(screen.getByPlaceholderText(/文档标题/), { target: { value: '登录方案' } })
+    fireEvent.change(screen.getByPlaceholderText(/文档内容/), { target: { value: 'JWT 令牌' } })
+    fireEvent.click(screen.getByRole('button', { name: /保存/ }))
+    // 创建后列表刷新应显示新文档（mockFetch 的 kb POST 分支推入 + GET 并入）
+    expect(await screen.findByText(/登录方案/)).toBeTruthy()
   })
 })

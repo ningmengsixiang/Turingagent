@@ -1,4 +1,4 @@
-import type { Approval, FileInfo, Memory, MemoryVersion, Message, QuotaStatus, Session, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
+import type { Approval, FileInfo, KbDocument, Memory, MemoryVersion, Message, QuotaStatus, Session, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
 
 const TOKEN_KEY = 'ta.token'
 
@@ -173,3 +173,12 @@ export const getFileDownloadUrl = (fileId: string): Promise<{ url: string; file:
 export const listSkills = (): Promise<{ skills: Skill[] }> => request('/api/v1/skills')
 
 export const getQuota = (): Promise<{ quota: QuotaStatus }> => request('/api/v1/org/quota')
+
+export const createKbDocument = (sessionId: string, title: string, content: string): Promise<{ document: KbDocument }> =>
+  request(`/api/v1/sessions/${sessionId}/kb`, { method: 'POST', body: JSON.stringify({ title, content }) })
+
+export const listKbDocuments = (sessionId: string): Promise<{ documents: KbDocument[] }> =>
+  request(`/api/v1/sessions/${sessionId}/kb`)
+
+export const searchKbDocuments = (sessionId: string, q: string): Promise<{ documents: KbDocument[] }> =>
+  request(`/api/v1/sessions/${sessionId}/kb?q=${encodeURIComponent(q)}`)

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Approval, ApprovalStatus, Memory, Message, QuotaStatus, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
-import { cancelApproval, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, getQuota, listMemories, listMessages, listSessions, listSessionMembers, listSkills, listTasks, resubmitApproval, returnApproval, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
+import type { Approval, ApprovalStatus, KbDocument, Memory, Message, QuotaStatus, SessionMember, Skill, Task, TaskStatus } from '@ta/contracts'
+import { cancelApproval, createKbDocument, createMemory, createSession, decideApproval, getApproval, getFileDownloadUrl, getQuota, listKbDocuments, listMemories, listMessages, listSessions, listSessionMembers, listSkills, listTasks, resubmitApproval, returnApproval, searchKbDocuments, sendMessage, summarizeMemory, transferApproval, updateMemory, updateTaskStatus, uploadFile } from '../api/client.js'
 import { WsClient } from '../api/ws.js'
 import type { SessionWithUnread } from '../api/client.js'
 import { createSpeechSession, type SpeechSession } from '../lib/speech.js'
@@ -47,6 +47,10 @@ export function Chat({ onLogout }: ChatProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [quota, setQuota] = useState<QuotaStatus | null>(null)
+  const [kbDocs, setKbDocs] = useState<KbDocument[]>([])
+  const [kbTitle, setKbTitle] = useState('')
+  const [kbContent, setKbContent] = useState('')
+  const [kbQuery, setKbQuery] = useState('')
   const [panelOpen, setPanelOpen] = useState(true)
   const wsRef = useRef<WsClient | null>(null)
   const activeIdRef = useRef<string | null>(null)
@@ -122,6 +126,15 @@ export function Chat({ onLogout }: ChatProps) {
     }
   }, [])
 
+  const loadKb = useCallback(async (sessionId: string) => {
+    try {
+      const r = await listKbDocuments(sessionId)
+      setKbDocs(r.documents)
+    } catch {
+      /* 忽略 */
+    }
+  }, [])
+
   useEffect(() => {
     void refreshSessions()
     const ws = new WsClient(
@@ -180,8 +193,9 @@ export function Chat({ onLogout }: ChatProps) {
       void loadMemories(activeId)
       void loadMembers(activeId)
       void loadTasks(activeId)
+      void loadKb(activeId)
     }
-  }, [activeId, loadMessages, loadMemories, loadMembers, loadTasks])
+  }, [activeId, loadMessages, loadMemories, loadMembers, loadTasks, loadKb])
 
   async function ensureSession(): Promise<string | null> {
     if (activeId) return activeId
@@ -426,6 +440,31 @@ export function Chat({ onLogout }: ChatProps) {
       a.click()
     } catch (err) {
       setError(err instanceof Error ? err.message : '下载失败')
+    }
+  }
+
+  async function handleKbCreate() {
+    if (!activeId || !kbTitle.trim() || !kbContent.trim()) {
+      setError('知识库标题与内容不能为空')
+      return
+    }
+    try {
+      await createKbDocument(activeId, kbTitle.trim(), kbContent.trim())
+      setKbTitle('')
+      setKbContent('')
+      await loadKb(activeId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存知识库失败')
+    }
+  }
+
+  async function handleKbSearch() {
+    if (!activeId) return
+    try {
+      const r = kbQuery.trim() ? await searchKbDocuments(activeId, kbQuery.trim()) : await listKbDocuments(activeId)
+      setKbDocs(r.documents)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '搜索失败')
     }
   }
 
@@ -710,6 +749,27 @@ export function Chat({ onLogout }: ChatProps) {
                   </div>
                 </div>
               ) : null}
+            </div>
+            <div className="kb-panel">
+              <strong>知识库</strong>
+              <div className="kb-search">
+                <input value={kbQuery} onChange={(e) => setKbQuery(e.target.value)} placeholder="搜索…" />
+                <button className="ghost small" onClick={() => void handleKbSearch()}>搜索</button>
+              </div>
+              <div className="kb-create">
+                <input value={kbTitle} onChange={(e) => setKbTitle(e.target.value)} placeholder="文档标题" />
+                <textarea value={kbContent} onChange={(e) => setKbContent(e.target.value)} placeholder="文档内容（≤10000 字）" rows={3} />
+                <button className="ghost small" onClick={() => void handleKbCreate()}>保存</button>
+              </div>
+              <div className="kb-list">
+                {kbDocs.map((d) => (
+                  <div key={d.id} className="kb-doc">
+                    <div className="kb-doc-title">{d.title}</div>
+                    <div className="kb-doc-snippet">{d.content.slice(0, 80)}…</div>
+                  </div>
+                ))}
+                {kbDocs.length === 0 && <div className="kanban-empty">空</div>}
+              </div>
             </div>
             <div className="kanban-columns">
               {(['todo', 'in_progress', 'blocked', 'done'] as TaskStatus[]).map((status) => {
