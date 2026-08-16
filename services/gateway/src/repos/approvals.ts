@@ -446,24 +446,47 @@ export async function escalateOverdueApprovals(pool: pg.Pool, now: Date = new Da
   if (admins.rows.length === 0) return escalated
 
   for (const row of overdue.rows) {
-    const nodes = await loadNodes(pool, row.id)
-    const node = nodes[row.current_node_index]
-    if (!node || node.status !== 'pending') continue
-
-    const next = admins.rows[row.escalated_count % admins.rows.length]!.user_id
-    await pool.query(
-      `UPDATE approval_nodes
-          SET approver_ids = $3, votes = '{}'
-        WHERE approval_id = $1 AND node_index = $2`,
-      [row.id, node.index, [next]],
-    )
-    await pool.query(
-      `UPDATE approvals
-          SET escalated_count = escalated_count + 1, last_node_activated_at = now()
-        WHERE id = $1`,
-      [row.id],
-    )
-    escalated.push((await getApproval(pool, row.id))!)
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      // 并发防护：行锁串行化（与 decide/transfer 等写操作同协议，防 escalate 与 decide 竞态污染终态）
+      const lock = await client.query<ApprovalRow>('SELECT * FROM approvals WHERE id = $1 FOR UPDATE', [row.id])
+      if (lock.rowCount !== 1) {
+        await client.query('COMMIT')
+        continue
+      }
+      const locked = lock.rows[0]!
+      if (locked.status !== 'pending') {
+        await client.query('COMMIT')
+        continue
+      }
+      const nodes = await loadNodes(client, row.id)
+      const node = nodes[locked.current_node_index]
+      if (!node || node.status !== 'pending') {
+        await client.query('COMMIT')
+        continue
+      }
+      const next = admins.rows[locked.escalated_count % admins.rows.length]!.user_id
+      await client.query(
+        `UPDATE approval_nodes
+            SET approver_ids = $3, votes = '{}'
+          WHERE approval_id = $1 AND node_index = $2`,
+        [row.id, node.index, [next]],
+      )
+      await client.query(
+        `UPDATE approvals
+            SET escalated_count = escalated_count + 1, last_node_activated_at = now()
+          WHERE id = $1`,
+        [row.id],
+      )
+      await client.query('COMMIT')
+      escalated.push((await getApproval(pool, row.id))!)
+    } catch (err) {
+      await client.query('ROLLBACK')
+      throw err
+    } finally {
+      client.release()
+    }
   }
   return escalated
 }
