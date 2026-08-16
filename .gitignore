@@ -10,5 +10,7 @@ dist/
 coverage/
 .env
 *.log
-lib/
+# 构建产物（lib/ 收窄：仅忽略各 package/service 的编译输出，不误伤源码目录 apps/web/src/lib/）
+packages/contracts/lib/
+services/gateway/lib/
 .env*
